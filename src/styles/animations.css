@@ -1,0 +1,203 @@
+/* ===========================
+   Baat-IA Animations v2
+   GPU-friendly (transform + opacity uniquement)
+   =========================== */
+
+/* --- Enregistrement --- */
+@keyframes pulse-record {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(239 68 68 / 0.6), 0 0 0 0 rgb(239 68 68 / 0.3);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 14px rgb(239 68 68 / 0), 0 0 0 28px rgb(239 68 68 / 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(239 68 68 / 0), 0 0 0 0 rgb(239 68 68 / 0);
+  }
+}
+
+@keyframes pulse-record-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* --- Entrées de page --- */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --- Barres de progression --- */
+@keyframes progress-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* --- Chargement --- */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* --- Modales / Apparition --- */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- Flottement subtil (éléments décoratifs) --- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* --- Pulsation douce (icône mic idle) --- */
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.06); opacity: 0.85; }
+}
+
+/* --- Entrée staggerée des cards --- */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Wax pattern shift (très lent) --- */
+@keyframes wax-drift {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(60px, 60px); }
+}
+
+/* --- Utility classes --- */
+.animate-pulse-record {
+  animation: pulse-record 1.6s ease-in-out infinite;
+}
+
+.animate-pulse-record-ring {
+  animation: pulse-record-ring 1.6s ease-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 400ms ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 300ms ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 350ms ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 350ms ease-out both;
+}
+
+.animate-progress-fill {
+  animation: progress-fill 700ms ease-out both;
+  transform-origin: left;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scale-in 220ms ease-out both;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+.animate-stagger-in {
+  animation: stagger-in 500ms ease-out both;
+}
+
+/* --- Delays pour stagger --- */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-150 { animation-delay: 150ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+
+/* --- Respect reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-record,
+  .animate-pulse-record-ring,
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-progress-fill,
+  .animate-shimmer,
+  .animate-scale-in,
+  .animate-float,
+  .animate-pulse-soft,
+  .animate-stagger-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

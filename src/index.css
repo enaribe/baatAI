@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Tailwind v4 : par défaut, dark: suit prefers-color-scheme uniquement.
+   Ici on aligne dark: sur la classe .dark posée par useDarkMode sur <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import "./styles/design-tokens.css";
+@import "./styles/animations.css";
+
+/* --- Base styles --- */
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-sand-900);
+  background-color: var(--color-sand-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+/* --- Dark mode --- */
+.dark body,
+.dark {
+  color: var(--color-sand-100);
+  background-color: var(--color-sand-950);
+}
+
+/* --- Tabular nums for stats --- */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Focus visible --- */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Wax pattern background --- */
+.wax-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cpath d='M40 0 C46 14 56 20 68 18 C56 22 50 32 52 44 C46 32 36 28 24 30 C34 26 38 16 40 0Z' fill='%23F97316' fill-opacity='0.4'/%3E%3Cpath d='M0 40 C14 46 20 56 18 68 C22 56 32 50 44 52 C32 46 28 36 30 24 C26 34 16 38 0 40Z' fill='%23F97316' fill-opacity='0.25'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 80px;
+}
+
+/* --- Scrollbar minimaliste --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-sand-300);
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-sand-700);
+}
+
+/* --- Selection --- */
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+.dark ::selection {
+  background: var(--color-primary-800);
+  color: var(--color-primary-100);
+}
