@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
-import type { FormEvent, ChangeEvent } from 'react'
+import type { FormEvent, ChangeEvent, DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2, File } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/use-auth'
 import { parseTextToPhrases } from '../lib/text-parser'
@@ -24,7 +24,17 @@ const USAGE_OPTIONS = [
   { value: 'both', label: 'Les deux (ASR + TTS)' },
 ]
 
+const ACCEPTED_EXTENSIONS = ['.txt', '.pdf', '.docx']
+const ACCEPTED_MIME = [
+  'text/plain',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]
+
 type Step = 0 | 1 | 2
+
+// Source des phrases : 'file' (traité par Python) ou 'manual' (parsé côté client)
+type PhrasesSource = 'file' | 'manual'
 
 export function NewProjectPage() {
   const navigate = useNavigate()
@@ -42,53 +52,97 @@ export function NewProjectPage() {
   const [usageType, setUsageType] = useState<ProjectUsageType>('asr')
 
   // Step 1 — Phrases
+  const [phrasesSource, setPhrasesSource] = useState<PhrasesSource | null>(null)
   const [phrases, setPhrases] = useState<string[]>([])
+  const [totalPhrases, setTotalPhrases] = useState(0)
   const [fileName, setFileName] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [manualText, setManualText] = useState('')
+  const [dragOver, setDragOver] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   const languageLabel = LANGUAGES.find((l) => l.value === targetLanguage)?.label ?? targetLanguage
 
-  const handleFileUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const isValidFile = (file: File): boolean => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
+    return ACCEPTED_EXTENSIONS.includes(ext) || ACCEPTED_MIME.includes(file.type)
+  }
 
-    setFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const text = event.target?.result as string
-      const parsed = parseTextToPhrases(text)
-      setPhrases(parsed)
-      setManualText('')
+  const handleFileSelect = useCallback((file: File) => {
+    if (!isValidFile(file)) {
+      setUploadError('Format non supporté. Utilisez un fichier .txt, .pdf ou .docx.')
+      return
     }
-    reader.readAsText(file)
+    setUploadError('')
+    setSelectedFile(file)
+    setFileName(file.name)
+    setPhrases([])
+    setTotalPhrases(0)
+    setPhrasesSource(null)
+    setManualText('')
   }, [])
+
+  const handleFileInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) handleFileSelect(file)
+    },
+    [handleFileSelect],
+  )
+
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      setDragOver(false)
+      const file = e.dataTransfer.files?.[0]
+      if (file) handleFileSelect(file)
+    },
+    [handleFileSelect],
+  )
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback(() => setDragOver(false), [])
 
   const handleManualParse = useCallback(() => {
     if (!manualText.trim()) return
     const parsed = parseTextToPhrases(manualText)
     setPhrases(parsed)
+    setTotalPhrases(parsed.length)
+    setPhrasesSource('manual')
+    setSelectedFile(null)
     setFileName('')
+    setUploadError('')
   }, [manualText])
 
   const clearPhrases = useCallback(() => {
     setPhrases([])
+    setTotalPhrases(0)
+    setPhrasesSource(null)
     setFileName('')
+    setSelectedFile(null)
     setManualText('')
+    setUploadError('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
   const canProceedStep0 = name.trim().length > 0
-  const canProceedStep1 = phrases.length > 0
+  // On peut avancer si on a des phrases (manuelles ou fichier sélectionné)
+  const canProceedStep1 = totalPhrases > 0 || selectedFile !== null
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!user || !canProceedStep1) return
+    if (!user) return
 
     setSubmitting(true)
     setError('')
 
     try {
-      // 1. Create project
+      // 1. Créer le projet
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
@@ -106,21 +160,53 @@ export function NewProjectPage() {
 
       const project = projectData as unknown as { id: string }
 
-      // 2. Insert phrases in batches of 500
-      const batchSize = 500
-      for (let i = 0; i < phrases.length; i += batchSize) {
-        const batch = phrases.slice(i, i + batchSize).map((content, idx) => ({
-          project_id: project.id,
-          position: i + idx + 1,
-          content,
-          normalized_content: content.toLowerCase().trim(),
-        }))
+      // 2a. Si fichier → le soumettre à l'Edge Function (Python fait l'extraction + insertion)
+      if (phrasesSource === 'file' && selectedFile) {
+        setUploading(true)
 
-        const { error: phrasesError } = await supabase.from('phrases').insert(batch as never)
-        if (phrasesError) throw phrasesError
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error('Session expirée, veuillez vous reconnecter.')
+
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+        formData.append('project_id', project.id)
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: formData,
+          },
+        )
+
+        const result = await response.json()
+        setUploading(false)
+
+        if (!response.ok) {
+          throw new Error(result.error ?? 'Erreur lors du traitement du fichier')
+        }
       }
 
-      // 3. Activate project
+      // 2b. Si saisie manuelle → insertion directe par le frontend
+      if (phrasesSource === 'manual' && phrases.length > 0) {
+        const batchSize = 500
+        for (let i = 0; i < phrases.length; i += batchSize) {
+          const batch = phrases.slice(i, i + batchSize).map((content, idx) => ({
+            project_id: project.id,
+            position: i + idx + 1,
+            content,
+            normalized_content: content.toLowerCase().trim(),
+          }))
+
+          const { error: phrasesError } = await supabase.from('phrases').insert(batch as never)
+          if (phrasesError) throw phrasesError
+        }
+      }
+
+      // 3. Activer le projet
       const { error: updateError } = await supabase
         .from('projects')
         .update({ status: 'active' } as never)
@@ -135,8 +221,36 @@ export function NewProjectPage() {
       console.error('Create project error:', err)
     } finally {
       setSubmitting(false)
+      setUploading(false)
     }
   }
+
+  // Lorsque l'utilisateur clique "Suivant" à l'étape 1, si c'est un fichier
+  // on fait un upload de preview pour afficher les phrases avant confirmation
+  const handlePreviewFile = useCallback(async () => {
+    if (!selectedFile || !user) return
+
+    setUploading(true)
+    setUploadError('')
+
+    try {
+      // Créer un projet temporaire (draft) pour le preview
+      // Non — on évite ça. On parse juste pour le preview via une requête dédiée.
+      // Pour l'instant : on stocke le fichier et on affiche juste le nom + message.
+      // Le parsing réel se fait au submit.
+      setPhrasesSource('file')
+      setTotalPhrases(-1) // -1 = "sera déterminé par Python"
+    } finally {
+      setUploading(false)
+    }
+  }, [selectedFile, user])
+
+  const handleStep1Next = useCallback(async () => {
+    if (phrasesSource === null && selectedFile) {
+      await handlePreviewFile()
+    }
+    setStep(2)
+  }, [phrasesSource, selectedFile, handlePreviewFile])
 
   return (
     <div className="p-6 lg:p-8 max-w-[42rem]">
@@ -249,41 +363,84 @@ export function NewProjectPage() {
         {step === 1 && (
           <div className="bg-white dark:bg-sand-900 rounded-2xl shadow-sm border border-sand-200/50 dark:border-sand-800 p-6 space-y-5 animate-fade-in-up">
             <p className="text-sm text-sand-600 dark:text-sand-400">
-              Importez un fichier texte (une phrase par ligne) ou saisissez-les manuellement.
+              Importez un fichier (.txt, .pdf, .docx) ou saisissez vos phrases manuellement.
             </p>
 
-            {/* File upload zone */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-sand-300 dark:border-sand-700 rounded-xl p-8 text-center cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-colors"
-            >
-              <Upload className="w-8 h-8 mx-auto mb-2 text-sand-400" />
-              <p className="text-sm font-medium text-sand-700 dark:text-sand-300">
-                Cliquez pour importer un fichier .txt
-              </p>
-              <p className="text-xs text-sand-400 mt-1">Une phrase par ligne</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
+            {/* Zone de dépôt de fichier */}
+            {!selectedFile ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                  dragOver
+                    ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-900/20'
+                    : 'border-sand-300 dark:border-sand-700 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/10'
+                }`}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-sand-400" />
+                <p className="text-sm font-medium text-sand-700 dark:text-sand-300">
+                  Cliquez ou déposez un fichier ici
+                </p>
+                <p className="text-xs text-sand-400 mt-1">.txt · .pdf · .docx</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".txt,.pdf,.docx"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+              </div>
+            ) : (
+              /* Fichier sélectionné */
+              <div className="flex items-center gap-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl px-4 py-3">
+                <File className="w-5 h-5 text-primary-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary-700 dark:text-primary-300 truncate">
+                    {fileName}
+                  </p>
+                  <p className="text-xs text-primary-500 dark:text-primary-400">
+                    Sera traité par le serveur lors de la création
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearPhrases}
+                  className="text-primary-400 hover:text-red-500 transition-colors shrink-0"
+                  aria-label="Retirer le fichier"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-            {/* Or manual */}
+            {uploadError && (
+              <p className="text-xs text-red-600 dark:text-red-400">{uploadError}</p>
+            )}
+
+            {/* Séparateur */}
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-sand-200 dark:bg-sand-800" />
               <span className="text-xs text-sand-400 uppercase font-medium">ou</span>
               <div className="flex-1 h-px bg-sand-200 dark:bg-sand-800" />
             </div>
 
+            {/* Saisie manuelle */}
             <div className="space-y-2">
               <Textarea
                 id="manual-phrases"
                 label="Saisie manuelle"
                 value={manualText}
-                onChange={(e) => setManualText(e.target.value)}
+                onChange={(e) => {
+                  setManualText(e.target.value)
+                  // Réinitialiser si on re-tape après avoir validé
+                  if (phrasesSource === 'manual') {
+                    setPhrases([])
+                    setTotalPhrases(0)
+                    setPhrasesSource(null)
+                  }
+                }}
                 placeholder={"Saisissez vos phrases, une par ligne...\nExemple : Nanga def ?\nMaa ngi fi rekk."}
                 rows={6}
               />
@@ -298,18 +455,15 @@ export function NewProjectPage() {
               </Button>
             </div>
 
-            {/* Phrases preview */}
-            {phrases.length > 0 && (
+            {/* Preview phrases manuelles */}
+            {phrasesSource === 'manual' && phrases.length > 0 && (
               <div className="bg-sand-50 dark:bg-sand-800/50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-primary-500" />
                     <span className="text-sm font-semibold text-sand-700 dark:text-sand-300">
-                      {phrases.length} phrase{phrases.length > 1 ? 's' : ''} importée{phrases.length > 1 ? 's' : ''}
+                      {phrases.length} phrase{phrases.length > 1 ? 's' : ''} saisie{phrases.length > 1 ? 's' : ''}
                     </span>
-                    {fileName && (
-                      <span className="text-xs text-sand-400">({fileName})</span>
-                    )}
                   </div>
                   <button
                     type="button"
@@ -343,8 +497,9 @@ export function NewProjectPage() {
               </Button>
               <Button
                 type="button"
-                disabled={!canProceedStep1}
-                onClick={() => setStep(2)}
+                disabled={!canProceedStep1 || uploading}
+                loading={uploading}
+                onClick={handleStep1Next}
                 icon={<ArrowRight className="w-4 h-4" />}
               >
                 Suivant
@@ -368,7 +523,23 @@ export function NewProjectPage() {
               {description && <SummaryRow label="Description" value={description} />}
               <SummaryRow label="Langue" value={languageLabel} />
               <SummaryRow label="Utilisation" value={usageType.toUpperCase()} />
-              <SummaryRow label="Phrases" value={`${phrases.length} phrase${phrases.length > 1 ? 's' : ''}`} />
+              {phrasesSource === 'file' && fileName && (
+                <SummaryRow label="Fichier" value={fileName} />
+              )}
+              {phrasesSource === 'manual' && totalPhrases > 0 && (
+                <SummaryRow
+                  label="Phrases"
+                  value={`${totalPhrases} phrase${totalPhrases > 1 ? 's' : ''}`}
+                />
+              )}
+              {phrasesSource === 'file' && (
+                <div className="flex items-start justify-between py-2 border-b border-sand-100 dark:border-sand-800">
+                  <span className="text-sm text-sand-500 dark:text-sand-400">Phrases</span>
+                  <span className="text-sm font-medium text-sand-500 dark:text-sand-400 italic">
+                    Extraites à la création
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between pt-4 border-t border-sand-100 dark:border-sand-800">
@@ -380,7 +551,7 @@ export function NewProjectPage() {
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Création...
+                    {uploading ? 'Traitement du fichier...' : 'Création...'}
                   </>
                 ) : (
                   'Créer le projet'
