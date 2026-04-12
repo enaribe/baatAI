@@ -160,61 +160,68 @@ export function NewProjectPage() {
 
       const project = projectData as unknown as { id: string }
 
-      // 2a. Si fichier → le soumettre à l'Edge Function (Python fait l'extraction + insertion)
-      if (phrasesSource === 'file' && selectedFile) {
-        setUploading(true)
+      // Fonction de rollback : supprime le projet si une erreur survient après sa création
+      const rollback = async () => {
+        await supabase.from('projects').delete().eq('id', project.id)
+      }
 
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) throw new Error('Session expirée, veuillez vous reconnecter.')
+      try {
+        // 2a. Si fichier → le soumettre à l'Edge Function (Python fait l'extraction + insertion)
+        if (phrasesSource === 'file' && selectedFile) {
+          setUploading(true)
 
-        const formData = new FormData()
-        formData.append('file', selectedFile)
-        formData.append('project_id', project.id)
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) throw new Error('Session expirée, veuillez vous reconnecter.')
 
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
+          const formData = new FormData()
+          formData.append('file', selectedFile)
+          formData.append('project_id', project.id)
+
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`,
+            {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${session.access_token}` },
+              body: formData,
             },
-            body: formData,
-          },
-        )
+          )
 
-        const result = await response.json()
-        setUploading(false)
+          setUploading(false)
+          const result = await response.json()
 
-        if (!response.ok) {
-          throw new Error(result.error ?? 'Erreur lors du traitement du fichier')
+          if (!response.ok) {
+            throw new Error(result.error ?? 'Erreur lors du traitement du fichier')
+          }
         }
-      }
 
-      // 2b. Si saisie manuelle → insertion directe par le frontend
-      if (phrasesSource === 'manual' && phrases.length > 0) {
-        const batchSize = 500
-        for (let i = 0; i < phrases.length; i += batchSize) {
-          const batch = phrases.slice(i, i + batchSize).map((content, idx) => ({
-            project_id: project.id,
-            position: i + idx + 1,
-            content,
-            normalized_content: content.toLowerCase().trim(),
-          }))
-
-          const { error: phrasesError } = await supabase.from('phrases').insert(batch as never)
-          if (phrasesError) throw phrasesError
+        // 2b. Si saisie manuelle → insertion directe par le frontend
+        if (phrasesSource === 'manual' && phrases.length > 0) {
+          const batchSize = 500
+          for (let i = 0; i < phrases.length; i += batchSize) {
+            const batch = phrases.slice(i, i + batchSize).map((content, idx) => ({
+              project_id: project.id,
+              position: i + idx + 1,
+              content,
+              normalized_content: content.toLowerCase().trim(),
+            }))
+            const { error: phrasesError } = await supabase.from('phrases').insert(batch as never)
+            if (phrasesError) throw phrasesError
+          }
         }
+
+        // 3. Activer le projet
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update({ status: 'active' } as never)
+          .eq('id', project.id)
+        if (updateError) throw updateError
+
+        navigate(`/project/${project.id}`)
+      } catch (innerErr) {
+        // Rollback : supprimer le projet créé pour éviter un projet zombie
+        await rollback()
+        throw innerErr
       }
-
-      // 3. Activer le projet
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ status: 'active' } as never)
-        .eq('id', project.id)
-
-      if (updateError) throw updateError
-
-      navigate(`/project/${project.id}`)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la création du projet'
       setError(message)

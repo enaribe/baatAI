@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const projectId = formData.get("project_id") as string | null;
+    const startPosition = formData.get("start_position") as string | null;
 
     if (!file || !projectId) {
       return new Response(
@@ -104,6 +105,7 @@ Deno.serve(async (req) => {
     const forwardForm = new FormData();
     forwardForm.append("file", file);
     forwardForm.append("project_id", projectId);
+    if (startPosition) forwardForm.append("start_position", startPosition);
 
     const pythonResponse = await fetch(`${pythonServerUrl}/api/upload-phrases`, {
       method: "POST",

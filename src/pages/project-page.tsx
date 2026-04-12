@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight } from 'lucide-react'
+import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle } from 'lucide-react'
 import { useProject } from '../hooks/use-project'
 import { useRealtimeRecordings } from '../hooks/use-realtime-recordings'
+import { supabase } from '../lib/supabase'
 import { Badge } from '../components/ui/badge'
 import { ProgressBar } from '../components/ui/progress-bar'
 import { Skeleton } from '../components/ui/skeleton'
+import { Button } from '../components/ui/button'
 import { StatCard } from '../components/stat-card'
 import { PhraseList } from '../components/phrase-list'
 import { SessionList } from '../components/session-list'
@@ -49,6 +51,29 @@ export function ProjectPage() {
   const navigate = useNavigate()
   const { project, phrases, sessions, recordings, exports, loading, error, refetch } = useProject(id)
   const [activeTab, setActiveTab] = useState<Tab>('phrases')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  const handleDelete = useCallback(async () => {
+    if (!project) return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const { error: deleteErr } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id)
+      if (deleteErr) throw deleteErr
+      navigate('/dashboard')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la suppression'
+      setDeleteError(message)
+      console.error('Delete project error:', err)
+    } finally {
+      setDeleting(false)
+    }
+  }, [project, navigate])
 
   useRealtimeRecordings({
     projectId: id,
@@ -93,7 +118,12 @@ export function ProjectPage() {
   const totalRecordings = recordings.length
   const validRecordings = recordings.filter((r) => r.is_valid === true).length
   const activeSessions = sessions.filter((s) => s.status === 'active' || s.status === 'pending').length
-  const progressPct = totalPhrases > 0 ? Math.round((totalRecordings / totalPhrases) * 100) : 0
+  // Progression = phrases uniques couvertes par au moins 1 enregistrement valide
+  const coveredPhraseIds = new Set(
+    recordings.filter((r) => r.is_valid === true).map((r) => r.phrase_id)
+  )
+  const coveredPhrases = coveredPhraseIds.size
+  const progressPct = totalPhrases > 0 ? Math.round((coveredPhrases / totalPhrases) * 100) : 0
 
   const dateStr = new Date(project.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -144,11 +174,21 @@ export function ProjectPage() {
           {project.description && (
             <p className="text-sand-400 text-sm mb-3 max-w-prose">{project.description}</p>
           )}
-          <div className="flex items-center gap-4 text-xs text-sand-500">
-            <span>Créé le {dateStr}</span>
-            <span className="flex items-center gap-1 font-bold text-primary-400 tabular-nums">
-              {progressPct}% complété
-            </span>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-xs text-sand-500">
+              <span>Créé le {dateStr}</span>
+              <span className="flex items-center gap-1 font-bold text-primary-400 tabular-nums">
+                {coveredPhrases}/{totalPhrases} validées · {progressPct}%
+              </span>
+            </div>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="inline-flex items-center gap-1.5 text-xs text-sand-500 hover:text-red-400 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-red-500/10"
+              aria-label="Supprimer le projet"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Supprimer
+            </button>
           </div>
         </div>
       </div>
@@ -188,9 +228,9 @@ export function ProjectPage() {
       {/* Overall progress */}
       <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/60 dark:border-sand-800 p-5 mb-6">
         <ProgressBar
-          value={totalRecordings}
+          value={coveredPhrases}
           max={totalPhrases || 1}
-          label="Progression globale"
+          label={`Phrases validées — ${coveredPhrases} sur ${totalPhrases}`}
         />
       </div>
 
@@ -223,7 +263,12 @@ export function ProjectPage() {
       {/* Tab content */}
       <div className="bg-white dark:bg-sand-900 rounded-2xl shadow-sm border border-sand-200/60 dark:border-sand-800 p-5 lg:p-6 animate-fade-in-up">
         {activeTab === 'phrases' && (
-          <PhraseList phrases={phrases} recordings={recordings} />
+          <PhraseList
+            phrases={phrases}
+            recordings={recordings}
+            projectId={project.id}
+            onPhrasesAdded={refetch}
+          />
         )}
         {activeTab === 'sessions' && (
           <SessionList
@@ -231,6 +276,7 @@ export function ProjectPage() {
             projectId={project.id}
             totalPhrases={totalPhrases}
             onSessionCreated={refetch}
+            onSessionDeleted={refetch}
           />
         )}
         {activeTab === 'recordings' && (
@@ -244,6 +290,67 @@ export function ProjectPage() {
           />
         )}
       </div>
+
+      {/* Modale de confirmation suppression */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false) }}
+        >
+          <div className="bg-white dark:bg-sand-900 rounded-2xl shadow-xl border border-sand-200/60 dark:border-sand-800 p-6 w-full max-w-md animate-scale-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h2
+                  className="text-base font-bold text-sand-900 dark:text-sand-100"
+                  style={{ fontFamily: 'var(--font-heading)' }}
+                >
+                  Supprimer ce projet ?
+                </h2>
+                <p className="text-xs text-sand-500 dark:text-sand-400">Cette action est irréversible.</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-sand-600 dark:text-sand-400 mb-2">
+              Le projet <span className="font-semibold text-sand-800 dark:text-sand-200">"{project.name}"</span> sera
+              définitivement supprimé, ainsi que toutes ses phrases, sessions et enregistrements.
+            </p>
+
+            {deleteError && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-3 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1"
+                onClick={() => { setShowDeleteModal(false); setDeleteError('') }}
+                disabled={deleting}
+              >
+                Annuler
+              </Button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
+              >
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? 'Suppression...' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
