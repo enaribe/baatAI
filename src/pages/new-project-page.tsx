@@ -190,7 +190,19 @@ export function NewProjectPage() {
           const result = await response.json()
 
           if (!response.ok) {
-            throw new Error(result.error ?? 'Erreur lors du traitement du fichier')
+            const detail = result?.error ?? result?.message ?? null
+            const status = response.status
+            if (detail) {
+              throw new Error(detail)
+            } else if (status === 401) {
+              throw new Error('Non autorisé — veuillez vous reconnecter.')
+            } else if (status === 400) {
+              throw new Error('Fichier invalide ou paramètre manquant.')
+            } else if (status === 500) {
+              throw new Error('Erreur serveur lors du traitement du fichier. Vérifiez que le fichier n\'est pas corrompu ou protégé.')
+            } else {
+              throw new Error(`Erreur ${status} lors du traitement du fichier.`)
+            }
           }
         }
 
