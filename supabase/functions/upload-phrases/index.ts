@@ -29,13 +29,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // On utilise le service_role key mais on passe le JWT user via getUser(jwt)
+    // pour valider que le token est bien émis par Supabase Auth
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: "Utilisateur non authentifié" }),
@@ -65,12 +67,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Vérifier que le projet appartient bien à l'utilisateur
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    const { data: project, error: projectError } = await supabaseAdmin
+    const { data: project, error: projectError } = await supabase
       .from("projects")
       .select("id, owner_id")
       .eq("id", projectId)
