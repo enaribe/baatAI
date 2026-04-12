@@ -100,34 +100,20 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
         formData.append('project_id', projectId)
         formData.append('start_position', String(nextPosition))
 
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: formData,
-          },
-        )
+        const { data, error: fnError } = await supabase.functions.invoke('upload-phrases', {
+          body: formData,
+        })
 
-        const result = await response.json()
-        if (!response.ok) {
-          const detail = result?.error ?? result?.message ?? null
-          const status = response.status
-          if (detail) {
-            throw new Error(detail)
-          } else if (status === 400) {
-            throw new Error('Fichier invalide ou paramètre manquant.')
-          } else if (status === 500) {
-            throw new Error('Erreur serveur lors du traitement. Vérifiez que le fichier n\'est pas corrompu ou protégé.')
-          } else {
-            throw new Error(`Erreur ${status} lors du traitement du fichier.`)
-          }
+        if (fnError) {
+          let message = fnError.message
+          try {
+            const parsed = JSON.parse(fnError.message)
+            message = parsed.error ?? parsed.message ?? fnError.message
+          } catch { /* message brut */ }
+          throw new Error(message)
         }
 
-        const count: number = result.data?.total_phrases ?? 0
+        const count: number = data?.data?.total_phrases ?? 0
         setAddSuccess(`${count} phrase${count > 1 ? 's' : ''} ajoutée${count > 1 ? 's' : ''} avec succès.`)
       } else if (manualText.trim()) {
         // Saisie manuelle → insertion directe, en filtrant les doublons

@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,24 +19,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 1. Vérifier le JWT Supabase de l'utilisateur
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Token d'authentification requis" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // On utilise le service_role key mais on passe le JWT user via getUser(jwt)
-    // pour valider que le token est bien émis par Supabase Auth
+    // Pattern officiel Supabase : le client lit le JWT depuis les headers de la requête
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+        global: {
+          headers: { Authorization: req.headers.get("Authorization") ?? "" },
+        },
+      },
     );
 
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+    // 1. Vérifier l'utilisateur connecté
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: "Utilisateur non authentifié" }),
@@ -46,14 +44,6 @@ Deno.serve(async (req) => {
     }
 
     // 2. Lire le body multipart
-    const contentType = req.headers.get("content-type") ?? "";
-    if (!contentType.includes("multipart/form-data")) {
-      return new Response(
-        JSON.stringify({ error: "Content-Type multipart/form-data requis" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const projectId = formData.get("project_id") as string | null;
@@ -87,12 +77,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Forwarder le fichier au serveur Python
+    // 4. Forwarder au serveur Python
     const pythonServerUrl = Deno.env.get("PYTHON_SERVER_URL");
     const apiSecret = Deno.env.get("PYTHON_API_SECRET");
 
     if (!pythonServerUrl || !apiSecret) {
-      console.error("Variables d'environnement manquantes : PYTHON_SERVER_URL ou PYTHON_API_SECRET");
+      console.error("Variables manquantes : PYTHON_SERVER_URL ou PYTHON_API_SECRET");
       return new Response(
         JSON.stringify({ error: "Configuration serveur manquante" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -106,9 +96,7 @@ Deno.serve(async (req) => {
 
     const pythonResponse = await fetch(`${pythonServerUrl}/api/upload-phrases`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiSecret}`,
-      },
+      headers: { Authorization: `Bearer ${apiSecret}` },
       body: forwardForm,
     });
 
