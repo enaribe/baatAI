@@ -104,7 +104,10 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`,
           {
             method: 'POST',
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
             body: formData,
           },
         )
