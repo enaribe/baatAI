@@ -100,20 +100,22 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
         formData.append('project_id', projectId)
         formData.append('start_position', String(nextPosition))
 
-        const { data, error: fnError } = await supabase.functions.invoke('upload-phrases', {
+        // Utiliser fetch directement : supabase.functions.invoke perd l'apikey header avec FormData
+        const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`
+        const fnRes = await fetch(fnUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
           body: formData,
         })
-
-        if (fnError) {
-          let message = fnError.message
-          try {
-            const parsed = JSON.parse(fnError.message)
-            message = parsed.error ?? parsed.message ?? fnError.message
-          } catch { /* message brut */ }
-          throw new Error(message)
+        const fnJson = await fnRes.json()
+        if (!fnRes.ok) {
+          throw new Error(fnJson.error ?? 'Erreur du serveur de traitement')
         }
 
-        const count: number = data?.data?.total_phrases ?? 0
+        const count: number = fnJson.data?.total_phrases ?? 0
         setAddSuccess(`${count} phrase${count > 1 ? 's' : ''} ajoutée${count > 1 ? 's' : ''} avec succès.`)
       } else if (manualText.trim()) {
         // Saisie manuelle → insertion directe, en filtrant les doublons

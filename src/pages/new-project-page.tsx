@@ -170,28 +170,29 @@ export function NewProjectPage() {
         if (phrasesSource === 'file' && selectedFile) {
           setUploading(true)
 
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) throw new Error('Session expirée, veuillez vous reconnecter.')
+
           const formData = new FormData()
           formData.append('file', selectedFile)
           formData.append('project_id', project.id)
 
-          const { data, error: fnError } = await supabase.functions.invoke('upload-phrases', {
+          // Utiliser fetch directement : supabase.functions.invoke perd l'apikey header avec FormData
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`
+          const fnRes = await fetch(fnUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
             body: formData,
           })
 
           setUploading(false)
 
-          if (fnError) {
-            // Extraire le message d'erreur depuis la réponse de l'Edge Function
-            let message = fnError.message
-            try {
-              const parsed = JSON.parse(fnError.message)
-              message = parsed.error ?? parsed.message ?? fnError.message
-            } catch { /* message brut */ }
-            throw new Error(message)
-          }
-
-          if (!data) {
-            throw new Error('Aucune donnée retournée par le serveur.')
+          const fnJson = await fnRes.json()
+          if (!fnRes.ok) {
+            throw new Error(fnJson.error ?? 'Erreur du serveur de traitement')
           }
         }
 

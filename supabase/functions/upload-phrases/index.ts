@@ -19,7 +19,33 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Pattern officiel Supabase : le client lit le JWT depuis les headers de la requête
+    // JWT explicite : avec service_role, getUser() sans argument n'utilise pas toujours le header Authorization
+    const authHeader = req.headers.get("Authorization");
+    const jwtMatch = authHeader?.match(/^Bearer\s+(.+)$/i);
+    const jwt = jwtMatch?.[1];
+    if (!jwt) {
+      return new Response(
+        JSON.stringify({ error: "Utilisateur non authentifié" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Client avec anon key pour valider le JWT utilisateur (nécessaire pour ES256)
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+        global: {
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
+      },
+    );
+
+    // Client service_role pour les opérations admin (lecture/écriture sans RLS)
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -28,14 +54,11 @@ Deno.serve(async (req) => {
           autoRefreshToken: false,
           persistSession: false,
         },
-        global: {
-          headers: { Authorization: req.headers.get("Authorization") ?? "" },
-        },
       },
     );
 
-    // 1. Vérifier l'utilisateur connecté
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // 1. Vérifier l'utilisateur connecté via le client anon (compatible ES256)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: "Utilisateur non authentifié" }),
