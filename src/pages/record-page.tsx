@@ -146,10 +146,11 @@ export function RecordPage() {
   const isCurrentRecorded = currentPhrase ? recordedIds.has(currentPhrase.id) : false
 
   const goNext = useCallback(() => {
+    console.log('[goNext] currentIndex=%d totalPhrases=%d pageState=%s', currentIndex, totalPhrases, pageState)
     if (currentIndex < totalPhrases - 1) {
       setCurrentIndex((i) => i + 1)
     }
-  }, [currentIndex, totalPhrases])
+  }, [currentIndex, totalPhrases, pageState])
 
   const goPrev = useCallback(() => {
     if (currentIndex > 0) {
@@ -382,6 +383,7 @@ export function RecordPage() {
   }
 
   // --- RECORDING UI ---
+  console.log('[RecordPage] render pageState=%s currentIndex=%d totalRecorded=%d totalPhrases=%d redoMode=%s', pageState, currentIndex, totalRecorded, totalPhrases, redoMode)
   const progressPct = totalPhrases > 0 ? (totalRecorded / totalPhrases) * 100 : 0
   const isRecording = pageState === 'recording'
   const isUploading = pageState === 'uploading'
