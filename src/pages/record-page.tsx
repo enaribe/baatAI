@@ -54,6 +54,8 @@ export function RecordPage() {
   // Queue de checks en arrière-plan (non bloquants)
   const pendingChecks = useRef<PendingCheck[]>([])
   const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Ref pour accéder à sessionData depuis le polling sans créer de dépendance cyclique
+  const sessionDataRef = useRef<SessionData | null>(null)
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
@@ -65,6 +67,7 @@ export function RecordPage() {
         const res = await fetch(`${supabaseUrl}/functions/v1/get-session?token=${token}`)
         const json = await res.json()
         if (!res.ok || json.error) throw new Error(json.error || 'Session invalide ou expirée')
+        sessionDataRef.current = json.data
         setSessionData(json.data)
         setRecordedIds(new Set(json.data.recorded_phrase_ids))
         const firstUnrecorded = json.data.phrases.findIndex(
@@ -102,10 +105,8 @@ export function RecordPage() {
 
           if (rec.processing_status === 'completed' || rec.processing_status === 'failed') {
             if (rec.is_valid === false || rec.processing_status === 'failed') {
-              setSessionData((prev) => {
-                if (!prev) return prev
-                const phrase = prev.phrases.find((p) => p.id === check.phraseId)
-                if (!phrase) return prev
+              const phrase = sessionDataRef.current?.phrases.find((p) => p.id === check.phraseId)
+              if (phrase) {
                 const entry: RejectedEntry = {
                   phraseId: phrase.id,
                   phraseContent: phrase.content,
@@ -118,8 +119,7 @@ export function RecordPage() {
                   return [...prevEntries, entry]
                 })
                 setNewRejectionCount((n) => n + 1)
-                return prev
-              })
+              }
             }
             // completed (valide ou invalide) → ne plus poller
           } else {
@@ -393,24 +393,30 @@ export function RecordPage() {
       {/* === ZONE HAUTE : Progression (≈20%) === */}
       <div className="flex-[0_0_20%] flex flex-col items-center justify-center px-6 pt-4 relative">
 
-        {/* Cloche de notifications rejets */}
-        {(hasRejections || newRejectionCount > 0) && (
-          <button
-            onClick={() => {
-              setShowRejectedPanel((v) => !v)
-              setNewRejectionCount(0)
-            }}
-            className="absolute top-3 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-white border border-sand-200 shadow-sm active:scale-95 transition-transform"
-            aria-label={`${rejectedEntries.length} enregistrement${rejectedEntries.length > 1 ? 's' : ''} rejeté${rejectedEntries.length > 1 ? 's' : ''}`}
-          >
-            <Bell className={`w-5 h-5 ${hasRejections ? 'text-amber-500' : 'text-sand-400'}`} />
-            {newRejectionCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4.5 h-4.5 min-w-[1.1rem] min-h-[1.1rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-black leading-none px-1">
-                {newRejectionCount}
-              </span>
-            )}
-          </button>
-        )}
+        {/* Cloche de notifications rejets — toujours visible */}
+        <button
+          onClick={() => {
+            setShowRejectedPanel((v) => !v)
+            setNewRejectionCount(0)
+          }}
+          className={[
+            'absolute top-3 right-4 flex items-center justify-center w-10 h-10 rounded-full border shadow-sm active:scale-95 transition-all duration-200',
+            hasRejections
+              ? 'bg-amber-50 border-amber-300 shadow-amber-100'
+              : 'bg-white border-sand-200',
+          ].join(' ')}
+          aria-label={hasRejections
+            ? `${rejectedEntries.length} enregistrement${rejectedEntries.length > 1 ? 's' : ''} rejeté${rejectedEntries.length > 1 ? 's' : ''}`
+            : 'Notifications qualité'
+          }
+        >
+          <Bell className={`w-5 h-5 transition-colors ${hasRejections ? 'text-amber-500' : 'text-sand-300'}`} />
+          {newRejectionCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[1.1rem] min-h-[1.1rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-black leading-none px-1">
+              {newRejectionCount}
+            </span>
+          )}
+        </button>
 
         {/* Header */}
         <div className="flex items-center gap-2 mb-4">

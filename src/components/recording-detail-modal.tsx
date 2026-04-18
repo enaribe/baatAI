@@ -166,12 +166,25 @@ export function RecordingDetailModal({ recording, phrase, session, onClose }: Re
                 decimals={2}
               />
               <MetricCard
-                label="Silence"
+                label="Silence VAD"
                 value={recording.silence_ratio != null ? recording.silence_ratio * 100 : null}
                 unit="%"
                 decimals={1}
               />
             </div>
+
+            {(recording.mos_overall != null || recording.mos_signal != null || recording.mos_noise != null) && (
+              <div className="mt-3">
+                <p className="text-[10px] font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-wider mb-2">
+                  DNSMOS P.835 — Qualité perceptuelle
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <MetricCard label="Global" value={recording.mos_overall} unit="/5" decimals={2} />
+                  <MetricCard label="Signal" value={recording.mos_signal} unit="/5" decimals={2} />
+                  <MetricCard label="Bruit" value={recording.mos_noise} unit="/5" decimals={2} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

@@ -70,6 +70,9 @@ export interface Recording {
   silence_ratio: number | null
   speech_energy: number | null
   dc_offset: number | null
+  mos_signal: number | null
+  mos_noise: number | null
+  mos_overall: number | null
   rejection_reasons: string[] | null
   qc_profile_used: string | null
   uploaded_at: string
