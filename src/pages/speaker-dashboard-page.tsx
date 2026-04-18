@@ -74,7 +74,7 @@ export function SpeakerDashboardPage() {
   const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'Locuteur'
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-[42rem] mx-auto px-4 py-8">
       {/* Greeting */}
       <div className="mb-6">
         <h1
