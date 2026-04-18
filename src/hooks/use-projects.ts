@@ -23,7 +23,7 @@ export function useProjects(): UseProjectsReturn {
   const [error, setError] = useState<string | null>(null)
 
   const fetchProjects = useCallback(async () => {
-    if (!user) { setLoading(false); return }
+    if (!user) return
 
     setLoading(true)
     setError(null)

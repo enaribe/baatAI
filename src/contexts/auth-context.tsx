@@ -33,16 +33,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [role, setRole] = useState<UserRole | null>(null)
 
   const fetchRole = useCallback(async (uid: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', uid)
-        .single() as unknown as { data: { role: UserRole } | null }
-      setRole(data?.role ?? 'client')
-    } catch {
-      setRole('client')
-    }
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', uid)
+      .single() as unknown as { data: { role: UserRole } | null }
+    setRole(data?.role ?? null)
   }, [])
 
   useEffect(() => {
