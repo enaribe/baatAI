@@ -6,7 +6,7 @@ export function SpeakerPendingPage() {
 
   return (
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-[28rem] text-center">
         <div className="relative inline-flex mb-6">
           <div className="w-20 h-20 rounded-2xl bg-amber-100 flex items-center justify-center">
             <Clock className="w-10 h-10 text-amber-500" />
@@ -19,7 +19,7 @@ export function SpeakerPendingPage() {
         >
           Profil en cours de validation
         </h1>
-        <p className="text-sand-500 text-sm leading-relaxed mb-6 max-w-sm mx-auto">
+        <p className="text-sand-500 text-sm leading-relaxed mb-6 max-w-[24rem] mx-auto">
           Votre profil a bien été reçu. Notre équipe le vérifie dans les <strong className="text-sand-700">48 heures</strong>.
           Vous recevrez un email dès l'approbation.
         </p>
