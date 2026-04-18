@@ -68,6 +68,8 @@ export interface Recording {
   snr_db: number | null
   clipping_pct: number | null
   silence_ratio: number | null
+  speech_energy: number | null
+  dc_offset: number | null
   rejection_reasons: string[] | null
   qc_profile_used: string | null
   uploaded_at: string

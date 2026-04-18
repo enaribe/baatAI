@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/auth-context'
+import { ToastProvider } from './contexts/toast-context'
+import { ToastContainer } from './components/ui/toast'
 import { ProtectedRoute } from './components/protected-route'
 import { AppLayout } from './components/layout/app-layout'
 import { PublicLayout } from './components/layout/public-layout'
@@ -15,7 +17,9 @@ export function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ToastProvider>
+          <ToastContainer />
+          <Routes>
           {/* Public routes */}
           <Route
             path="/login"
@@ -72,7 +76,8 @@ export function App() {
           {/* Landing page */}
           <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   )

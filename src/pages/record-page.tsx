@@ -1,10 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { Square, SkipForward, SkipBack, CheckCircle2, Loader2, AlertCircle, RotateCcw, Mic } from 'lucide-react'
+import { Square, SkipForward, SkipBack, CheckCircle2, Loader2, AlertCircle, RotateCcw, Mic, AlertTriangle } from 'lucide-react'
 import { useRecorder } from '../hooks/use-recorder'
-import type { Phrase } from '../types/database'
+import { translateRejectReasons, getRejectionInfo } from '../lib/qc-translations'
+import type { Phrase, Recording } from '../types/database'
 
-type PageState = 'loading' | 'ready' | 'recording' | 'uploading' | 'done' | 'error'
+type PageState = 'loading' | 'ready' | 'recording' | 'uploading' | 'processing' | 'done' | 'error'
+
+interface QcFeedback {
+  phraseId: string
+  kind: 'valid' | 'rejected' | 'failed'
+  reasons: string[]
+}
 
 interface SessionData {
   session: {
@@ -29,6 +36,8 @@ export function RecordPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const [redoMode, setRedoMode] = useState(false)
+  const [, setPendingRecordingId] = useState<string | null>(null)
+  const [qcFeedback, setQcFeedback] = useState<QcFeedback | null>(null)
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
@@ -79,9 +88,49 @@ export function RecordPage() {
   const handleRedo = useCallback(() => {
     setRedoMode(true)
     setErrorMessage('')
+    setQcFeedback(null)
   }, [])
 
+  const pollQcStatus = useCallback(
+    async (recordingId: string, phraseId: string): Promise<QcFeedback | null> => {
+      const MAX_ATTEMPTS = 20
+      const INTERVAL_MS = 1500
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        try {
+          const res = await fetch(
+            `${supabaseUrl}/functions/v1/get-recording-status?token=${token}&recording_id=${recordingId}`,
+            { headers: { apikey: supabaseAnonKey, authorization: `Bearer ${supabaseAnonKey}` } },
+          )
+          const json = await res.json()
+          if (res.ok && json.data) {
+            const rec = json.data as Partial<Recording>
+            if (rec.processing_status === 'completed') {
+              if (rec.is_valid) {
+                return { phraseId, kind: 'valid', reasons: [] }
+              }
+              return {
+                phraseId,
+                kind: 'rejected',
+                reasons: rec.rejection_reasons ?? [],
+              }
+            }
+            if (rec.processing_status === 'failed') {
+              return { phraseId, kind: 'failed', reasons: rec.rejection_reasons ?? [] }
+            }
+          }
+        } catch (err) {
+          console.error('pollQcStatus error:', err)
+        }
+        await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS))
+      }
+      return null
+    },
+    [supabaseUrl, supabaseAnonKey, token],
+  )
+
   const canRecord = (!isCurrentRecorded || redoMode) && pageState === 'ready'
+  const isProcessing = pageState === 'processing'
+  const feedbackForCurrent = qcFeedback && qcFeedback.phraseId === currentPhrase?.id ? qcFeedback : null
 
   const handleStartRecording = useCallback(async () => {
     setPageState('recording')
@@ -136,26 +185,48 @@ export function RecordPage() {
       const json = await res.json()
       if (!res.ok || json.error) throw new Error(json.error || "Erreur lors de la soumission")
 
-      setRecordedIds((prev) => new Set([...prev, currentPhrase.id]))
-      setRedoMode(false)
+      const recordingId = json.data?.recording_id as string | undefined
+      const submittedPhraseId = currentPhrase.id
 
-      const nextUnrecorded = phrases.findIndex(
-        (p, i) => i > currentIndex && !recordedIds.has(p.id) && p.id !== currentPhrase.id,
-      )
-      if (nextUnrecorded >= 0) {
-        setCurrentIndex(nextUnrecorded)
-      } else if (totalRecorded + 1 >= totalPhrases && !redoMode) {
-        setPageState('done')
-        return
-      } else {
-        goNext()
+      setRedoMode(false)
+      setPageState('processing')
+      setPendingRecordingId(recordingId ?? null)
+      setQcFeedback(null)
+
+      let feedback: QcFeedback | null = null
+      if (recordingId) {
+        feedback = await pollQcStatus(recordingId, submittedPhraseId)
       }
+
+      if (!feedback || feedback.kind === 'valid') {
+        setQcFeedback(feedback)
+        setRecordedIds((prev) => new Set([...prev, submittedPhraseId]))
+
+        const nextUnrecorded = phrases.findIndex(
+          (p, i) => i > currentIndex && !recordedIds.has(p.id) && p.id !== submittedPhraseId,
+        )
+        if (nextUnrecorded >= 0) {
+          setCurrentIndex(nextUnrecorded)
+        } else if (totalRecorded + 1 >= totalPhrases && !redoMode) {
+          setPageState('done')
+          setPendingRecordingId(null)
+          return
+        } else {
+          goNext()
+        }
+      } else {
+        setQcFeedback(feedback)
+        setRedoMode(true)
+      }
+
+      setPendingRecordingId(null)
       setPageState('ready')
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Erreur d'upload")
+      setPendingRecordingId(null)
       setPageState('ready')
     }
-  }, [recorder, currentPhrase, sessionData, token, supabaseUrl, supabaseAnonKey, phrases, currentIndex, recordedIds, totalRecorded, totalPhrases, redoMode, goNext])
+  }, [recorder, currentPhrase, sessionData, token, supabaseUrl, supabaseAnonKey, phrases, currentIndex, recordedIds, totalRecorded, totalPhrases, redoMode, goNext, pollQcStatus])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -314,16 +385,28 @@ export function RecordPage() {
         {/* Contenu central */}
         <div className="max-w-[30rem] w-full px-14 text-center">
           {/* Statut badge */}
-          {isCurrentRecorded && !redoMode && (
+          {isCurrentRecorded && !redoMode && !feedbackForCurrent && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-100 text-secondary-700 text-xs font-bold mb-4 border border-secondary-200/60">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Déjà enregistrée
             </div>
           )}
-          {redoMode && (
+          {redoMode && !feedbackForCurrent && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold mb-4 border border-amber-200/60">
               <RotateCcw className="w-3.5 h-3.5" />
               Mode correction
+            </div>
+          )}
+          {feedbackForCurrent && feedbackForCurrent.kind === 'valid' && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-100 text-secondary-700 text-xs font-bold mb-4 border border-secondary-200/60">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Audio validé
+            </div>
+          )}
+          {feedbackForCurrent && (feedbackForCurrent.kind === 'rejected' || feedbackForCurrent.kind === 'failed') && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold mb-4 border border-red-200/60">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {feedbackForCurrent.kind === 'failed' ? 'Analyse impossible' : 'Audio rejeté — à refaire'}
             </div>
           )}
 
@@ -340,11 +423,42 @@ export function RecordPage() {
             {currentPhrase?.content ?? '...'}
           </p>
 
+          {/* Conseils QC */}
+          {feedbackForCurrent && (feedbackForCurrent.kind === 'rejected' || feedbackForCurrent.kind === 'failed') && feedbackForCurrent.reasons.length > 0 && (
+            <div className="mt-4 px-4 py-3 bg-red-50 rounded-xl text-left border border-red-200/60 space-y-2 max-w-[26rem] mx-auto">
+              {feedbackForCurrent.reasons.map((code) => {
+                const info = getRejectionInfo(code)
+                return (
+                  <div key={code} className="text-xs">
+                    <p className="font-bold text-red-700">
+                      {info?.label ?? code}
+                    </p>
+                    {info && (
+                      <p className="text-red-600 mt-0.5 italic">→ {info.advice}</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {feedbackForCurrent && feedbackForCurrent.kind === 'failed' && feedbackForCurrent.reasons.length === 0 && (
+            <div className="mt-4 px-4 py-2.5 bg-red-50 rounded-xl text-red-600 text-xs text-center border border-red-200/60">
+              Le traitement automatique a échoué. Réessayez dans un instant.
+            </div>
+          )}
+
           {/* Erreurs */}
           {(recorder.error || (errorMessage && pageState === 'ready')) && (
             <div className="mt-4 px-4 py-2.5 bg-red-50 rounded-xl text-red-600 text-xs text-center border border-red-200/60">
               {recorder.error || errorMessage}
             </div>
+          )}
+
+          {/* Info raisons traduites (concises) */}
+          {feedbackForCurrent && feedbackForCurrent.kind === 'rejected' && (
+            <p className="sr-only">
+              {translateRejectReasons(feedbackForCurrent.reasons).join(', ')}
+            </p>
           )}
         </div>
       </div>
@@ -366,6 +480,14 @@ export function RecordPage() {
               <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
               <span className="text-sm text-sand-600 font-semibold tabular-nums">
                 Envoi {uploadProgress}%
+              </span>
+            </div>
+          )}
+          {isProcessing && (
+            <div className="flex items-center gap-2 animate-fade-in">
+              <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+              <span className="text-sm text-sand-600 font-semibold">
+                Analyse qualité...
               </span>
             </div>
           )}
@@ -396,7 +518,7 @@ export function RecordPage() {
 
             <button
               onClick={isRecording ? handleStopRecording : handleStartRecording}
-              disabled={isUploading || (!canRecord && pageState === 'ready')}
+              disabled={isUploading || isProcessing || (!canRecord && pageState === 'ready')}
               className={[
                 'relative w-[88px] h-[88px] rounded-full flex items-center justify-center',
                 'shadow-xl transition-all duration-200',
@@ -409,7 +531,7 @@ export function RecordPage() {
               style={{ minWidth: '88px', minHeight: '88px', touchAction: 'manipulation' }}
               aria-label={isRecording ? "Arrêter l'enregistrement" : 'Commencer à enregistrer'}
             >
-              {isUploading ? (
+              {isUploading || isProcessing ? (
                 <Loader2 className="w-9 h-9 text-white animate-spin" />
               ) : isRecording ? (
                 <Square className="w-8 h-8 text-white" fill="white" />
@@ -426,11 +548,13 @@ export function RecordPage() {
             ? 'Appuyez pour arrêter — lisez clairement'
             : isUploading
               ? 'Envoi en cours, attendez...'
-              : redoMode
-                ? 'Appuyez pour ré-enregistrer'
-                : isCurrentRecorded
-                  ? 'Enregistrée ✓ — Refaire ou continuer'
-                  : 'Appuyez pour enregistrer · Espace / Entrée'
+              : isProcessing
+                ? 'Vérification automatique de la qualité audio...'
+                : redoMode
+                  ? 'Appuyez pour ré-enregistrer'
+                  : isCurrentRecorded
+                    ? 'Enregistrée ✓ — Refaire ou continuer'
+                    : 'Appuyez pour enregistrer · Espace / Entrée'
           }
         </p>
       </div>

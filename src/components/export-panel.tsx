@@ -1,15 +1,16 @@
 import { useState } from 'react'
-import { Download, Package, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Download, Package, Loader2, CheckCircle2, XCircle, Clock, ShieldCheck } from 'lucide-react'
 import { Button } from './ui/button'
 import { Select } from './ui/select'
 import { Badge } from './ui/badge'
-import { useExports } from '../hooks/use-exports'
+import { useExports, type ExportFilters } from '../hooks/use-exports'
 import type { Export, ExportFormat } from '../types/database'
 
 interface ExportPanelProps {
   projectId: string
   exports: Export[]
   onExportRequested: () => void
+  validRecordingsCount?: number
 }
 
 const FORMAT_OPTIONS = [
@@ -32,14 +33,20 @@ const statusVariants: Record<string, 'pending' | 'processing' | 'valid' | 'rejec
   failed: 'rejected',
 }
 
-export function ExportPanel({ projectId, exports: exportsList, onExportRequested }: ExportPanelProps) {
+export function ExportPanel({ projectId, exports: exportsList, onExportRequested, validRecordingsCount }: ExportPanelProps) {
   const [format, setFormat] = useState<ExportFormat>('ljspeech')
+  const [minSnr, setMinSnr] = useState<string>('')
   const [requesting, setRequesting] = useState(false)
   const { requestExport, downloadExport, downloading, error } = useExports()
 
   const handleRequest = async () => {
     setRequesting(true)
-    await requestExport(projectId, format)
+    const filters: ExportFilters = {}
+    const snrValue = parseFloat(minSnr)
+    if (!Number.isNaN(snrValue) && snrValue > 0) {
+      filters.min_snr_db = snrValue
+    }
+    await requestExport(projectId, format, filters)
     onExportRequested()
     setRequesting(false)
   }
@@ -75,19 +82,58 @@ export function ExportPanel({ projectId, exports: exportsList, onExportRequested
       </div>
 
       {/* New export */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="flex-1">
-          <Select
-            id="export-format"
-            value={format}
-            onChange={(e) => setFormat(e.target.value as ExportFormat)}
-            options={FORMAT_OPTIONS}
-          />
+      <div className="rounded-2xl border border-sand-200/60 dark:border-sand-800 bg-sand-50/60 dark:bg-sand-800/20 p-4 mb-6">
+        <div className="flex items-start gap-2 mb-3">
+          <ShieldCheck className="w-4 h-4 text-secondary-500 mt-0.5 shrink-0" />
+          <p className="text-xs text-sand-600 dark:text-sand-400 leading-relaxed">
+            Seuls les enregistrements <span className="font-semibold text-secondary-600 dark:text-secondary-400">validés par le QC</span> sont inclus dans l'export
+            {typeof validRecordingsCount === 'number' && (
+              <> ({<span className="tabular-nums font-bold">{validRecordingsCount}</span>} disponible{validRecordingsCount > 1 ? 's' : ''})</>
+            )}.
+          </p>
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label
+              htmlFor="export-format"
+              className="block text-[11px] font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wider mb-1"
+            >
+              Format
+            </label>
+            <Select
+              id="export-format"
+              value={format}
+              onChange={(e) => setFormat(e.target.value as ExportFormat)}
+              options={FORMAT_OPTIONS}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="export-min-snr"
+              className="block text-[11px] font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wider mb-1"
+            >
+              SNR minimum (optionnel)
+            </label>
+            <input
+              id="export-min-snr"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.5"
+              placeholder="ex: 15"
+              value={minSnr}
+              onChange={(e) => setMinSnr(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-sand-900 border border-sand-200 dark:border-sand-700 text-sm text-sand-800 dark:text-sand-100 placeholder:text-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all"
+            />
+          </div>
+        </div>
+
         <Button
           onClick={handleRequest}
           loading={requesting}
           icon={requesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          className="w-full sm:w-auto"
         >
           Générer l'export
         </Button>

@@ -2,8 +2,12 @@ import { useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { ExportFormat } from '../types/database'
 
+export interface ExportFilters {
+  min_snr_db?: number
+}
+
 interface UseExportsReturn {
-  requestExport: (projectId: string, format: ExportFormat) => Promise<void>
+  requestExport: (projectId: string, format: ExportFormat, filters?: ExportFilters) => Promise<void>
   downloading: boolean
   downloadExport: (storagePath: string, fileName: string) => Promise<void>
   error: string | null
@@ -13,24 +17,27 @@ export function useExports(): UseExportsReturn {
   const [error, setError] = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
 
-  const requestExport = useCallback(async (projectId: string, format: ExportFormat) => {
-    setError(null)
-    try {
-      const { error: insertError } = await supabase
-        .from('exports')
-        .insert({
-          project_id: projectId,
-          format,
-          filters_applied: {},
-        } as never)
+  const requestExport = useCallback(
+    async (projectId: string, format: ExportFormat, filters: ExportFilters = {}) => {
+      setError(null)
+      try {
+        const { error: insertError } = await supabase
+          .from('exports')
+          .insert({
+            project_id: projectId,
+            format,
+            filters_applied: filters,
+          } as never)
 
-      if (insertError) throw insertError
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Erreur lors de la demande d'export"
-      setError(message)
-      console.error('requestExport error:', err)
-    }
-  }, [])
+        if (insertError) throw insertError
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Erreur lors de la demande d'export"
+        setError(message)
+        console.error('requestExport error:', err)
+      }
+    },
+    [],
+  )
 
   const downloadExport = useCallback(async (storagePath: string, fileName: string) => {
     setDownloading(true)

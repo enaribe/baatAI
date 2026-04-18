@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle } from 'lucide-react'
 import { useProject } from '../hooks/use-project'
 import { useRealtimeRecordings } from '../hooks/use-realtime-recordings'
+import { useToast } from '../hooks/use-toast'
+import { translateRejectReasons } from '../lib/qc-translations'
 import { supabase } from '../lib/supabase'
 import { Badge } from '../components/ui/badge'
 import { ProgressBar } from '../components/ui/progress-bar'
@@ -75,10 +77,33 @@ export function ProjectPage() {
     }
   }, [project, navigate])
 
+  const { notify } = useToast()
+
+  const handleRecordingUpdate = useCallback(
+    (recording: Parameters<NonNullable<Parameters<typeof useRealtimeRecordings>[0]['onUpdate']>>[0]) => {
+      refetch()
+      if (recording.processing_status === 'failed') {
+        notify({
+          variant: 'error',
+          title: 'Échec du traitement',
+          message: 'Un enregistrement n\'a pas pu être analysé. Consultez l\'onglet Enregistrements.',
+        })
+      } else if (recording.processing_status === 'completed' && recording.is_valid === false) {
+        const reasons = translateRejectReasons(recording.rejection_reasons).join(', ') || 'critères QC non atteints'
+        notify({
+          variant: 'warning',
+          title: 'Enregistrement rejeté',
+          message: `Raison : ${reasons}.`,
+        })
+      }
+    },
+    [refetch, notify],
+  )
+
   useRealtimeRecordings({
     projectId: id,
     onInsert: useCallback(() => refetch(), [refetch]),
-    onUpdate: useCallback(() => refetch(), [refetch]),
+    onUpdate: handleRecordingUpdate,
   })
 
   if (loading) {
@@ -287,6 +312,7 @@ export function ProjectPage() {
             projectId={project.id}
             exports={exports}
             onExportRequested={refetch}
+            validRecordingsCount={validRecordings}
           />
         )}
       </div>

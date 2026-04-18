@@ -1,0 +1,4 @@
+ALTER TABLE public.exports
+  ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS error_message TEXT,
+  ADD COLUMN IF NOT EXISTS recording_count INT;
