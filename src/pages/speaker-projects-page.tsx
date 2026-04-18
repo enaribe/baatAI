@@ -44,10 +44,10 @@ export function SpeakerProjectsPage() {
     }
   }
 
-  if (!profile || profile.verification_status !== 'approved') {
+  if (!profile) {
     return (
       <div className="max-w-[42rem] mx-auto px-4 py-8 text-center">
-        <p className="text-sand-500">Votre profil doit être approuvé pour accéder aux projets.</p>
+        <p className="text-sand-500">Chargement du profil…</p>
       </div>
     )
   }

@@ -40,10 +40,10 @@ export function SpeakerValidatePage() {
     }
   }
 
-  if (!profile || profile.verification_status !== 'approved') {
+  if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50 px-6">
-        <p className="text-sand-500 text-center">Profil non approuvé.</p>
+        <p className="text-sand-500 text-center">Chargement du profil…</p>
       </div>
     )
   }
