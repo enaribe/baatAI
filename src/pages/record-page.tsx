@@ -144,7 +144,6 @@ export function RecordPage() {
   const totalPhrases = phrases.length
   const totalRecorded = recordedIds.size
   const isCurrentRecorded = currentPhrase ? recordedIds.has(currentPhrase.id) : false
-  const allDone = totalRecorded >= totalPhrases && totalPhrases > 0 && !redoMode
 
   const goNext = useCallback(() => {
     if (currentIndex < totalPhrases - 1) {
@@ -325,7 +324,7 @@ export function RecordPage() {
   }
 
   // --- DONE ---
-  if (pageState === 'done' || allDone) {
+  if (pageState === 'done') {
     return (
       <div className="h-dvh flex flex-col items-center justify-center bg-sand-50 px-6">
         <div className="relative mb-6">
