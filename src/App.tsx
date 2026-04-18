@@ -27,6 +27,7 @@ import { SpeakerProfilePage } from './pages/speaker-profile-page'
 import { SpeakerRecordPage } from './pages/speaker-record-page'
 // Admin
 import { AdminSpeakersPage } from './pages/admin-speakers-page'
+import { AdminWithdrawalsPage } from './pages/admin-withdrawals-page'
 
 export function App() {
   return (
@@ -153,6 +154,14 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AppLayout><AdminSpeakersPage /></AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/withdrawals"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AppLayout><AdminWithdrawalsPage /></AppLayout>
                 </ProtectedRoute>
               }
             />
