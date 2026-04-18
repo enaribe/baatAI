@@ -96,7 +96,7 @@ export function AdminWithdrawalsPage() {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-[56rem] mx-auto px-4 py-8">
       <h1
         className="text-2xl font-extrabold text-sand-900 dark:text-sand-100 mb-6"
         style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}

@@ -71,7 +71,7 @@ export function SpeakerProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-[42rem] mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1
           className="text-2xl font-extrabold text-sand-900 dark:text-sand-100"

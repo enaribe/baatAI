@@ -334,7 +334,7 @@ export function SpeakerRecordPage() {
         )}
 
         {rejectedPhrases.length > 0 && (
-          <div className="mt-3 w-full max-w-sm rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="mt-3 w-full max-w-[24rem] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="text-xs font-bold text-amber-800 mb-2 flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5" />
               {rejectedPhrases.length} phrase{rejectedPhrases.length > 1 ? 's' : ''} à corriger

@@ -46,14 +46,14 @@ export function SpeakerProjectsPage() {
 
   if (!profile || profile.verification_status !== 'approved') {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-[42rem] mx-auto px-4 py-8 text-center">
         <p className="text-sand-500">Votre profil doit être approuvé pour accéder aux projets.</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-[42rem] mx-auto px-4 py-8">
       <h1
         className="text-2xl font-extrabold text-sand-900 dark:text-sand-100 mb-6"
         style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}

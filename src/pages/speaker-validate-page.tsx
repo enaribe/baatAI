@@ -90,7 +90,7 @@ export function SpeakerValidatePage() {
 
       {/* Phrase attendue */}
       <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[24rem]">
           <p className="text-[11px] font-bold text-sand-400 uppercase tracking-widest text-center mb-4">
             L'orateur devait lire :
           </p>
