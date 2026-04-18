@@ -72,7 +72,7 @@ export function SpeakerOnboardingPage() {
         languages: form.languages,
         dialects: form.dialects,
         bio: form.bio || null,
-        verification_status: 'pending',
+        verification_status: 'approved',
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (err) {
@@ -80,7 +80,7 @@ export function SpeakerOnboardingPage() {
       setLoading(false)
       return
     }
-    navigate('/speaker/pending')
+    navigate('/speaker/dashboard')
   }
 
   const canNext = () => {
