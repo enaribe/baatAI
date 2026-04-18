@@ -92,8 +92,8 @@ export function SpeakerOnboardingPage() {
   const stepLabels = ['Identité', 'Langues', 'Présentation', 'Finaliser']
 
   return (
-    <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-sand-50 px-4 py-8">
+      <div className="w-full max-w-lg mx-auto">
         {/* Titre */}
         <div className="text-center mb-8">
           <h1
