@@ -12,7 +12,10 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, loading, role } = useAuth()
 
-  if (loading) {
+  // Attendre que l'auth ET le rôle soient chargés avant de décider
+  const roleLoading = user !== null && role === null
+
+  if (loading || (allowedRoles && roleLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -25,7 +28,6 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Rediriger vers l'espace correspondant au rôle réel
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
     return <Navigate to="/dashboard" replace />
   }
