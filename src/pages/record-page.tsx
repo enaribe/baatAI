@@ -531,7 +531,8 @@ export function RecordPage() {
         <button
           onClick={goPrev}
           disabled={currentIndex === 0 || pageState !== 'ready'}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-sand-100 text-sand-500 hover:bg-sand-200 hover:text-sand-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-sand-100 text-sand-500 hover:bg-sand-200 hover:text-sand-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          style={{ touchAction: 'manipulation' }}
           aria-label="Phrase précédente"
         >
           <SkipBack className="w-5 h-5" />
@@ -541,7 +542,8 @@ export function RecordPage() {
         <button
           onClick={goNext}
           disabled={currentIndex >= totalPhrases - 1 || pageState !== 'ready'}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-sand-100 text-sand-500 hover:bg-sand-200 hover:text-sand-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-sand-100 text-sand-500 hover:bg-sand-200 hover:text-sand-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          style={{ touchAction: 'manipulation' }}
           aria-label="Phrase suivante"
         >
           <SkipForward className="w-5 h-5" />
