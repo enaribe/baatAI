@@ -14,17 +14,21 @@ export function useAvailableProjects(speakerId: string | undefined): UseAvailabl
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetch = useCallback(async () => {
+  const fetchProjects = useCallback(async () => {
     if (!speakerId) { setLoading(false); return }
     setLoading(true)
-    const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, string>) => Promise<{ data: unknown; error: { message: string } | null }>
-    const { data, error: err } = await rpc('get_available_projects', { p_speaker_id: speakerId })
+    setError(null)
+
+    const { data, error: err } = await (supabase as unknown as {
+      rpc: (fn: string, args: Record<string, string>) => Promise<{ data: AvailableProject[] | null; error: { message: string } | null }>
+    }).rpc('get_available_projects', { p_speaker_id: speakerId })
+
     if (err) setError(err.message)
-    setProjects((data as AvailableProject[]) ?? [])
+    setProjects(data ?? [])
     setLoading(false)
   }, [speakerId])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  return { projects, loading, error, refetch: fetch }
+  return { projects, loading, error, refetch: fetchProjects }
 }
