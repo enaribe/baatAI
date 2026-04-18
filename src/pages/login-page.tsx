@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/use-auth'
 import { Loader2, Mic, AlertCircle, Mail, Lock } from 'lucide-react'
 
 export function LoginPage() {
-  const { signIn, user, loading: authLoading } = useAuth()
+  const { signIn, user, loading: authLoading, role } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,6 +20,7 @@ export function LoginPage() {
   }
 
   if (user) {
+    if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -127,7 +128,14 @@ export function LoginPage() {
           to="/register"
           className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300"
         >
-          Créer un compte
+          Compte client
+        </Link>
+        {' '}·{' '}
+        <Link
+          to="/speaker/register"
+          className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300"
+        >
+          Devenir locuteur
         </Link>
       </p>
     </div>

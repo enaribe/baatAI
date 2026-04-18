@@ -4,7 +4,23 @@ export type SessionStatus = 'pending' | 'active' | 'completed'
 export type RecordingStatus = 'pending' | 'processing' | 'completed' | 'failed'
 export type ExportFormat = 'ljspeech' | 'huggingface' | 'csv_wav'
 export type ExportStatus = 'pending' | 'generating' | 'ready' | 'failed'
-export type UserRole = 'client' | 'admin'
+export type UserRole = 'client' | 'admin' | 'speaker'
+
+// ── Locuteurs ──────────────────────────────────────────────────────────────
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say'
+export type VerificationStatus = 'pending' | 'approved' | 'rejected'
+export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired'
+export type WalletTransactionType =
+  | 'recording_validated'
+  | 'validation_reward'
+  | 'bonus'
+  | 'withdrawal_request'
+  | 'withdrawal_paid'
+  | 'withdrawal_refund'
+export type WalletTransactionStatus = 'pending' | 'confirmed' | 'failed'
+export type WithdrawalMethod = 'wave' | 'orange_money' | 'free_money' | 'bank'
+export type WithdrawalStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'failed'
+export type RequiredGender = 'male' | 'female' | 'any'
 
 export interface Profile {
   id: string
@@ -12,6 +28,33 @@ export interface Profile {
   organization: string | null
   role: UserRole
   created_at: string
+}
+
+export interface SpeakerProfile {
+  id: string
+  phone: string | null
+  avatar_url: string | null
+  bio: string | null
+  date_of_birth: string | null
+  gender: Gender | null
+  city: string | null
+  country: string
+  languages: string[]
+  dialects: Record<string, string[]>
+  reliability_score: number
+  total_recordings: number
+  total_validated: number
+  total_duration_seconds: number
+  is_certified: boolean
+  certified_at: string | null
+  certified_by: string | null
+  wallet_balance_fcfa: number
+  total_earned_fcfa: number
+  total_withdrawn_fcfa: number
+  is_available: boolean
+  verification_status: VerificationStatus
+  created_at: string
+  updated_at: string
 }
 
 export interface Project {
@@ -24,6 +67,17 @@ export interface Project {
   usage_type: ProjectUsageType
   status: ProjectStatus
   settings: Record<string, unknown>
+  // Champs marketplace locuteurs
+  is_public: boolean
+  rate_per_hour_fcfa: number
+  min_speakers: number | null
+  max_speakers: number | null
+  required_languages: string[]
+  required_dialects: string[]
+  required_gender: RequiredGender | null
+  age_min: number | null
+  age_max: number | null
+  funding_source: string | null
   created_at: string
   updated_at: string
 }
@@ -50,6 +104,9 @@ export interface RecordingSession {
   }
   status: SessionStatus
   total_recorded: number
+  // Nullable pour compat rétro : NULL = session anonyme token
+  speaker_id: string | null
+  invitation_id: string | null
   created_at: string
   expires_at: string
 }
@@ -89,10 +146,65 @@ export interface Export {
   file_size_bytes: number | null
   filters_applied: Record<string, unknown>
   status: ExportStatus
+  completed_at: string | null
+  error_message: string | null
+  recording_count: number | null
   created_at: string
 }
 
-// Type Database pour le client Supabase
+export interface ProjectInvitation {
+  id: string
+  project_id: string
+  speaker_id: string
+  invited_by: string | null
+  message: string | null
+  status: InvitationStatus
+  responded_at: string | null
+  created_at: string
+  expires_at: string
+}
+
+export interface WalletTransaction {
+  id: string
+  speaker_id: string
+  amount_fcfa: number
+  type: WalletTransactionType
+  status: WalletTransactionStatus
+  reference_table: string | null
+  reference_id: string | null
+  description: string | null
+  created_at: string
+}
+
+export interface Withdrawal {
+  id: string
+  speaker_id: string
+  amount_fcfa: number
+  method: WithdrawalMethod
+  destination: string
+  status: WithdrawalStatus
+  processed_by: string | null
+  processed_at: string | null
+  rejection_reason: string | null
+  transaction_reference: string | null
+  created_at: string
+}
+
+// Résultat de la RPC get_available_projects
+export interface AvailableProject {
+  project_id: string
+  project_name: string
+  language_label: string | null
+  target_language: string
+  usage_type: ProjectUsageType
+  rate_per_hour_fcfa: number
+  is_public: boolean
+  phrase_count: number
+  funding_source: string | null
+  invitation_status: InvitationStatus | null
+}
+
+// ── Type Database (client Supabase typé) ──────────────────────────────────
 export interface Database {
   public: {
     Tables: {
@@ -101,12 +213,34 @@ export interface Database {
         Insert: Partial<Profile> & { id: string }
         Update: Partial<Profile>
       }
+      speaker_profiles: {
+        Row: SpeakerProfile
+        Insert: Omit<SpeakerProfile,
+          | 'reliability_score' | 'total_recordings' | 'total_validated'
+          | 'total_duration_seconds' | 'is_certified' | 'certified_at'
+          | 'certified_by' | 'wallet_balance_fcfa' | 'total_earned_fcfa'
+          | 'total_withdrawn_fcfa' | 'verification_status' | 'created_at'
+          | 'updated_at'
+        > & {
+          reliability_score?: number
+          verification_status?: VerificationStatus
+        }
+        Update: Partial<SpeakerProfile>
+      }
       projects: {
         Row: Project
-        Insert: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'status' | 'settings'> & {
+        Insert: Omit<Project,
+          | 'id' | 'created_at' | 'updated_at' | 'status' | 'settings'
+          | 'is_public' | 'rate_per_hour_fcfa' | 'required_languages'
+          | 'required_dialects'
+        > & {
           id?: string
           status?: ProjectStatus
           settings?: Record<string, unknown>
+          is_public?: boolean
+          rate_per_hour_fcfa?: number
+          required_languages?: string[]
+          required_dialects?: string[]
         }
         Update: Partial<Project>
       }
@@ -117,12 +251,17 @@ export interface Database {
       }
       recording_sessions: {
         Row: RecordingSession
-        Insert: Omit<RecordingSession, 'id' | 'token' | 'created_at' | 'expires_at' | 'total_recorded' | 'status'> & {
+        Insert: Omit<RecordingSession,
+          | 'id' | 'token' | 'created_at' | 'expires_at'
+          | 'total_recorded' | 'status' | 'speaker_id' | 'invitation_id'
+        > & {
           id?: string
           token?: string
           status?: SessionStatus
           speaker_name?: string | null
           speaker_metadata?: Record<string, unknown>
+          speaker_id?: string | null
+          invitation_id?: string | null
         }
         Update: Partial<RecordingSession>
       }
@@ -142,9 +281,43 @@ export interface Database {
         }
         Update: Partial<Export>
       }
+      project_invitations: {
+        Row: ProjectInvitation
+        Insert: Omit<ProjectInvitation,
+          | 'id' | 'created_at' | 'expires_at' | 'status' | 'responded_at'
+        > & {
+          id?: string
+          status?: InvitationStatus
+        }
+        Update: Partial<ProjectInvitation>
+      }
+      wallet_transactions: {
+        Row: WalletTransaction
+        Insert: Omit<WalletTransaction, 'id' | 'created_at' | 'status'> & {
+          id?: string
+          status?: WalletTransactionStatus
+        }
+        Update: Partial<WalletTransaction>
+      }
+      withdrawals: {
+        Row: Withdrawal
+        Insert: Omit<Withdrawal,
+          | 'id' | 'created_at' | 'status' | 'processed_by'
+          | 'processed_at' | 'rejection_reason' | 'transaction_reference'
+        > & {
+          id?: string
+          status?: WithdrawalStatus
+        }
+        Update: Partial<Withdrawal>
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      get_available_projects: {
+        Args: { p_speaker_id: string }
+        Returns: AvailableProject[]
+      }
+    }
     Enums: Record<string, never>
   }
 }

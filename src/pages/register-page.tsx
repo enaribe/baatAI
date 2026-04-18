@@ -35,7 +35,7 @@ export function RegisterPage() {
     }
 
     setLoading(true)
-    const { error: signUpError } = await signUp(email, password, fullName, organization || undefined)
+    const { error: signUpError } = await signUp(email, password, fullName, 'client', organization || undefined)
     if (signUpError) {
       setError(signUpError.message)
     }

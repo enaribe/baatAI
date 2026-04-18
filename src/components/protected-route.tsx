@@ -1,14 +1,16 @@
 import { Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useAuth } from '../hooks/use-auth'
+import type { UserRole } from '../types/database'
 import { Loader2 } from 'lucide-react'
 
 interface ProtectedRouteProps {
   children: ReactNode
+  allowedRoles?: UserRole[]
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { user, loading, role } = useAuth()
 
   if (loading) {
     return (
@@ -20,6 +22,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (allowedRoles && role && !allowedRoles.includes(role)) {
+    // Rediriger vers l'espace correspondant au rôle réel
+    if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>
