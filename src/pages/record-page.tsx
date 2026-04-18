@@ -369,7 +369,7 @@ export function RecordPage() {
         <button
           onClick={() => {
             setCurrentIndex(0)
-            setRedoMode(false)
+            setRedoMode(true)
             setPageState('ready')
           }}
           className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-sand-100 text-sand-700 text-sm font-semibold hover:bg-sand-200 transition-colors border border-sand-200 hover:border-sand-300"

@@ -56,10 +56,12 @@ export function RecordingDetailModal({ recording, phrase, session, onClose }: Re
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white dark:bg-sand-900 rounded-2xl shadow-xl border border-sand-200/60 dark:border-sand-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+      <div className="bg-white dark:bg-sand-900 rounded-t-2xl sm:rounded-2xl shadow-xl border border-sand-200/60 dark:border-sand-800 w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto animate-scale-in"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <div className="sticky top-0 bg-white dark:bg-sand-900 border-b border-sand-200/60 dark:border-sand-800 px-6 py-4 flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -81,7 +83,7 @@ export function RecordingDetailModal({ recording, phrase, session, onClose }: Re
               )}
             </div>
             <h2
-              className="text-lg font-bold text-sand-900 dark:text-sand-100 leading-tight"
+              className="text-lg font-bold text-sand-900 dark:text-sand-100 leading-tight break-words"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
               {phrase?.content ?? 'Phrase introuvable'}
