@@ -92,8 +92,19 @@ export function SpeakerOnboardingPage() {
   const stepLabels = ['Identité', 'Langues', 'Présentation', 'Finaliser']
 
   return (
-    <div className="min-h-screen bg-sand-50 px-4 py-8">
-      <div className="w-full max-w-lg mx-auto">
+    <div className="min-h-screen bg-sand-50 relative overflow-hidden">
+      {/* Warm glow blob */}
+      <div
+        className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)' }}
+        aria-hidden="true"
+      />
+      <div
+        className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 w-full max-w-lg mx-auto px-4 py-8">
         {/* Titre */}
         <div className="text-center mb-8">
           <h1
