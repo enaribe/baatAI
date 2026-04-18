@@ -149,14 +149,12 @@ export function RecordPage() {
   const goNext = useCallback(() => {
     if (currentIndex < totalPhrases - 1) {
       setCurrentIndex((i) => i + 1)
-      setRedoMode(false)
     }
   }, [currentIndex, totalPhrases])
 
   const goPrev = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex((i) => i - 1)
-      setRedoMode(false)
     }
   }, [currentIndex])
 
@@ -239,7 +237,6 @@ export function RecordPage() {
 
       // Marquer comme enregistrée immédiatement — pas d'attente QC
       setRecordedIds((prev) => new Set([...prev, submittedPhraseId]))
-      setRedoMode(false)
 
       // Supprimer de la liste des rejets si c'était un redo
       setRejectedEntries((prev) => prev.filter((e) => e.phraseId !== submittedPhraseId))
@@ -252,16 +249,20 @@ export function RecordPage() {
         ]
       }
 
-      // Passer directement à la suivante
+      // Passer à la prochaine phrase non enregistrée si elle existe
       const nextUnrecorded = phrases.findIndex(
         (p, i) => i > currentIndex && !recordedIds.has(p.id) && p.id !== submittedPhraseId,
       )
       if (nextUnrecorded >= 0) {
+        // Il reste des phrases à enregistrer — sortir du mode révision
+        setRedoMode(false)
         setCurrentIndex(nextUnrecorded)
       } else if (totalRecorded + 1 >= totalPhrases && !redoMode) {
+        // Toutes enregistrées en flux normal → écran done
         setPageState('done')
         return
       } else {
+        // Mode révision : avancer simplement à la suivante
         goNext()
       }
 
