@@ -104,7 +104,7 @@ export function SpeakerOnboardingPage() {
         style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
-      <div className="relative z-10 w-full max-w-lg mx-auto px-4 py-8">
+      <div className="relative z-10 w-full max-w-[32rem] mx-auto px-4 py-8">
         {/* Titre */}
         <div className="text-center mb-8">
           <h1
