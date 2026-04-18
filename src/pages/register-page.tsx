@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/use-auth'
 import { Loader2, Mic, AlertCircle, User, Mail, Lock, Building2 } from 'lucide-react'
 
 export function RegisterPage() {
-  const { signUp, user, loading: authLoading } = useAuth()
+  const { signUp, user, loading: authLoading, role } = useAuth()
+  const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +23,7 @@ export function RegisterPage() {
   }
 
   if (user) {
+    if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -38,6 +40,8 @@ export function RegisterPage() {
     const { error: signUpError } = await signUp(email, password, fullName, 'client', organization || undefined)
     if (signUpError) {
       setError(signUpError.message)
+    } else {
+      navigate('/dashboard')
     }
     setLoading(false)
   }
@@ -162,11 +166,14 @@ export function RegisterPage() {
 
       <p className="text-center mt-5 text-sand-500 text-sm">
         Déjà un compte ?{' '}
-        <Link
-          to="/login"
-          className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300"
-        >
+        <Link to="/login" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300">
           Se connecter
+        </Link>
+      </p>
+      <p className="text-center mt-2 text-sand-500 text-sm">
+        Vous voulez enregistrer votre voix ?{' '}
+        <Link to="/speaker/register" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300">
+          Devenir locuteur
         </Link>
       </p>
     </div>
