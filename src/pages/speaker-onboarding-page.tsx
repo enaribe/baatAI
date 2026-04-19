@@ -117,20 +117,20 @@ export function SpeakerOnboardingPage() {
         style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
-      <div className="relative z-10 w-full max-w-[32rem] mx-auto px-4 py-8">
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
         {/* Titre */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <h1
-            className="text-2xl font-extrabold text-sand-900"
+            className="text-3xl font-extrabold text-sand-900 md:text-4xl"
             style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
           >
             Créer votre profil locuteur
           </h1>
-          <p className="text-sand-500 text-sm mt-1">Étape {step} sur 4</p>
+          <p className="text-sand-500 text-base mt-2">Étape {step} sur 4</p>
         </div>
 
         {/* Stepper */}
-        <div className="flex items-center gap-0 mb-8">
+        <div className="flex items-center gap-0 mb-10">
           {stepLabels.map((label, i) => {
             const n = (i + 1) as Step
             const done = n < step
@@ -153,7 +153,7 @@ export function SpeakerOnboardingPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-sand-900/8 border border-sand-200/60 p-7">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-sand-900/5 border border-sand-200/60 p-8 sm:p-10">
           {error && (
             <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -163,23 +163,23 @@ export function SpeakerOnboardingPage() {
 
           {/* Étape 1 — Identité */}
           {step === 1 && (
-            <div className="space-y-5">
-              <h2 className="text-base font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
                 Informations personnelles
               </h2>
               <div>
-                <label className="block text-sm font-semibold text-sand-700 mb-2">Genre <span className="text-red-500">*</span></label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="block text-sm font-semibold text-sand-700 mb-3">Genre <span className="text-red-500">*</span></label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {([['male', 'Homme'], ['female', 'Femme'], ['other', 'Autre'], ['prefer_not_to_say', 'Non précisé']] as const).map(([val, lbl]) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setForm(f => ({ ...f, gender: val }))}
                       className={[
-                        'py-2.5 rounded-xl border text-sm font-semibold transition-all',
+                        'py-3 rounded-xl border text-sm font-semibold transition-all',
                         form.gender === val
-                          ? 'bg-primary-50 border-primary-400 text-primary-700'
-                          : 'border-sand-200 text-sand-600 hover:border-sand-300',
+                          ? 'bg-primary-50 border-primary-400 text-primary-700 shadow-sm'
+                          : 'border-sand-200 text-sand-600 hover:border-sand-300 hover:bg-sand-50/50',
                       ].join(' ')}
                     >
                       {lbl}
@@ -187,26 +187,28 @@ export function SpeakerOnboardingPage() {
                   ))}
                 </div>
               </div>
-              <div>
-                <label htmlFor="dob" className="block text-sm font-semibold text-sand-700 mb-1.5">Date de naissance</label>
-                <input
-                  id="dob"
-                  type="date"
-                  value={form.date_of_birth}
-                  onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white"
-                />
-              </div>
-              <div>
-                <label htmlFor="city" className="block text-sm font-semibold text-sand-700 mb-1.5">Ville <span className="text-red-500">*</span></label>
-                <input
-                  id="city"
-                  type="text"
-                  value={form.city}
-                  onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white"
-                  placeholder="Dakar, Thiès, Bamako…"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label htmlFor="dob" className="block text-sm font-semibold text-sand-700 mb-1.5">Date de naissance</label>
+                  <input
+                    id="dob"
+                    type="date"
+                    value={form.date_of_birth}
+                    onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="city" className="block text-sm font-semibold text-sand-700 mb-1.5">Ville <span className="text-red-500">*</span></label>
+                  <input
+                    id="city"
+                    type="text"
+                    value={form.city}
+                    onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
+                    placeholder="Dakar, Thiès, Bamako…"
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="phone" className="block text-sm font-semibold text-sand-700 mb-1.5">Téléphone (pour les paiements)</label>
@@ -215,7 +217,7 @@ export function SpeakerOnboardingPage() {
                   type="tel"
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
                   placeholder="+221 77 000 00 00"
                 />
               </div>
@@ -224,67 +226,69 @@ export function SpeakerOnboardingPage() {
 
           {/* Étape 2 — Langues */}
           {step === 2 && (
-            <div className="space-y-5">
-              <h2 className="text-base font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
                 Langues parlées <span className="text-red-500">*</span>
               </h2>
-              <p className="text-sm text-sand-500">Sélectionnez toutes les langues que vous parlez couramment.</p>
+              <p className="text-base text-sand-500">Sélectionnez toutes les langues que vous parlez couramment.</p>
 
-              {Object.entries(LANGUAGES).map(([code, lang]) => (
-                <div key={code}>
-                  <button
-                    type="button"
-                    onClick={() => toggleLanguage(code)}
-                    className={[
-                      'w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-semibold transition-all',
-                      form.languages.includes(code)
-                        ? 'bg-primary-50 border-primary-400 text-primary-700'
-                        : 'border-sand-200 text-sand-700 hover:border-sand-300',
-                    ].join(' ')}
-                  >
-                    <span>{lang.label}</span>
-                    {form.languages.includes(code) && <Check className="w-4 h-4 text-primary-600" />}
-                  </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(LANGUAGES).map(([code, lang]) => (
+                  <div key={code} className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleLanguage(code)}
+                      className={[
+                        'w-full flex items-center justify-between px-4 py-3.5 rounded-xl border text-sm font-semibold transition-all',
+                        form.languages.includes(code)
+                          ? 'bg-primary-50 border-primary-400 text-primary-700 shadow-sm'
+                          : 'border-sand-200 text-sand-700 hover:border-sand-300 hover:bg-sand-50/50',
+                      ].join(' ')}
+                    >
+                      <span>{lang.label}</span>
+                      {form.languages.includes(code) && <Check className="w-5 h-5 text-primary-600" />}
+                    </button>
 
-                  {form.languages.includes(code) && lang.dialects.length > 0 && (
-                    <div className="mt-2 ml-4 flex flex-wrap gap-2">
-                      {lang.dialects.map(d => (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => toggleDialect(code, d)}
-                          className={[
-                            'px-3 py-1 rounded-full text-xs font-semibold border transition-all',
-                            (form.dialects[code] ?? []).includes(d)
-                              ? 'bg-accent-100 border-accent-400 text-accent-700'
-                              : 'border-sand-200 text-sand-500 hover:border-sand-300',
-                          ].join(' ')}
-                        >
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {form.languages.includes(code) && lang.dialects.length > 0 && (
+                      <div className="pl-2 flex flex-wrap gap-2">
+                        {lang.dialects.map(d => (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => toggleDialect(code, d)}
+                            className={[
+                              'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                              (form.dialects[code] ?? []).includes(d)
+                                ? 'bg-accent-100 border-accent-400 text-accent-700 shadow-sm'
+                                : 'border-sand-200 text-sand-500 hover:border-sand-300 hover:bg-sand-50/50',
+                            ].join(' ')}
+                          >
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Étape 3 — Présentation */}
           {step === 3 && (
-            <div className="space-y-5">
-              <h2 className="text-base font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
                 Présentez-vous (optionnel)
               </h2>
-              <p className="text-sm text-sand-500">
+              <p className="text-base text-sand-500">
                 Un texte court visible par les clients qui recherchent des locuteurs.
               </p>
               <textarea
                 value={form.bio}
                 onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                rows={5}
+                rows={6}
                 maxLength={400}
-                className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white resize-none"
+                className="w-full px-4 py-4 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white resize-none transition-colors"
                 placeholder="Ex : Locuteur Wolof natif de Dakar, je parle également le Pulaar. Voix claire et articulée…"
               />
               <p className="text-xs text-sand-400 text-right">{form.bio.length}/400</p>
@@ -293,47 +297,52 @@ export function SpeakerOnboardingPage() {
 
           {/* Étape 4 — Récap */}
           {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="text-base font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
                 Résumé de votre profil
               </h2>
-              <div className="space-y-3 text-sm text-sand-700">
-                <div className="flex justify-between py-2 border-b border-sand-100">
-                  <span className="text-sand-500">Genre</span>
-                  <span className="font-semibold">{form.gender || '—'}</span>
+              <div className="space-y-4 text-base text-sand-700 bg-sand-50/50 p-6 rounded-2xl border border-sand-100">
+                <div className="flex justify-between pb-3 border-b border-sand-200/60">
+                  <span className="text-sand-500 font-medium">Genre</span>
+                  <span className="font-semibold text-sand-900">{form.gender || '—'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-sand-100">
-                  <span className="text-sand-500">Ville</span>
-                  <span className="font-semibold">{form.city || '—'}</span>
+                <div className="flex justify-between pb-3 border-b border-sand-200/60">
+                  <span className="text-sand-500 font-medium">Ville</span>
+                  <span className="font-semibold text-sand-900">{form.city || '—'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-sand-100">
-                  <span className="text-sand-500">Langues</span>
-                  <span className="font-semibold">{form.languages.map(c => LANGUAGES[c]?.label ?? c).join(', ') || '—'}</span>
+                <div className="flex justify-between pb-3 border-b border-sand-200/60">
+                  <span className="text-sand-500 font-medium">Langues</span>
+                  <span className="font-semibold text-sand-900 text-right">{form.languages.map(c => LANGUAGES[c]?.label ?? c).join(', ') || '—'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-sand-100">
-                  <span className="text-sand-500">Téléphone</span>
-                  <span className="font-semibold">{form.phone || '—'}</span>
+                <div className="flex justify-between">
+                  <span className="text-sand-500 font-medium">Téléphone</span>
+                  <span className="font-semibold text-sand-900">{form.phone || '—'}</span>
                 </div>
               </div>
 
-              <div className="bg-secondary-50 border border-secondary-200 rounded-xl p-4 text-sm text-secondary-800">
-                <p className="font-bold mb-1">Vous y êtes presque</p>
-                <p className="text-secondary-700 text-xs leading-relaxed">
-                  Votre profil sera créé et vous pourrez commencer à enregistrer des projets dès maintenant.
-                </p>
+              <div className="bg-secondary-50 border border-secondary-200 rounded-2xl p-5 text-sm text-secondary-800 flex items-start gap-4">
+                <div className="p-2 bg-secondary-100 rounded-full shrink-0">
+                  <Check className="w-5 h-5 text-secondary-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-base mb-1">Vous y êtes presque !</p>
+                  <p className="text-secondary-700 leading-relaxed">
+                    Votre profil sera créé et vous pourrez commencer à enregistrer des projets dès maintenant.
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex gap-3 mt-7">
+          <div className="flex gap-4 mt-10">
             {step > 1 && (
               <button
                 type="button"
                 onClick={() => setStep(s => (s - 1) as Step)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-sand-200 text-sand-700 text-sm font-semibold hover:bg-sand-50 transition-all"
+                className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-sand-200 text-sand-700 text-base font-semibold hover:bg-sand-50 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-5 h-5" />
                 Précédent
               </button>
             )}
@@ -342,19 +351,19 @@ export function SpeakerOnboardingPage() {
                 type="button"
                 onClick={() => setStep(s => (s + 1) as Step)}
                 disabled={!canNext()}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-md shadow-primary-500/20 transition-all hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold text-base shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-primary-500/25"
               >
                 Suivant
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={submit}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-md shadow-primary-500/20 transition-all hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold text-base shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-primary-500/25"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                 Soumettre mon profil
               </button>
             )}
