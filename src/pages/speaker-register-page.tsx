@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/use-auth'
 import { Loader2, Mic, AlertCircle, Mail, Lock, User } from 'lucide-react'
 
 export function SpeakerRegisterPage() {
-  const { signUp, user, loading: authLoading } = useAuth()
+  const { signUp, user, loading: authLoading, role, roleStatus } = useAuth()
   const navigate = useNavigate()
 
   const [fullName, setFullName] = useState('')
@@ -14,13 +14,19 @@ export function SpeakerRegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (authLoading) return (
+  const waitingForRole = user !== null && roleStatus !== 'loaded' && roleStatus !== 'error'
+
+  if (authLoading || waitingForRole) return (
     <div className="min-h-screen flex items-center justify-center bg-sand-50">
       <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
     </div>
   )
 
-  if (user) return <Navigate to="/speaker/dashboard" replace />
+  if (user && role) {
+    if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
+    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
+    return <Navigate to="/dashboard" replace />
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

@@ -4,11 +4,14 @@ import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { UserRole } from '../types/database'
 
+export type RoleStatus = 'idle' | 'loading' | 'loaded' | 'error'
+
 export interface AuthContextValue {
   user: User | null
   session: Session | null
   loading: boolean
   role: UserRole | null
+  roleStatus: RoleStatus
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (
     email: string,
@@ -31,24 +34,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<UserRole | null>(null)
+  const [roleStatus, setRoleStatus] = useState<RoleStatus>('idle')
   const pendingRole = useRef<UserRole | null>(null)
 
   const fetchRole = useCallback(async (uid: string) => {
-    // Si un rôle est en attente (juste après signup), l'utiliser directement
     if (pendingRole.current) {
+      console.info('[AUTH] Rôle depuis pendingRole:', pendingRole.current)
       setRole(pendingRole.current)
+      setRoleStatus('loaded')
       pendingRole.current = null
       return
     }
+    setRoleStatus('loading')
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', uid)
-        .single() as unknown as { data: { role: UserRole } | null }
-      setRole(data?.role ?? 'client')
-    } catch {
-      setRole('client')
+        .single() as unknown as { data: { role: UserRole } | null, error: unknown }
+
+      if (error) throw error
+
+      if (!data?.role) {
+        console.warn('[AUTH] Profil sans rôle pour user', uid, '– déconnexion forcée')
+        await supabase.auth.signOut()
+        setRole(null)
+        setRoleStatus('error')
+        return
+      }
+
+      console.info('[AUTH] Rôle chargé depuis DB:', data.role)
+      setRole(data.role)
+      setRoleStatus('loaded')
+    } catch (err) {
+      console.error('[AUTH] Erreur fetchRole:', err)
+      setRole(null)
+      setRoleStatus('error')
     }
   }, [])
 
@@ -56,15 +77,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       setUser(s?.user ?? null)
-      if (s?.user) fetchRole(s.user.id)
+      if (s?.user) {
+        setRoleStatus('loading')
+        fetchRole(s.user.id)
+      } else {
+        setRole(null)
+        setRoleStatus('idle')
+      }
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s)
       setUser(s?.user ?? null)
-      if (s?.user) fetchRole(s.user.id)
-      else setRole(null)
+      if (s?.user) {
+        setRoleStatus('loading')
+        fetchRole(s.user.id)
+      } else {
+        pendingRole.current = null
+        setRole(null)
+        setRoleStatus('idle')
+      }
       setLoading(false)
     })
 
@@ -95,9 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
     if (error) return { error: new Error(error.message) }
 
-    // Mettre à jour le rôle si différent du défaut 'client'
     if (data.user && userRole !== 'client') {
-      // Stocker le rôle attendu AVANT que onAuthStateChange ne déclenche fetchRole
       pendingRole.current = userRole
       const profilesTable = supabase.from('profiles') as unknown as {
         update: (v: { role: UserRole }) => { eq: (col: string, val: string) => Promise<unknown> }
@@ -109,11 +140,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   const signOut = useCallback(async () => {
+    pendingRole.current = null
     await supabase.auth.signOut()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, role, roleStatus, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

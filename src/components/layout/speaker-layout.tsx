@@ -1,12 +1,13 @@
 import { type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Mic, Wallet, CheckSquare, Mail, User,
-  LogOut, Sun, Moon, Clock,
+  LogOut, Sun, Moon, Clock, Loader2,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
 import { useDarkMode } from '../../hooks/use-dark-mode'
 import { useSpeakerProfile } from '../../hooks/use-speaker-profile'
+import { useSpeakerGuard } from '../../hooks/use-speaker-guard'
 
 interface SpeakerLayoutProps {
   children: ReactNode
@@ -24,11 +25,25 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
   const { signOut, user } = useAuth()
   const { isDark, toggle } = useDarkMode()
   const { profile } = useSpeakerProfile(user?.id)
+  const guard = useSpeakerGuard()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
+  }
+
+  if (guard.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-sand-50 dark:bg-sand-950">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    )
+  }
+
+  if (guard.status === 'no-profile') return <Navigate to="/speaker/onboarding" replace />
+  if (guard.status === 'pending' || guard.status === 'rejected') {
+    return <Navigate to="/speaker/pending" replace />
   }
 
   const initials = (user?.user_metadata?.full_name as string | undefined)

@@ -10,12 +10,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, loading, role } = useAuth()
+  const { user, loading, role, roleStatus } = useAuth()
 
-  // Attendre que l'auth ET le rôle soient chargés avant de décider
-  const roleLoading = user !== null && role === null
-
-  if (loading || (allowedRoles && roleLoading)) {
+  if (loading || (user && (roleStatus === 'idle' || roleStatus === 'loading'))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -27,8 +24,14 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
+  if (roleStatus === 'error' || !role) {
+    console.warn('[PROTECTED-ROUTE] Rôle introuvable pour un user authentifié – redirection /login')
+    return <Navigate to="/login" replace />
+  }
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
+    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
     return <Navigate to="/dashboard" replace />
   }
 

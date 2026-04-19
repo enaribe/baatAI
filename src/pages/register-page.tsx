@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/use-auth'
 import {
   Loader2, Mic, AlertCircle, User, Mail, Lock, Building2,
@@ -10,8 +10,7 @@ import {
 type Step = 'choose' | 'client-form'
 
 export function RegisterPage() {
-  const { signUp, user, loading: authLoading, role } = useAuth()
-  const navigate = useNavigate()
+  const { signUp, user, loading: authLoading, role, roleStatus } = useAuth()
   const [step, setStep] = useState<Step>('choose')
 
   const [fullName, setFullName] = useState('')
@@ -21,7 +20,9 @@ export function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (authLoading) {
+  const waitingForRole = user !== null && roleStatus !== 'loaded' && roleStatus !== 'error'
+
+  if (authLoading || waitingForRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -29,8 +30,9 @@ export function RegisterPage() {
     )
   }
 
-  if (user) {
+  if (user && role) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
+    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -45,8 +47,8 @@ export function RegisterPage() {
     const { error: signUpError } = await signUp(email, password, fullName, 'client', organization || undefined)
     if (signUpError) {
       setError(signUpError.message)
-    } else {
-      navigate('/dashboard')
+      setLoading(false)
+      return
     }
     setLoading(false)
   }

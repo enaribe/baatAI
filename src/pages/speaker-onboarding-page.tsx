@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { ChevronRight, ChevronLeft, Check, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '../hooks/use-auth'
+import { useSpeakerGuard } from '../hooks/use-speaker-guard'
 import { supabase } from '../lib/supabase'
 import { LANGUAGES } from '../lib/languages'
 import type { Gender } from '../types/database'
@@ -30,11 +31,25 @@ const INITIAL: FormData = {
 
 export function SpeakerOnboardingPage() {
   const { user } = useAuth()
+  const guard = useSpeakerGuard()
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(1)
   const [form, setForm] = useState<FormData>(INITIAL)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  if (guard.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-sand-50">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    )
+  }
+
+  if (guard.hasProfile) {
+    if (guard.status === 'approved') return <Navigate to="/speaker/dashboard" replace />
+    return <Navigate to="/speaker/pending" replace />
+  }
 
   const toggleLanguage = (code: string) => {
     setForm(f => {
@@ -72,7 +87,7 @@ export function SpeakerOnboardingPage() {
         languages: form.languages,
         dialects: form.dialects,
         bio: form.bio || null,
-        verification_status: 'approved',
+        verification_status: 'pending',
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (err) {
@@ -80,7 +95,7 @@ export function SpeakerOnboardingPage() {
       setLoading(false)
       return
     }
-    navigate('/speaker/dashboard')
+    navigate('/speaker/pending')
   }
 
   const canNext = () => {

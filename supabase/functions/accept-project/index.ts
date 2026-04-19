@@ -1,15 +1,15 @@
-import { serve } from 'https://deno.land/x/sift@0.6.0/mod.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
@@ -28,6 +28,20 @@ serve(async (req) => {
 
     // Vérifier que c'est un locuteur approuvé
     const admin = createClient(supabaseUrl, serviceKey)
+
+    // 1. Le profile global doit avoir role='speaker'
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) return json({ data: null, error: 'Profil introuvable' }, 404)
+    if (profile.role !== 'speaker') {
+      return json({ data: null, error: 'Seuls les locuteurs peuvent accepter un projet' }, 403)
+    }
+
+    // 2. Le speaker_profile doit exister et être approuvé
     const { data: speaker } = await admin
       .from('speaker_profiles')
       .select('id, verification_status, languages, gender')

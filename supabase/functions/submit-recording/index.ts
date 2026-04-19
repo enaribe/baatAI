@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // 1. Validate session token
     const { data: session, error: sessionError } = await supabase
       .from("recording_sessions")
-      .select("id, project_id, status, expires_at, total_recorded")
+      .select("id, project_id, speaker_id, status, expires_at, total_recorded")
       .eq("token", session_token)
       .single();
 
@@ -56,6 +56,22 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Session expirée" }),
         { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // 1b. Speaker still approved? (défense en profondeur si rejected après création de session)
+    if (session.speaker_id) {
+      const { data: speaker } = await supabase
+        .from("speaker_profiles")
+        .select("verification_status")
+        .eq("id", session.speaker_id)
+        .single();
+
+      if (!speaker || speaker.verification_status !== "approved") {
+        return new Response(
+          JSON.stringify({ error: "Locuteur non approuvé" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // 2. Validate that phrase belongs to the project

@@ -9,13 +9,20 @@ interface UseAvailableProjectsResult {
   refetch: () => Promise<void>
 }
 
-export function useAvailableProjects(speakerId: string | undefined): UseAvailableProjectsResult {
+export function useAvailableProjects(
+  speakerId: string | undefined,
+  isApproved: boolean,
+): UseAvailableProjectsResult {
   const [projects, setProjects] = useState<AvailableProject[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchProjects = useCallback(async () => {
-    if (!speakerId) { setLoading(false); return }
+    if (!speakerId || !isApproved) {
+      setProjects([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -26,7 +33,7 @@ export function useAvailableProjects(speakerId: string | undefined): UseAvailabl
     if (err) setError(err.message)
     setProjects(data ?? [])
     setLoading(false)
-  }, [speakerId])
+  }, [speakerId, isApproved])
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 

@@ -5,13 +5,15 @@ import { useAuth } from '../hooks/use-auth'
 import { Loader2, Mic, AlertCircle, Mail, Lock } from 'lucide-react'
 
 export function LoginPage() {
-  const { signIn, user, loading: authLoading, role } = useAuth()
+  const { signIn, user, loading: authLoading, role, roleStatus } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (authLoading) {
+  const waitingForRole = user !== null && roleStatus !== 'loaded' && roleStatus !== 'error'
+
+  if (authLoading || waitingForRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -19,8 +21,9 @@ export function LoginPage() {
     )
   }
 
-  if (user) {
+  if (user && role) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
+    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
     return <Navigate to="/dashboard" replace />
   }
 
