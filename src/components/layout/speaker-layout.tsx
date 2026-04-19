@@ -2,12 +2,13 @@ import { type ReactNode } from 'react'
 import { NavLink, useNavigate, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Mic, Wallet, CheckSquare, Mail, User,
-  LogOut, Sun, Moon, Clock, Loader2,
+  LogOut, Sun, Moon, Clock, Loader2, Bell,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
 import { useDarkMode } from '../../hooks/use-dark-mode'
 import { useSpeakerProfile } from '../../hooks/use-speaker-profile'
 import { useSpeakerGuard } from '../../hooks/use-speaker-guard'
+import { useNotifications } from '../../hooks/use-notifications'
 
 interface SpeakerLayoutProps {
   children: ReactNode
@@ -19,13 +20,15 @@ const navItems = [
   { to: '/speaker/invitations', icon: Mail, label: 'Invitations' },
   { to: '/speaker/validate', icon: CheckSquare, label: 'Valider' },
   { to: '/speaker/wallet', icon: Wallet, label: 'Mes gains' },
-]
+  { to: '/speaker/notifications', icon: Bell, label: 'Notifications', showUnread: true },
+] as const
 
 export function SpeakerLayout({ children }: SpeakerLayoutProps) {
   const { signOut, user } = useAuth()
   const { isDark, toggle } = useDarkMode()
   const { profile } = useSpeakerProfile(user?.id)
   const guard = useSpeakerGuard()
+  const { unreadCount } = useNotifications(user?.id)
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -102,30 +105,39 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-1">
           <p className="px-3 mb-3 text-[10px] font-bold text-sand-400 uppercase tracking-widest">Navigation</p>
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                [
-                  'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'text-sand-600 hover:bg-sand-100 hover:text-sand-900 dark:text-sand-400 dark:hover:bg-sand-800/70 dark:hover:text-sand-200',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary-500" />
-                  )}
-                  <Icon className="w-4.5 h-4.5 shrink-0" />
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const showBadge = 'showUnread' in item && item.showUnread && unreadCount > 0
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  [
+                    'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                      : 'text-sand-600 hover:bg-sand-100 hover:text-sand-900 dark:text-sand-400 dark:hover:bg-sand-800/70 dark:hover:text-sand-200',
+                  ].join(' ')
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary-500" />
+                    )}
+                    <Icon className="w-4.5 h-4.5 shrink-0" />
+                    {item.label}
+                    {showBadge && (
+                      <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-primary-500 text-white text-[10px] font-bold flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            )
+          })}
 
           {/* Lien profil */}
           <div className="pt-3 border-t border-sand-100 dark:border-sand-800/50 mt-3">
@@ -215,6 +227,18 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
                 {balanceDisplay}
               </span>
             )}
+            <NavLink
+              to="/speaker/notifications"
+              aria-label="Notifications"
+              className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-sand-100 dark:hover:bg-sand-800 transition-colors text-sand-600 dark:text-sand-400"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </NavLink>
             <button
               onClick={toggle}
               className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-sand-100 dark:hover:bg-sand-800 transition-colors text-sand-600 dark:text-sand-400"
@@ -237,7 +261,7 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-sand-950/90 backdrop-blur-lg border-t border-sand-200/70 dark:border-sand-800/70">
         <div className="flex items-center justify-around h-16 px-1">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.filter(i => i.to !== '/speaker/notifications').map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}

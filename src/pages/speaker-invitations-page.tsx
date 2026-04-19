@@ -1,60 +1,43 @@
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerInvitations } from '../hooks/use-speaker-invitations'
-import { useNavigate } from 'react-router-dom'
-import { Loader2, Mail, Check, X, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Loader2, Mail, ChevronRight, Clock, Check, X } from 'lucide-react'
 import { getLanguageLabel } from '../lib/languages'
-import { supabase } from '../lib/supabase'
+import type { InvitationStatus } from '../types/database'
+
+const statusLabel: Record<InvitationStatus, { label: string; className: string }> = {
+  pending: { label: 'En attente', className: 'bg-amber-100 text-amber-700' },
+  accepted: { label: 'Acceptée', className: 'bg-secondary-100 text-secondary-700' },
+  declined: { label: 'Déclinée', className: 'bg-sand-100 text-sand-500' },
+  expired: { label: 'Expirée', className: 'bg-sand-100 text-sand-400' },
+  cancelled: { label: 'Annulée', className: 'bg-sand-100 text-sand-400' },
+}
+
+function daysUntil(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+}
 
 export function SpeakerInvitationsPage() {
   const { user } = useAuth()
-  const { invitations, loading, respond, refetch } = useSpeakerInvitations(user?.id)
-  const navigate = useNavigate()
-  const [responding, setResponding] = useState<string | null>(null)
+  const { invitations, loading } = useSpeakerInvitations(user?.id)
 
-  const handleAccept = async (inv: (typeof invitations)[0]) => {
-    setResponding(inv.id)
-    await respond(inv.id, 'accepted')
-
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      const res = await fetch(`${supabaseUrl}/functions/v1/accept-project`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ project_id: inv.project_id, invitation_id: inv.id }),
-      })
-      const json = await res.json() as { data?: { session_id: string }; error?: string }
-      if (json.data?.session_id) {
-        navigate(`/speaker/record/${json.data.session_id}`)
-        return
-      }
-    }
-    await refetch()
-    setResponding(null)
-  }
-
-  const handleDecline = async (id: string) => {
-    setResponding(id)
-    await respond(id, 'declined')
-    setResponding(null)
-  }
-
-  const statusLabel: Record<string, { label: string; className: string }> = {
-    pending: { label: 'En attente', className: 'bg-amber-100 text-amber-700' },
-    accepted: { label: 'Acceptée', className: 'bg-secondary-100 text-secondary-700' },
-    declined: { label: 'Déclinée', className: 'bg-sand-100 text-sand-500' },
-    expired: { label: 'Expirée', className: 'bg-sand-100 text-sand-400' },
-  }
+  const pendingCount = invitations.filter(i => i.status === 'pending').length
 
   return (
     <div className="max-w-[42rem] mx-auto px-4 py-8">
-      <h1
-        className="text-2xl font-extrabold text-sand-900 dark:text-sand-100 mb-6"
-        style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-      >
-        Invitations reçues
-      </h1>
+      <div className="mb-6">
+        <h1
+          className="text-2xl font-extrabold text-sand-900 dark:text-sand-100"
+          style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
+        >
+          Invitations reçues
+        </h1>
+        {pendingCount > 0 && (
+          <p className="text-sm text-sand-500 mt-1">
+            <span className="font-semibold text-primary-600">{pendingCount}</span> en attente de votre réponse
+          </p>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
@@ -69,17 +52,18 @@ export function SpeakerInvitationsPage() {
       ) : (
         <div className="space-y-3">
           {invitations.map(inv => {
-            const badge = statusLabel[inv.status] ?? statusLabel['pending']
-            const badgeLabel = badge?.label ?? 'En attente'
-            const badgeClassName = badge?.className ?? 'bg-amber-100 text-amber-700'
-            const isResponding = responding === inv.id
+            const badge = statusLabel[inv.status] ?? statusLabel.pending
+            const days = daysUntil(inv.expires_at)
+            const isExpiringSoon = inv.status === 'pending' && days <= 3 && days > 0
+            const rate = inv.rate_snapshot_fcfa ?? inv.project?.rate_per_hour_fcfa ?? 0
 
             return (
-              <div
+              <Link
                 key={inv.id}
-                className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-5"
+                to={`/speaker/invitations/${inv.id}`}
+                className="block bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
-                <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sand-900 dark:text-sand-100 text-sm" style={{ fontFamily: 'var(--font-heading)' }}>
                       {inv.project?.name ?? '—'}
@@ -88,65 +72,35 @@ export function SpeakerInvitationsPage() {
                       {inv.project?.language_label ?? getLanguageLabel(inv.project?.name ?? '')}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeClassName}`}>
-                    {badgeLabel}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+                    {badge.label}
                   </span>
                 </div>
 
-                {inv.project?.rate_per_hour_fcfa != null && inv.project.rate_per_hour_fcfa > 0 && (
-                  <p className="text-base font-extrabold text-primary-600 tabular-nums mb-3" style={{ fontFamily: 'var(--font-heading)' }}>
-                    {new Intl.NumberFormat('fr-SN').format(inv.project.rate_per_hour_fcfa)}{'\u00a0'}FCFA/h
+                {rate > 0 && (
+                  <p className="text-sm font-extrabold text-primary-600 tabular-nums mb-2">
+                    {new Intl.NumberFormat('fr-SN').format(rate)} FCFA/h
                   </p>
                 )}
 
-                {inv.message && (
-                  <p className="text-xs text-sand-500 italic mb-3 leading-relaxed bg-sand-50 dark:bg-sand-800 rounded-lg px-3 py-2">
-                    « {inv.message} »
+                {isExpiringSoon && (
+                  <p className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full mb-2">
+                    <Clock className="w-3 h-3" />
+                    Expire dans {days} j
                   </p>
                 )}
 
-                <p className="text-[11px] text-sand-400 mb-4">
-                  Expire le {new Date(inv.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-                </p>
-
-                {inv.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDecline(inv.id)}
-                      disabled={isResponding}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-sand-200 text-sand-600 text-sm font-semibold hover:bg-sand-50 transition-all disabled:opacity-40"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      Décliner
-                    </button>
-                    <button
-                      onClick={() => handleAccept(inv)}
-                      disabled={isResponding}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold shadow-md shadow-primary-500/20 hover:scale-[1.02] transition-all disabled:opacity-40"
-                    >
-                      {isResponding ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Accepter et commencer
-                          <ChevronRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-sand-400">
+                    {inv.status === 'accepted' && <Check className="w-3 h-3 text-secondary-500" />}
+                    {inv.status === 'declined' && <X className="w-3 h-3" />}
+                    {inv.status === 'pending'
+                      ? `Expire le ${new Date(inv.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
+                      : `Reçue le ${new Date(inv.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`}
                   </div>
-                )}
-
-                {inv.status === 'accepted' && (
-                  <button
-                    onClick={() => navigate(`/speaker/projects/${inv.project_id}`)}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-secondary-100 text-secondary-700 text-sm font-bold hover:bg-secondary-200 transition-all"
-                  >
-                    Continuer l'enregistrement
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+                  <ChevronRight className="w-4 h-4 text-sand-300" />
+                </div>
+              </Link>
             )
           })}
         </div>

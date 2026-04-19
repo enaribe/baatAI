@@ -9,7 +9,24 @@ export type UserRole = 'client' | 'admin' | 'speaker'
 // ── Locuteurs ──────────────────────────────────────────────────────────────
 export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say'
 export type VerificationStatus = 'pending' | 'approved' | 'rejected'
-export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired'
+export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled'
+
+export type NotificationType =
+  | 'invitation_received'
+  | 'invitation_reminder'
+  | 'invitation_accepted'
+  | 'invitation_declined'
+  | 'recording_rejected'
+  | 'project_completed'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  payload: Record<string, unknown>
+  read_at: string | null
+  created_at: string
+}
 export type WalletTransactionType =
   | 'recording_validated'
   | 'validation_reward'
@@ -162,6 +179,11 @@ export interface ProjectInvitation {
   responded_at: string | null
   created_at: string
   expires_at: string
+  rate_snapshot_fcfa: number | null
+  estimated_duration_minutes: number | null
+  cancelled_at: string | null
+  cancelled_by: string | null
+  reminded_at: string | null
 }
 
 export interface WalletTransaction {

@@ -46,16 +46,31 @@ Deno.serve(async (req) => {
       return json({ error: 'project_id et speaker_id requis' }, 400)
     }
 
-    // Vérifier que le projet appartient au client
+    // Vérifier que le projet appartient au client + charger tarif pour snapshot
     const { data: project } = await admin
       .from('projects')
-      .select('id, owner_id')
+      .select('id, owner_id, rate_per_hour_fcfa, max_speakers')
       .eq('id', project_id)
       .single()
 
     if (!project) return json({ error: 'Projet introuvable' }, 404)
     if (project.owner_id !== user.id && profile.role !== 'admin') {
       return json({ error: 'Accès interdit' }, 403)
+    }
+
+    // Check max_speakers : invitations pending + accepted ne doit pas dépasser
+    if (project.max_speakers != null) {
+      const { count: activeCount } = await admin
+        .from('project_invitations')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', project_id)
+        .in('status', ['pending', 'accepted'])
+
+      if (activeCount != null && activeCount >= project.max_speakers) {
+        return json({
+          error: `Limite atteinte : ${project.max_speakers} locuteurs maximum pour ce projet.`,
+        }, 400)
+      }
     }
 
     // Vérifier que le locuteur est approuvé
@@ -82,7 +97,17 @@ Deno.serve(async (req) => {
       return json({ error: 'Une invitation est déjà en cours pour ce locuteur' }, 409)
     }
 
-    // Créer l'invitation
+    // Calcul durée estimée : nb phrases × 5s par défaut
+    const { count: phraseCount } = await admin
+      .from('phrases')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', project_id)
+
+    const estimatedDurationMinutes = phraseCount
+      ? Math.ceil((phraseCount * 5) / 60)
+      : null
+
+    // Créer l'invitation avec snapshots
     const { data: invitation, error: insertErr } = await admin
       .from('project_invitations')
       .insert({
@@ -91,6 +116,8 @@ Deno.serve(async (req) => {
         invited_by: user.id,
         message: message ?? null,
         status: 'pending',
+        rate_snapshot_fcfa: project.rate_per_hour_fcfa,
+        estimated_duration_minutes: estimatedDurationMinutes,
       })
       .select('id')
       .single()

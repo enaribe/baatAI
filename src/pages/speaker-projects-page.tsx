@@ -1,7 +1,7 @@
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerProfile } from '../hooks/use-speaker-profile'
 import { useAvailableProjects } from '../hooks/use-available-projects'
-import { Mic, ChevronRight, Loader2, Search } from 'lucide-react'
+import { Mic, ChevronRight, Loader2, Search, Mail, CheckCircle2, Globe } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { getLanguageLabel, LANGUAGES } from '../lib/languages'
@@ -118,20 +118,42 @@ export function SpeakerProjectsPage() {
                     <span className="text-base font-extrabold text-primary-600 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
                       {rateDisplay}
                     </span>
-                    {project.is_public && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">Public</span>
-                    )}
+                    {project.invitation_status === 'accepted' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700">
+                        <CheckCircle2 className="w-2.5 h-2.5" />
+                        Acceptée
+                      </span>
+                    ) : project.invitation_status === 'pending' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        <Mail className="w-2.5 h-2.5" />
+                        Invitation
+                      </span>
+                    ) : project.is_public ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">
+                        <Globe className="w-2.5 h-2.5" />
+                        Public
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   {project.invitation_status === 'accepted' ? (
-                    <Link
-                      to={`/speaker/projects/${project.project_id}`}
+                    <button
+                      onClick={() => handleAccept(project)}
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold shadow-md shadow-primary-500/20 hover:scale-[1.02] transition-all"
                     >
                       <Mic className="w-4 h-4" />
                       Continuer
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  ) : project.invitation_status === 'pending' ? (
+                    <Link
+                      to="/speaker/invitations"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-100 text-amber-800 text-sm font-bold hover:bg-amber-200 transition-all"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Voir l'invitation
                       <ChevronRight className="w-4 h-4" />
                     </Link>
                   ) : (

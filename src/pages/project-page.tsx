@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle, UserSearch } from 'lucide-react'
+import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle, UserPlus } from 'lucide-react'
 import { useProject } from '../hooks/use-project'
 import { useRealtimeRecordings } from '../hooks/use-realtime-recordings'
 import { useToast } from '../hooks/use-toast'
@@ -15,17 +15,17 @@ import { PhraseList } from '../components/phrase-list'
 import { SessionList } from '../components/session-list'
 import { RecordingList } from '../components/recording-list'
 import { ExportPanel } from '../components/export-panel'
-import { SpeakerSearchPanel } from '../components/speaker-search-panel'
+import { RecruitmentPanel } from '../components/recruitment/recruitment-panel'
 import type { ProjectStatus, ProjectUsageType } from '../types/database'
 
-type Tab = 'phrases' | 'sessions' | 'recordings' | 'exports' | 'speakers'
+type Tab = 'phrases' | 'sessions' | 'recordings' | 'exports' | 'recruitment'
 
 const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
   { key: 'phrases', label: 'Phrases', icon: FileText },
   { key: 'sessions', label: 'Sessions', icon: Users },
   { key: 'recordings', label: 'Enregistrements', icon: Mic },
   { key: 'exports', label: 'Exports', icon: Package },
-  { key: 'speakers', label: 'Locuteurs', icon: UserSearch },
+  { key: 'recruitment', label: 'Recrutement', icon: UserPlus },
 ]
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -317,11 +317,8 @@ export function ProjectPage() {
             validRecordingsCount={validRecordings}
           />
         )}
-        {activeTab === 'speakers' && (
-          <SpeakerSearchPanel
-            projectId={project.id}
-            projectLanguage={project.target_language}
-          />
+        {activeTab === 'recruitment' && (
+          <RecruitmentPanel projectId={project.id} />
         )}
       </div>
 

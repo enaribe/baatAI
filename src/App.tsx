@@ -21,6 +21,8 @@ import { SpeakerPendingPage } from './pages/speaker-pending-page'
 import { SpeakerDashboardPage } from './pages/speaker-dashboard-page'
 import { SpeakerProjectsPage } from './pages/speaker-projects-page'
 import { SpeakerInvitationsPage } from './pages/speaker-invitations-page'
+import { SpeakerInvitationDetailPage } from './pages/speaker-invitation-detail-page'
+import { SpeakerNotificationsPage } from './pages/speaker-notifications-page'
 import { SpeakerWalletPage } from './pages/speaker-wallet-page'
 import { SpeakerValidatePage } from './pages/speaker-validate-page'
 import { SpeakerProfilePage } from './pages/speaker-profile-page'
@@ -94,6 +96,22 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['speaker']}>
                   <SpeakerLayout><SpeakerInvitationsPage /></SpeakerLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/speaker/invitations/:id"
+              element={
+                <ProtectedRoute allowedRoles={['speaker']}>
+                  <SpeakerLayout><SpeakerInvitationDetailPage /></SpeakerLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/speaker/notifications"
+              element={
+                <ProtectedRoute allowedRoles={['speaker']}>
+                  <SpeakerLayout><SpeakerNotificationsPage /></SpeakerLayout>
                 </ProtectedRoute>
               }
             />
