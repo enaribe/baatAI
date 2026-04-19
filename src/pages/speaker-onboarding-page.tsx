@@ -316,10 +316,10 @@ export function SpeakerOnboardingPage() {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                <p className="font-bold mb-1">Validation requise</p>
-                <p className="text-amber-700 text-xs leading-relaxed">
-                  Votre profil sera examiné par notre équipe dans les 48 heures. Vous recevrez un email à la validation.
+              <div className="bg-secondary-50 border border-secondary-200 rounded-xl p-4 text-sm text-secondary-800">
+                <p className="font-bold mb-1">Vous y êtes presque</p>
+                <p className="text-secondary-700 text-xs leading-relaxed">
+                  Votre profil sera créé et vous pourrez commencer à enregistrer des projets dès maintenant.
                 </p>
               </div>
             </div>
