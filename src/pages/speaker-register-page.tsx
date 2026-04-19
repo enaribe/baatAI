@@ -46,7 +46,7 @@ const STEPS: { id: Step; label: string; hint: string }[] = [
 ]
 
 export function SpeakerRegisterPage() {
-  const { signUp, user, loading: authLoading, role, roleStatus } = useAuth()
+  const { signUp, user, loading: authLoading, role } = useAuth()
   const navigate = useNavigate()
 
   const [step, setStep] = useState<Step>(1)
@@ -55,9 +55,7 @@ export function SpeakerRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const waitingForRole = user !== null && roleStatus !== 'loaded' && roleStatus !== 'error'
-
-  if (authLoading || waitingForRole) {
+  if (authLoading) {
     return <FullscreenLoader />
   }
 

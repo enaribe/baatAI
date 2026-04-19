@@ -11,11 +11,10 @@ export interface UseSpeakerGuardResult {
 }
 
 export function useSpeakerGuard(): UseSpeakerGuardResult {
-  const { user, role, roleStatus } = useAuth()
+  const { user, role, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useSpeakerProfile(user?.id)
 
-  const isAuthLoading = !user || roleStatus === 'idle' || roleStatus === 'loading'
-  const isLoading = isAuthLoading || profileLoading
+  const isLoading = authLoading || !user || profileLoading
 
   if (isLoading) {
     return {

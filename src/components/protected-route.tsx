@@ -10,9 +10,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, loading, role, roleStatus } = useAuth()
+  const { user, loading, role } = useAuth()
 
-  if (loading || (user && (roleStatus === 'idle' || roleStatus === 'loading'))) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -24,8 +24,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />
   }
 
-  if (roleStatus === 'error' || !role) {
-    console.warn('[PROTECTED-ROUTE] Rôle introuvable pour un user authentifié – redirection /login')
+  if (!role) {
+    console.warn('[PROTECTED-ROUTE] User authentifié sans role — redirection /login')
     return <Navigate to="/login" replace />
   }
 

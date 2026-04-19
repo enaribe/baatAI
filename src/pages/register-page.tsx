@@ -10,7 +10,7 @@ import {
 type Step = 'choose' | 'client-form'
 
 export function RegisterPage() {
-  const { signUp, user, loading: authLoading, role, roleStatus } = useAuth()
+  const { signUp, user, loading: authLoading, role } = useAuth()
   const [step, setStep] = useState<Step>('choose')
 
   const [fullName, setFullName] = useState('')
@@ -20,9 +20,7 @@ export function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const waitingForRole = user !== null && roleStatus !== 'loaded' && roleStatus !== 'error'
-
-  if (authLoading || waitingForRole) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sand-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
