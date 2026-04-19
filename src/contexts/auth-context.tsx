@@ -116,24 +116,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     userRole: UserRole = 'client',
     organization?: string,
   ) => {
-    const { data, error } = await supabase.auth.signUp({
+    // Important : définir pendingRole AVANT signUp pour que le fetchRole
+    // déclenché par onAuthStateChange récupère le bon rôle sans aller en DB
+    // (et évite la race condition avec le trigger handle_new_user).
+    pendingRole.current = userRole
+
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
           organization: organization ?? null,
+          role: userRole,
         },
       },
     })
-    if (error) return { error: new Error(error.message) }
-
-    if (data.user && userRole !== 'client') {
-      pendingRole.current = userRole
-      const profilesTable = supabase.from('profiles') as unknown as {
-        update: (v: { role: UserRole }) => { eq: (col: string, val: string) => Promise<unknown> }
-      }
-      await profilesTable.update({ role: userRole }).eq('id', data.user.id)
+    if (error) {
+      pendingRole.current = null
+      return { error: new Error(error.message) }
     }
 
     return { error: null }
