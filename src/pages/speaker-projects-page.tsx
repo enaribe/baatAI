@@ -11,8 +11,7 @@ import type { AvailableProject } from '../types/database'
 export function SpeakerProjectsPage() {
   const { user } = useAuth()
   const { profile } = useSpeakerProfile(user?.id)
-  const isApproved = profile?.verification_status === 'approved'
-  const { projects, loading } = useAvailableProjects(user?.id, isApproved)
+  const { projects, loading } = useAvailableProjects(user?.id)
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterLang, setFilterLang] = useState('')

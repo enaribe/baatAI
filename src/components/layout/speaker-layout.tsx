@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { NavLink, useNavigate, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Mic, Wallet, CheckSquare, Mail, User,
-  LogOut, Sun, Moon, Clock, Loader2, Bell,
+  LogOut, Sun, Moon, Loader2, Bell,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
 import { useDarkMode } from '../../hooks/use-dark-mode'
@@ -45,9 +45,6 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
   }
 
   if (guard.status === 'no-profile') return <Navigate to="/speaker/onboarding" replace />
-  if (guard.status === 'pending' || guard.status === 'rejected') {
-    return <Navigate to="/speaker/pending" replace />
-  }
 
   const initials = (user?.user_metadata?.full_name as string | undefined)
     ?.split(' ')
@@ -55,27 +52,6 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
     .map((n: string) => n[0])
     .join('')
     .toUpperCase() ?? '?'
-
-  const verificationBadge = () => {
-    if (!profile) return null
-    if (profile.verification_status === 'approved') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700 text-[10px] font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-secondary-500" />
-          Approuvé
-        </span>
-      )
-    }
-    if (profile.verification_status === 'pending') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
-          <Clock className="w-2.5 h-2.5" />
-          En attente
-        </span>
-      )
-    }
-    return null
-  }
 
   const balanceDisplay = profile
     ? new Intl.NumberFormat('fr-SN').format(profile.wallet_balance_fcfa) + ' FCFA'
@@ -179,7 +155,6 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
                 <p className="text-xs font-semibold text-sand-800 dark:text-sand-200 truncate">
                   {(user?.user_metadata?.full_name as string | undefined) || user?.email?.split('@')[0]}
                 </p>
-                {verificationBadge()}
               </div>
             </div>
             {balanceDisplay && (

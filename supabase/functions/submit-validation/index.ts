@@ -32,12 +32,12 @@ serve(async (req) => {
     // Vérifier le profil
     const { data: speaker } = await admin
       .from('speaker_profiles')
-      .select('verification_status, reliability_score')
+      .select('reliability_score')
       .eq('id', user.id)
       .single()
 
-    if (!speaker || speaker.verification_status !== 'approved') {
-      return json({ data: null, error: 'Profil non approuvé' }, 403)
+    if (!speaker) {
+      return json({ data: null, error: 'Profil locuteur introuvable' }, 404)
     }
     if ((speaker.reliability_score ?? 1) < 0.5) {
       return json({ data: null, error: 'Score de fiabilité insuffisant pour valider' }, 403)

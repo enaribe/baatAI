@@ -73,15 +73,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Vérifier que le locuteur est approuvé
+    // Vérifier que le locuteur a un profil
     const { data: speaker } = await admin
       .from('speaker_profiles')
-      .select('id, verification_status')
+      .select('id')
       .eq('id', speaker_id)
       .single()
 
-    if (!speaker || speaker.verification_status !== 'approved') {
-      return json({ error: 'Locuteur non approuvé' }, 400)
+    if (!speaker) {
+      return json({ error: 'Locuteur introuvable' }, 400)
     }
 
     // Vérifier qu'une invitation n'existe pas déjà (non expirée)

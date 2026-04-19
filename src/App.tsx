@@ -16,7 +16,6 @@ import { LandingPage } from './pages/landing-page'
 // Locuteur — public
 import { SpeakerRegisterPage } from './pages/speaker-register-page'
 import { SpeakerOnboardingPage } from './pages/speaker-onboarding-page'
-import { SpeakerPendingPage } from './pages/speaker-pending-page'
 // Locuteur — espace authentifié
 import { SpeakerDashboardPage } from './pages/speaker-dashboard-page'
 import { SpeakerProjectsPage } from './pages/speaker-projects-page'
@@ -29,7 +28,6 @@ import { SpeakerValidatePage } from './pages/speaker-validate-page'
 import { SpeakerProfilePage } from './pages/speaker-profile-page'
 import { SpeakerRecordPage } from './pages/speaker-record-page'
 // Admin
-import { AdminSpeakersPage } from './pages/admin-speakers-page'
 import { AdminWithdrawalsPage } from './pages/admin-withdrawals-page'
 
 export function App() {
@@ -56,15 +54,6 @@ export function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/speaker/pending"
-              element={
-                <ProtectedRoute allowedRoles={['speaker']}>
-                  <SpeakerPendingPage />
-                </ProtectedRoute>
-              }
-            />
-
             {/* ── Locuteur — enregistrement fullscreen (pas de layout) ── */}
             <Route
               path="/speaker/record/:sessionId"
@@ -176,14 +165,6 @@ export function App() {
             />
 
             {/* ── Admin ── */}
-            <Route
-              path="/admin/speakers"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AppLayout><AdminSpeakersPage /></AppLayout>
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/admin/withdrawals"
               element={

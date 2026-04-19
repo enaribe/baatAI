@@ -23,7 +23,7 @@ export function LoginPage() {
 
   if (user && role) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
-    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
+    if (role === 'admin') return <Navigate to="/admin/withdrawals" replace />
     return <Navigate to="/dashboard" replace />
   }
 

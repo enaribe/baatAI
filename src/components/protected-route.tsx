@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (allowedRoles && !allowedRoles.includes(role)) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
-    if (role === 'admin') return <Navigate to="/admin/speakers" replace />
+    if (role === 'admin') return <Navigate to="/admin/withdrawals" replace />
     return <Navigate to="/dashboard" replace />
   }
 

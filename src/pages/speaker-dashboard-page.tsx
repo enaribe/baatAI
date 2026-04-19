@@ -61,8 +61,7 @@ function ProjectCard({ project }: { project: AvailableProject }) {
 export function SpeakerDashboardPage() {
   const { user } = useAuth()
   const { profile } = useSpeakerProfile(user?.id)
-  const isApproved = profile?.verification_status === 'approved'
-  const { projects, loading: projectsLoading } = useAvailableProjects(user?.id, isApproved)
+  const { projects, loading: projectsLoading } = useAvailableProjects(user?.id)
   const { invitations } = useSpeakerInvitations(user?.id)
 
   const balance = useCountUp(profile?.wallet_balance_fcfa ?? 0)

@@ -41,17 +41,14 @@ Deno.serve(async (req) => {
       return json({ data: null, error: 'Seuls les locuteurs peuvent accepter un projet' }, 403)
     }
 
-    // 2. Le speaker_profile doit exister et être approuvé
+    // 2. Le speaker_profile doit exister
     const { data: speaker } = await admin
       .from('speaker_profiles')
-      .select('id, verification_status, languages, gender')
+      .select('id, languages, gender')
       .eq('id', user.id)
       .single()
 
     if (!speaker) return json({ data: null, error: 'Profil locuteur introuvable' }, 404)
-    if (speaker.verification_status !== 'approved') {
-      return json({ data: null, error: 'Profil non approuvé' }, 403)
-    }
 
     const { project_id, invitation_id } = await req.json() as {
       project_id: string

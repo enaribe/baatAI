@@ -96,16 +96,14 @@ Deno.serve(async (req) => {
       ? Math.ceil((phraseCount * 5) / 60)
       : null
 
-    // Vérifier quels speakers sont approuvés
+    // Vérifier quels speakers ont un profil
     const { data: speakers } = await admin
       .from('speaker_profiles')
-      .select('id, verification_status')
+      .select('id')
       .in('id', speaker_ids) as unknown as {
-        data: { id: string; verification_status: string }[] | null
+        data: { id: string }[] | null
       }
-    const approvedIds = new Set(
-      (speakers ?? []).filter(s => s.verification_status === 'approved').map(s => s.id),
-    )
+    const validIds = new Set((speakers ?? []).map(s => s.id))
 
     // Invitations existantes non-expirées
     const { data: existing } = await admin
@@ -122,8 +120,8 @@ Deno.serve(async (req) => {
     const toInsert: Record<string, unknown>[] = []
 
     for (const sid of speaker_ids) {
-      if (!approvedIds.has(sid)) {
-        results.push({ speaker_id: sid, ok: false, error: 'Locuteur non approuvé' })
+      if (!validIds.has(sid)) {
+        results.push({ speaker_id: sid, ok: false, error: 'Locuteur introuvable' })
         continue
       }
       if (alreadyInvited.has(sid)) {

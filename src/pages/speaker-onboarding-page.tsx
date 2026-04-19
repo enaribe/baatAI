@@ -47,8 +47,7 @@ export function SpeakerOnboardingPage() {
   }
 
   if (guard.hasProfile) {
-    if (guard.status === 'approved') return <Navigate to="/speaker/dashboard" replace />
-    return <Navigate to="/speaker/pending" replace />
+    return <Navigate to="/speaker/dashboard" replace />
   }
 
   const toggleLanguage = (code: string) => {
@@ -87,7 +86,6 @@ export function SpeakerOnboardingPage() {
         languages: form.languages,
         dialects: form.dialects,
         bio: form.bio || null,
-        verification_status: 'pending',
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (err) {
@@ -95,7 +93,7 @@ export function SpeakerOnboardingPage() {
       setLoading(false)
       return
     }
-    navigate('/speaker/pending')
+    navigate('/speaker/dashboard')
   }
 
   const canNext = () => {

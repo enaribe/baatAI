@@ -30,12 +30,11 @@ serve(async (req) => {
     // Vérifier le profil et le solde
     const { data: speaker } = await admin
       .from('speaker_profiles')
-      .select('wallet_balance_fcfa, verification_status')
+      .select('wallet_balance_fcfa')
       .eq('id', user.id)
       .single()
 
     if (!speaker) return json({ data: null, error: 'Profil introuvable' }, 404)
-    if (speaker.verification_status !== 'approved') return json({ data: null, error: 'Profil non approuvé' }, 403)
 
     const { amount_fcfa, method, destination } = await req.json() as {
       amount_fcfa: number

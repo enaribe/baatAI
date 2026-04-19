@@ -58,21 +58,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 1b. Speaker still approved? (défense en profondeur si rejected après création de session)
-    if (session.speaker_id) {
-      const { data: speaker } = await supabase
-        .from("speaker_profiles")
-        .select("verification_status")
-        .eq("id", session.speaker_id)
-        .single();
-
-      if (!speaker || speaker.verification_status !== "approved") {
-        return new Response(
-          JSON.stringify({ error: "Locuteur non approuvé" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-    }
 
     // 2. Validate that phrase belongs to the project
     const { data: phrase, error: phraseError } = await supabase

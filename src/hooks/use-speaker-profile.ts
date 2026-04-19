@@ -6,7 +6,6 @@ interface UseSpeakerProfileResult {
   profile: SpeakerProfile | null
   loading: boolean
   error: string | null
-  isApproved: boolean
   refetch: () => Promise<void>
   update: (data: Partial<SpeakerProfile>) => Promise<{ error: string | null }>
 }
@@ -47,7 +46,6 @@ export function useSpeakerProfile(userId: string | undefined): UseSpeakerProfile
     profile,
     loading,
     error,
-    isApproved: profile?.verification_status === 'approved',
     refetch: fetch,
     update,
   }
