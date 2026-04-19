@@ -23,6 +23,7 @@ import { SpeakerProjectsPage } from './pages/speaker-projects-page'
 import { SpeakerInvitationsPage } from './pages/speaker-invitations-page'
 import { SpeakerInvitationDetailPage } from './pages/speaker-invitation-detail-page'
 import { SpeakerNotificationsPage } from './pages/speaker-notifications-page'
+import { AccountPage } from './pages/account-page'
 import { SpeakerWalletPage } from './pages/speaker-wallet-page'
 import { SpeakerValidatePage } from './pages/speaker-validate-page'
 import { SpeakerProfilePage } from './pages/speaker-profile-page'
@@ -162,6 +163,14 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['client', 'admin']}>
                   <AppLayout><ProjectPage /></AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                <ProtectedRoute allowedRoles={['client', 'admin']}>
+                  <AppLayout><AccountPage /></AppLayout>
                 </ProtectedRoute>
               }
             />

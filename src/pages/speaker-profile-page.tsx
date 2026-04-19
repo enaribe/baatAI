@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerProfile } from '../hooks/use-speaker-profile'
 import { LANGUAGES } from '../lib/languages'
-import { Loader2, Save, Check, AlertCircle, Star, Shield } from 'lucide-react'
+import { Loader2, Save, Check, AlertCircle, Star, Shield, Trash2 } from 'lucide-react'
 import type { Gender } from '../types/database'
+import { DeleteAccountModal } from '../components/delete-account-modal'
 
 export function SpeakerProfilePage() {
   const { user } = useAuth()
@@ -18,6 +19,7 @@ export function SpeakerProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -195,6 +197,35 @@ export function SpeakerProfilePage() {
           {saved ? 'Sauvegardé !' : 'Enregistrer les modifications'}
         </button>
       </div>
+
+      {/* Zone danger */}
+      <div className="mt-8 pt-6 border-t border-sand-200/60 dark:border-sand-800">
+        <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-2">Zone danger</p>
+        <div className="bg-white dark:bg-sand-900 rounded-2xl border border-red-200/70 dark:border-red-900/40 p-5">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-sm font-extrabold text-sand-900 dark:text-sand-100"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                Supprimer mon compte
+              </p>
+              <p className="text-xs text-sand-500 leading-relaxed mt-1">
+                Vos données personnelles seront anonymisées. Vos enregistrements sont conservés pour les datasets déjà créés.
+              </p>
+            </div>
+            <button
+              onClick={() => setDeleteOpen(true)}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <DeleteAccountModal open={deleteOpen} onClose={() => setDeleteOpen(false)} />
     </div>
   )
 }

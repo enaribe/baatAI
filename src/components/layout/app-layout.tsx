@@ -82,8 +82,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Bottom — Utilisateur */}
         <div className="px-3 py-4 border-t border-sand-100 dark:border-sand-800/50 space-y-1">
-          {/* User info */}
-          <div className="flex items-center gap-3 px-3 py-2.5 mb-2">
+          {/* User info — lien vers /account */}
+          <NavLink
+            to="/account"
+            className={({ isActive }) =>
+              [
+                'flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl transition-colors',
+                isActive
+                  ? 'bg-primary-50 dark:bg-primary-900/20'
+                  : 'hover:bg-sand-100 dark:hover:bg-sand-800/70',
+              ].join(' ')
+            }
+          >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
               {initials}
             </div>
@@ -93,7 +103,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </p>
               <p className="text-[10px] text-sand-400 truncate">{user?.email}</p>
             </div>
-          </div>
+          </NavLink>
 
           <button
             onClick={toggle}
