@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useEffect, useState, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -31,8 +31,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<UserRole | null>(null)
+  const pendingRole = useRef<UserRole | null>(null)
 
   const fetchRole = useCallback(async (uid: string) => {
+    // Si un rôle est en attente (juste après signup), l'utiliser directement
+    if (pendingRole.current) {
+      setRole(pendingRole.current)
+      pendingRole.current = null
+      return
+    }
     try {
       const { data } = await supabase
         .from('profiles')
@@ -90,6 +97,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Mettre à jour le rôle si différent du défaut 'client'
     if (data.user && userRole !== 'client') {
+      // Stocker le rôle attendu AVANT que onAuthStateChange ne déclenche fetchRole
+      pendingRole.current = userRole
       const profilesTable = supabase.from('profiles') as unknown as {
         update: (v: { role: UserRole }) => { eq: (col: string, val: string) => Promise<unknown> }
       }
