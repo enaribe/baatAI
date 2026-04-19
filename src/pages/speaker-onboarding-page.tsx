@@ -86,6 +86,8 @@ export function SpeakerOnboardingPage() {
         languages: form.languages,
         dialects: form.dialects,
         bio: form.bio || null,
+        verification_status: 'approved',
+        is_available: true,
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (err) {

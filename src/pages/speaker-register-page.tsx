@@ -149,6 +149,8 @@ export function SpeakerRegisterPage() {
         languages: form.languages,
         dialects: form.dialects,
         bio: form.bio.trim() || null,
+        verification_status: 'approved',
+        is_available: true,
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (profileError) {
