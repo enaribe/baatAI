@@ -1,7 +1,9 @@
+import { Component } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
 import { useAuth } from '../hooks/use-auth'
 import { useNotifications } from '../hooks/use-notifications'
 import { Link } from 'react-router-dom'
-import { Loader2, Bell, Mail, Check, X, AlertCircle, Clock, ChevronRight, CheckCheck } from 'lucide-react'
+import { Loader2, Bell, Mail, Check, X, AlertCircle, Clock, ChevronRight, CheckCheck, AlertTriangle } from 'lucide-react'
 import type { Notification, NotificationType } from '../types/database'
 
 interface NotifDisplay {
@@ -14,7 +16,7 @@ interface NotifDisplay {
 }
 
 function buildDisplay(n: Notification): NotifDisplay {
-  const p = n.payload as Record<string, unknown>
+  const p = (n.payload as Record<string, unknown> | null) ?? {}
   const projectName = (p.project_name as string) ?? 'un projet'
   const rate = p.rate_per_hour_fcfa as number | undefined
   const rateStr = rate && rate > 0
@@ -90,9 +92,34 @@ function relativeTime(iso: string): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
-export function SpeakerNotificationsPage() {
+interface BoundaryState { error: Error | null }
+class LocalErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
+  state: BoundaryState = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[SpeakerNotificationsPage] render crash:', error, info)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="max-w-[42rem] mx-auto px-4 py-8">
+          <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold mb-1">Erreur d'affichage de la page</p>
+              <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed">{this.state.error.message}{'\n\n'}{this.state.error.stack}</pre>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function NotificationsPageInner() {
   const { user } = useAuth()
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications(user?.id)
+  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead } = useNotifications(user?.id)
 
   return (
     <div className="max-w-[42rem] mx-auto px-4 py-8">
@@ -114,6 +141,16 @@ export function SpeakerNotificationsPage() {
         )}
       </div>
 
+      {error && (
+        <div className="mb-4 flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="font-bold mb-1">Erreur de chargement</p>
+            <pre className="whitespace-pre-wrap break-words font-mono text-[11px]">{error}</pre>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-primary-400" />
@@ -121,7 +158,7 @@ export function SpeakerNotificationsPage() {
       ) : notifications.length === 0 ? (
         <div className="text-center py-16">
           <Bell className="w-10 h-10 text-sand-300 mx-auto mb-3" />
-          <p className="text-sand-500 font-semibold">Aucune notification pour l\'instant</p>
+          <p className="text-sand-500 font-semibold">Aucune notification pour l{"'"}instant</p>
           <p className="text-sand-400 text-sm mt-1">Vous serez prévenu ici des invitations et mises à jour</p>
         </div>
       ) : (
@@ -189,5 +226,13 @@ export function SpeakerNotificationsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export function SpeakerNotificationsPage() {
+  return (
+    <LocalErrorBoundary>
+      <NotificationsPageInner />
+    </LocalErrorBoundary>
   )
 }

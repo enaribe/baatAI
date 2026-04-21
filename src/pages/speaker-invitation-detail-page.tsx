@@ -112,7 +112,7 @@ export function SpeakerInvitationDetailPage() {
 
     const res = await fetch(`${supabaseUrl}/functions/v1/accept-project`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string },
       body: JSON.stringify({ project_id: invitation.project_id, invitation_id: invitation.id }),
     })
     const json = await res.json() as { data?: { session_id: string }; error?: string }

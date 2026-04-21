@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Filter, Loader2, UserSearch, Users, Star } from 'lucide-react'
+import { Search, Filter, Loader2, UserSearch, Users, Star, AlertTriangle } from 'lucide-react'
 import { useMatchSpeakers } from '../../hooks/use-match-speakers'
 import { useToast } from '../../hooks/use-toast'
 import { supabase } from '../../lib/supabase'
@@ -26,7 +26,7 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
     certifiedOnly,
   }), [search, gender, certifiedOnly])
 
-  const { speakers, loading, refetch } = useMatchSpeakers(projectId, filters)
+  const { speakers, loading, refetch, error, rawSpeakersCount } = useMatchSpeakers(projectId, filters)
 
   const selectableSpeakers = speakers.filter(
     s => !s.invitation_status || (s.invitation_status !== 'pending' && s.invitation_status !== 'accepted'),
@@ -56,19 +56,38 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
       return
     }
 
+    console.group('[inviteOne] POST /invite-speaker')
+    console.info('projectId:', projectId)
+    console.info('speakerId:', speakerId)
+    console.info('session user id:', session.user.id)
+    console.info('session user metadata.role:', session.user.user_metadata?.role)
+    console.info('token (10 premiers car.):', session.access_token.slice(0, 10) + '…')
+
     const res = await fetch(`${supabaseUrl}/functions/v1/invite-speaker`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
       },
       body: JSON.stringify({ project_id: projectId, speaker_id: speakerId }),
     })
-    const json = await res.json() as { data?: unknown; error?: string }
+    const rawText = await res.text()
+    console.info('response status:', res.status)
+    console.info('response body (raw):', rawText)
+    console.groupEnd()
+
+    let json: { data?: unknown; error?: string } = {}
+    try { json = JSON.parse(rawText) } catch { /* body non JSON */ }
+
     setIndividualSending(null)
 
-    if (json.error) {
-      notify({ variant: 'error', title: 'Échec', message: json.error })
+    if (json.error || !res.ok) {
+      notify({
+        variant: 'error',
+        title: `Échec (HTTP ${res.status})`,
+        message: json.error || rawText || 'Erreur inconnue',
+      })
     } else {
       notify({ variant: 'success', message: 'Invitation envoyée' })
       await refetch()
@@ -91,6 +110,7 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
       },
       body: JSON.stringify({
         project_id: projectId,
@@ -223,6 +243,32 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
         </div>
       )}
 
+      {/* Erreur RPC (diagnostic) */}
+      {error && (
+        <div className="mb-4 flex items-start gap-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-xs">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="font-bold mb-1">Erreur RPC match_speakers_for_project</p>
+            <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed">{error}</pre>
+          </div>
+        </div>
+      )}
+
+      {/* Diagnostic : comptage brut vs résultat */}
+      {!loading && !error && (
+        <div className="mb-4 flex items-center justify-between gap-2 bg-sand-50 dark:bg-sand-800/40 border border-sand-200/60 dark:border-sand-700/60 px-3 py-2 rounded-lg text-[11px] text-sand-500">
+          <span>
+            Diagnostic :
+            <span className="font-bold text-sand-700 dark:text-sand-300 ml-1 tabular-nums">
+              {rawSpeakersCount ?? '?'}
+            </span> locuteur(s) disponible(s) en base ·
+            <span className="font-bold text-sand-700 dark:text-sand-300 ml-1 tabular-nums">
+              {speakers.length}
+            </span> après matching projet
+          </span>
+        </div>
+      )}
+
       {/* Liste */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -232,7 +278,13 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
         <div className="text-center py-12">
           <UserSearch className="w-10 h-10 text-sand-300 mx-auto mb-3" />
           <p className="text-sand-500 font-semibold text-sm">Aucun locuteur ne correspond</p>
-          <p className="text-sand-400 text-xs mt-1">Essayez de modifier les filtres</p>
+          <p className="text-sand-400 text-xs mt-1">
+            {rawSpeakersCount === 0
+              ? 'Aucun locuteur n\'est encore inscrit sur la plateforme.'
+              : rawSpeakersCount && rawSpeakersCount > 0
+                ? `${rawSpeakersCount} locuteur(s) existent mais ne matchent pas ce projet (langues, genre, âge…). Vérifiez les critères du projet.`
+                : 'Essayez de modifier les filtres.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2.5 pb-24">

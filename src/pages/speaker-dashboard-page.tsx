@@ -1,58 +1,68 @@
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerProfile } from '../hooks/use-speaker-profile'
-import { useAvailableProjects } from '../hooks/use-available-projects'
+import { useSpeakerActiveProjects, type ActiveSpeakerProject } from '../hooks/use-speaker-active-projects'
 import { useSpeakerInvitations } from '../hooks/use-speaker-invitations'
 import { useCountUp } from '../hooks/use-count-up'
-import { Mic, TrendingUp, Clock, Star, ChevronRight, Zap } from 'lucide-react'
+import { Mic, TrendingUp, Clock, Star, ChevronRight, Zap, Play, Compass } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getLanguageLabel } from '../lib/languages'
-import type { AvailableProject } from '../types/database'
 
-function ProjectCard({ project }: { project: AvailableProject }) {
+function ActiveProjectCard({ project }: { project: ActiveSpeakerProject }) {
   const rateDisplay = project.rate_per_hour_fcfa > 0
     ? new Intl.NumberFormat('fr-SN').format(project.rate_per_hour_fcfa) + ' FCFA/h'
     : 'Bénévole'
 
+  const progress = project.total_phrases > 0
+    ? Math.min(100, Math.round((project.recorded_phrases / project.total_phrases) * 100))
+    : 0
+
   return (
     <Link
-      to={`/speaker/projects/${project.project_id}`}
+      to={`/speaker/record/${project.session_id}`}
       className="block bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-5 hover:shadow-lg hover:shadow-sand-900/8 hover:-translate-y-0.5 transition-all duration-200 group"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sand-900 dark:text-sand-100 text-sm leading-snug truncate" style={{ fontFamily: 'var(--font-heading)' }}>
+          <p
+            className="font-bold text-sand-900 dark:text-sand-100 text-sm leading-snug truncate"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
             {project.project_name}
           </p>
-          <p className="text-xs text-sand-500 mt-0.5">{getLanguageLabel(project.target_language)}</p>
+          <p className="text-xs text-sand-500 mt-0.5">
+            {getLanguageLabel(project.target_language)}
+          </p>
         </div>
-        {project.is_public && (
-          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">
-            Public
+        <span className="inline-flex items-center gap-1 shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700">
+          <Play className="w-2.5 h-2.5 fill-secondary-700" />
+          En cours
+        </span>
+      </div>
+
+      {/* Progression */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] font-semibold text-sand-600 dark:text-sand-400 tabular-nums">
+            {project.recorded_phrases} / {project.total_phrases} phrases
           </span>
-        )}
-        {project.invitation_status === 'pending' && (
-          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-            Invité
+          <span className="text-[11px] font-bold text-secondary-700 dark:text-secondary-400 tabular-nums">
+            {progress}%
           </span>
-        )}
+        </div>
+        <div className="h-1.5 bg-sand-100 dark:bg-sand-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-secondary-400 to-secondary-600 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs text-sand-500">
-          <span className="flex items-center gap-1">
-            <Mic className="w-3 h-3" />
-            {project.phrase_count} phrases
-          </span>
-          {project.funding_source && (
-            <span className="text-[10px] font-semibold text-secondary-600 bg-secondary-50 px-2 py-0.5 rounded-full">
-              {project.funding_source}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 text-primary-600 dark:text-primary-400">
-          <span className="text-sm font-bold tabular-nums">{rateDisplay}</span>
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </div>
+        <span className="text-xs font-semibold text-sand-500">{rateDisplay}</span>
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-400 group-hover:gap-1.5 transition-all">
+          Reprendre
+          <ChevronRight className="w-3.5 h-3.5" />
+        </span>
       </div>
     </Link>
   )
@@ -61,7 +71,7 @@ function ProjectCard({ project }: { project: AvailableProject }) {
 export function SpeakerDashboardPage() {
   const { user } = useAuth()
   const { profile } = useSpeakerProfile(user?.id)
-  const { projects, loading: projectsLoading } = useAvailableProjects(user?.id)
+  const { projects: activeProjects, loading: projectsLoading } = useSpeakerActiveProjects(user?.id)
   const { invitations } = useSpeakerInvitations(user?.id)
 
   const balance = useCountUp(profile?.wallet_balance_fcfa ?? 0)
@@ -147,33 +157,49 @@ export function SpeakerDashboardPage() {
         </div>
       )}
 
-      {/* Projets disponibles */}
+      {/* Projets en cours du locuteur */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-sand-800 dark:text-sand-200" style={{ fontFamily: 'var(--font-heading)' }}>
-            Projets disponibles
+          <h2
+            className="text-base font-bold text-sand-800 dark:text-sand-200"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            Mes projets en cours
           </h2>
-          <Link to="/speaker/projects" className="text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-            Voir tout →
+          <Link
+            to="/speaker/projects"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            Découvrir
           </Link>
         </div>
 
         {projectsLoading ? (
           <div className="space-y-3">
             {[1, 2].map(i => (
-              <div key={i} className="bg-sand-100 dark:bg-sand-800 rounded-2xl h-24 animate-pulse" />
+              <div key={i} className="bg-sand-100 dark:bg-sand-800 rounded-2xl h-28 animate-pulse" />
             ))}
           </div>
-        ) : projects.length === 0 ? (
+        ) : activeProjects.length === 0 ? (
           <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-8 text-center">
             <Clock className="w-8 h-8 text-sand-300 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-sand-500">Aucun projet disponible pour vos langues</p>
-            <p className="text-xs text-sand-400 mt-1">Revenez bientôt ou complétez votre profil</p>
+            <p className="text-sm font-semibold text-sand-500">Aucun projet en cours</p>
+            <p className="text-xs text-sand-400 mt-1 mb-4">
+              Parcourez les projets disponibles pour commencer
+            </p>
+            <Link
+              to="/speaker/projects"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold shadow-sm transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Voir les projets disponibles
+            </Link>
           </div>
         ) : (
           <div className="space-y-3">
-            {projects.slice(0, 4).map(p => (
-              <ProjectCard key={p.project_id} project={p} />
+            {activeProjects.map(p => (
+              <ActiveProjectCard key={p.session_id} project={p} />
             ))}
           </div>
         )}

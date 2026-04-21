@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle, UserPlus } from 'lucide-react'
+import { ArrowLeft, FileText, Users, Mic, Package, Loader2, ChevronRight, Trash2, AlertTriangle, UserPlus, Settings } from 'lucide-react'
 import { useProject } from '../hooks/use-project'
 import { useRealtimeRecordings } from '../hooks/use-realtime-recordings'
 import { useToast } from '../hooks/use-toast'
@@ -16,9 +16,10 @@ import { SessionList } from '../components/session-list'
 import { RecordingList } from '../components/recording-list'
 import { ExportPanel } from '../components/export-panel'
 import { RecruitmentPanel } from '../components/recruitment/recruitment-panel'
+import { ProjectSettingsPanel } from '../components/project-settings-panel'
 import type { ProjectStatus, ProjectUsageType } from '../types/database'
 
-type Tab = 'phrases' | 'sessions' | 'recordings' | 'exports' | 'recruitment'
+type Tab = 'phrases' | 'sessions' | 'recordings' | 'exports' | 'recruitment' | 'settings'
 
 const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
   { key: 'phrases', label: 'Phrases', icon: FileText },
@@ -26,6 +27,7 @@ const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
   { key: 'recordings', label: 'Enregistrements', icon: Mic },
   { key: 'exports', label: 'Exports', icon: Package },
   { key: 'recruitment', label: 'Recrutement', icon: UserPlus },
+  { key: 'settings', label: 'Paramètres', icon: Settings },
 ]
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -319,6 +321,9 @@ export function ProjectPage() {
         )}
         {activeTab === 'recruitment' && (
           <RecruitmentPanel projectId={project.id} />
+        )}
+        {activeTab === 'settings' && (
+          <ProjectSettingsPanel project={project} onUpdated={refetch} />
         )}
       </div>
 

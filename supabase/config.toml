@@ -364,6 +364,39 @@ allow_dynamic_registration = false
 [functions.upload-phrases]
 verify_jwt = false
 
+[functions.invite-speaker]
+verify_jwt = false
+
+[functions.invite-speaker-bulk]
+verify_jwt = false
+
+[functions.accept-project]
+verify_jwt = false
+
+[functions.cancel-invitation]
+verify_jwt = false
+
+[functions.remind-invitation]
+verify_jwt = false
+
+[functions.submit-validation]
+verify_jwt = false
+
+[functions.request-withdrawal]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.submit-recording]
+verify_jwt = false
+
+[functions.get-session]
+verify_jwt = false
+
+[functions.get-recording-status]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

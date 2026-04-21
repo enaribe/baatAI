@@ -185,7 +185,7 @@ export function SentTab({ projectId }: SentTabProps) {
 
     const res = await fetch(`${supabaseUrl}/functions/v1/cancel-invitation`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string },
       body: JSON.stringify({ invitation_id: id }),
     })
     const json = await res.json() as { data?: unknown; error?: string }
@@ -206,7 +206,7 @@ export function SentTab({ projectId }: SentTabProps) {
 
     const res = await fetch(`${supabaseUrl}/functions/v1/remind-invitation`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string },
       body: JSON.stringify({ invitation_id: id }),
     })
     const json = await res.json() as { data?: unknown; error?: string }

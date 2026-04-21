@@ -21,11 +21,11 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { session_token, phrase_id, storage_path } = body;
+    const { session_token, session_id, phrase_id, storage_path } = body;
 
-    if (!session_token || !phrase_id || !storage_path) {
+    if ((!session_token && !session_id) || !phrase_id || !storage_path) {
       return new Response(
-        JSON.stringify({ error: "Champs requis : session_token, phrase_id, storage_path" }),
+        JSON.stringify({ error: "Champs requis : (session_token ou session_id), phrase_id, storage_path" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -36,12 +36,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // 1. Validate session token
-    const { data: session, error: sessionError } = await supabase
+    // 1. Validate session (par token ou par id selon ce qui est fourni)
+    const sessionQuery = supabase
       .from("recording_sessions")
-      .select("id, project_id, speaker_id, status, expires_at, total_recorded")
-      .eq("token", session_token)
-      .single();
+      .select("id, project_id, speaker_id, status, expires_at, total_recorded");
+
+    const { data: session, error: sessionError } = session_id
+      ? await sessionQuery.eq("id", session_id).single()
+      : await sessionQuery.eq("token", session_token).single();
 
     if (sessionError || !session) {
       return new Response(

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import type { FormEvent, ChangeEvent, DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2, File } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2, File, Globe, Lock, Languages } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/use-auth'
 import { parseTextToPhrases } from '../lib/text-parser'
@@ -50,6 +50,31 @@ export function NewProjectPage() {
   const [description, setDescription] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('wol')
   const [usageType, setUsageType] = useState<ProjectUsageType>('asr')
+  const [isVolunteer, setIsVolunteer] = useState(false)
+  const [rateInput, setRateInput] = useState('5000')
+  const [rateError, setRateError] = useState('')
+  const [isPublic, setIsPublic] = useState(true)
+  const [requiredLanguages, setRequiredLanguages] = useState<string[]>(['wol'])
+
+  const MIN_RATE = 2000
+  const rateValue = isVolunteer ? 0 : parseInt(rateInput, 10) || 0
+
+  // Synchroniser la langue cible avec les langues requises :
+  // si on change la langue cible, on s'assure qu'elle est dans requiredLanguages
+  const handleTargetLanguageChange = (code: string) => {
+    setTargetLanguage(code)
+    if (!requiredLanguages.includes(code)) {
+      setRequiredLanguages((langs) => [...langs, code])
+    }
+  }
+
+  const toggleRequiredLanguage = (code: string) => {
+    // On ne peut pas décocher la langue cible (obligatoire)
+    if (code === targetLanguage) return
+    setRequiredLanguages((langs) =>
+      langs.includes(code) ? langs.filter((l) => l !== code) : [...langs, code],
+    )
+  }
 
   // Step 1 — Phrases
   const [phrasesSource, setPhrasesSource] = useState<PhrasesSource | null>(null)
@@ -131,6 +156,7 @@ export function NewProjectPage() {
   }, [])
 
   const canProceedStep0 = name.trim().length > 0
+    && (isVolunteer || rateValue >= MIN_RATE)
   // On peut avancer si on a des phrases (manuelles ou fichier sélectionné)
   const canProceedStep1 = totalPhrases > 0 || selectedFile !== null
 
@@ -152,6 +178,9 @@ export function NewProjectPage() {
           target_language: targetLanguage,
           language_label: languageLabel,
           usage_type: usageType,
+          rate_per_hour_fcfa: rateValue,
+          is_public: isPublic,
+          required_languages: requiredLanguages,
         } as never)
         .select()
         .single()
@@ -344,7 +373,7 @@ export function NewProjectPage() {
               id="target-language"
               label="Langue cible"
               value={targetLanguage}
-              onChange={(e) => setTargetLanguage(e.target.value)}
+              onChange={(e) => handleTargetLanguageChange(e.target.value)}
               options={LANGUAGES}
             />
             <Select
@@ -354,6 +383,165 @@ export function NewProjectPage() {
               onChange={(e) => setUsageType(e.target.value as ProjectUsageType)}
               options={USAGE_OPTIONS}
             />
+
+            {/* Tarif de rémunération */}
+            <div className="pt-2 border-t border-sand-100 dark:border-sand-800">
+              <label htmlFor="rate" className="block text-sm font-semibold text-sand-800 dark:text-sand-200 mb-1.5">
+                Rémunération des locuteurs <span className="text-primary-500">*</span>
+              </label>
+              <p className="text-xs text-sand-500 dark:text-sand-400 mb-3">
+                Les locuteurs sont payés à l'heure d'enregistrement validé.
+                Fourchette recommandée : <span className="font-semibold text-sand-700 dark:text-sand-300">3 000 – 8 000 FCFA/h</span>.
+                Minimum légal : {MIN_RATE.toLocaleString('fr-FR')} FCFA/h.
+              </p>
+
+              <div className={`relative ${isVolunteer ? 'opacity-50 pointer-events-none' : ''}`}>
+                <input
+                  id="rate"
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_RATE}
+                  step={500}
+                  value={rateInput}
+                  onChange={(e) => {
+                    setRateInput(e.target.value)
+                    const n = parseInt(e.target.value, 10) || 0
+                    if (e.target.value && n < MIN_RATE) {
+                      setRateError(`Minimum ${MIN_RATE.toLocaleString('fr-FR')} FCFA/h.`)
+                    } else {
+                      setRateError('')
+                    }
+                  }}
+                  disabled={isVolunteer}
+                  className="w-full pr-20 pl-4 py-2.5 rounded-xl border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-900 text-sand-900 dark:text-sand-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent tabular-nums"
+                  placeholder="5000"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-sand-500 dark:text-sand-400 pointer-events-none">
+                  FCFA/h
+                </span>
+              </div>
+
+              {rateError && !isVolunteer && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1.5">{rateError}</p>
+              )}
+
+              <label className="flex items-start gap-2.5 mt-3 p-3 rounded-xl border border-sand-200 dark:border-sand-700 bg-sand-50/50 dark:bg-sand-800/30 cursor-pointer hover:border-sand-300 dark:hover:border-sand-600 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={isVolunteer}
+                  onChange={(e) => {
+                    setIsVolunteer(e.target.checked)
+                    if (e.target.checked) setRateError('')
+                  }}
+                  className="mt-0.5 w-4 h-4 accent-primary-500 shrink-0"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-sand-800 dark:text-sand-200">Projet bénévole / académique</p>
+                  <p className="text-xs text-sand-500 dark:text-sand-400 leading-relaxed">
+                    Les locuteurs verront le badge « Bénévole » et sauront qu'ils participent gratuitement.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* Visibilité */}
+            <div className="pt-2 border-t border-sand-100 dark:border-sand-800">
+              <label className="block text-sm font-semibold text-sand-800 dark:text-sand-200 mb-1.5">
+                Visibilité du projet <span className="text-primary-500">*</span>
+              </label>
+              <p className="text-xs text-sand-500 dark:text-sand-400 mb-3">
+                Qui peut voir et postuler à ce projet ?
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(true)}
+                  className={[
+                    'relative flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all',
+                    isPublic
+                      ? 'bg-secondary-50 dark:bg-secondary-900/30 border-secondary-400 text-secondary-700 dark:text-secondary-300'
+                      : 'border-sand-200 dark:border-sand-700 text-sand-700 dark:text-sand-300 hover:border-sand-300',
+                  ].join(' ')}
+                >
+                  <Globe className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold leading-tight">Public</p>
+                    <p className="text-[11px] mt-0.5 opacity-80 leading-snug">
+                      Visible par tous les locuteurs qui parlent les langues requises
+                    </p>
+                  </div>
+                  {isPublic && (
+                    <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-current flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(false)}
+                  className={[
+                    'relative flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all',
+                    !isPublic
+                      ? 'bg-accent-50 dark:bg-accent-900/30 border-accent-400 text-accent-700 dark:text-accent-300'
+                      : 'border-sand-200 dark:border-sand-700 text-sand-700 dark:text-sand-300 hover:border-sand-300',
+                  ].join(' ')}
+                >
+                  <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold leading-tight">Sur invitation</p>
+                    <p className="text-[11px] mt-0.5 opacity-80 leading-snug">
+                      Seuls les locuteurs que vous invitez voient le projet
+                    </p>
+                  </div>
+                  {!isPublic && (
+                    <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-current flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Langues requises */}
+            <div className="pt-2 border-t border-sand-100 dark:border-sand-800">
+              <label className="block text-sm font-semibold text-sand-800 dark:text-sand-200 mb-1.5">
+                <Languages className="w-4 h-4 inline -mt-0.5 mr-1" />
+                Langues acceptées
+              </label>
+              <p className="text-xs text-sand-500 dark:text-sand-400 mb-3">
+                Les locuteurs doivent parler au moins une de ces langues.
+                La langue cible est obligatoire.
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+                {LANGUAGES.map((lang) => {
+                  const active = requiredLanguages.includes(lang.value)
+                  const isTarget = lang.value === targetLanguage
+                  return (
+                    <button
+                      key={lang.value}
+                      type="button"
+                      onClick={() => toggleRequiredLanguage(lang.value)}
+                      disabled={isTarget}
+                      className={[
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                        isTarget
+                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-400 text-primary-700 dark:text-primary-300 cursor-default'
+                          : active
+                            ? 'bg-secondary-50 dark:bg-secondary-900/30 border-secondary-400 text-secondary-700 dark:text-secondary-300'
+                            : 'border-sand-200 dark:border-sand-700 text-sand-600 dark:text-sand-400 hover:border-sand-300',
+                      ].join(' ')}
+                    >
+                      {active && <Check className="w-3 h-3" />}
+                      {lang.label}
+                      {isTarget && <span className="text-[9px] opacity-70">(cible)</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             <div className="flex justify-end pt-2">
               <Button
@@ -532,6 +720,24 @@ export function NewProjectPage() {
               {description && <SummaryRow label="Description" value={description} />}
               <SummaryRow label="Langue" value={languageLabel} />
               <SummaryRow label="Utilisation" value={usageType.toUpperCase()} />
+              <SummaryRow
+                label="Rémunération"
+                value={isVolunteer
+                  ? 'Bénévole'
+                  : `${rateValue.toLocaleString('fr-FR')} FCFA/h`}
+              />
+              <SummaryRow
+                label="Visibilité"
+                value={isPublic ? 'Public' : 'Sur invitation'}
+              />
+              <SummaryRow
+                label="Langues acceptées"
+                value={
+                  requiredLanguages
+                    .map((c) => LANGUAGES.find((l) => l.value === c)?.label ?? c)
+                    .join(', ') || '—'
+                }
+              />
               {phrasesSource === 'file' && fileName && (
                 <SummaryRow label="Fichier" value={fileName} />
               )}

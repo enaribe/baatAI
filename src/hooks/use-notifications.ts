@@ -38,26 +38,28 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
   useEffect(() => {
     if (!userId) return
 
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 50))
-        },
-      )
-      .subscribe()
+    // Nom unique par monte pour éviter le conflit StrictMode double-mount
+    const channelName = `notifications:${userId}:${Math.random().toString(36).slice(2, 8)}`
+    const channel = supabase.channel(channelName)
 
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 50))
+      },
+    )
+
+    channel.subscribe()
     channelRef.current = channel
 
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
       channelRef.current = null
     }
   }, [userId])
