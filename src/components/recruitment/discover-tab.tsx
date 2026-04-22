@@ -56,13 +56,6 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
       return
     }
 
-    console.group('[inviteOne] POST /invite-speaker')
-    console.info('projectId:', projectId)
-    console.info('speakerId:', speakerId)
-    console.info('session user id:', session.user.id)
-    console.info('session user metadata.role:', session.user.user_metadata?.role)
-    console.info('token (10 premiers car.):', session.access_token.slice(0, 10) + '…')
-
     const res = await fetch(`${supabaseUrl}/functions/v1/invite-speaker`, {
       method: 'POST',
       headers: {
@@ -73,9 +66,6 @@ export function DiscoverTab({ projectId }: DiscoverTabProps) {
       body: JSON.stringify({ project_id: projectId, speaker_id: speakerId }),
     })
     const rawText = await res.text()
-    console.info('response status:', res.status)
-    console.info('response body (raw):', rawText)
-    console.groupEnd()
 
     let json: { data?: unknown; error?: string } = {}
     try { json = JSON.parse(rawText) } catch { /* body non JSON */ }

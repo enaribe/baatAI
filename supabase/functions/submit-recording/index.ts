@@ -36,6 +36,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // 0. Si la requête est en mode "speaker authentifié" (session_id fourni),
+    //    on EXIGE un Bearer token valide et on vérifie que l'user authentifié
+    //    correspond bien au speaker_id de la session. Le mode legacy anonyme
+    //    (session_token) reste accepté pour la compat retro de /record/:token.
+    let authenticatedUserId: string | null = null;
+    if (session_id) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      if (!jwt) {
+        return new Response(
+          JSON.stringify({ error: "Authentification requise" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
+      if (userErr || !userData?.user) {
+        return new Response(
+          JSON.stringify({ error: "Token invalide" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      authenticatedUserId = userData.user.id;
+    }
+
     // 1. Validate session (par token ou par id selon ce qui est fourni)
     const sessionQuery = supabase
       .from("recording_sessions")
@@ -49,6 +73,14 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Session introuvable" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // 1b. Vérifier que l'utilisateur authentifié est bien le propriétaire de la session
+    if (session_id && authenticatedUserId && session.speaker_id !== authenticatedUserId) {
+      return new Response(
+        JSON.stringify({ error: "Accès refusé" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 

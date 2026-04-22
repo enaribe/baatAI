@@ -47,10 +47,6 @@ export function useMatchSpeakers(
     setLoading(true)
     setError(null)
 
-    console.group('[useMatchSpeakers] Fetch')
-    console.info('projectId:', projectId)
-    console.info('filters:', filters)
-
     // 1. Compte brut de tous les speakers disponibles (sans filtre projet)
     const { count: totalCount, error: countError } = await (supabase
       .from('speaker_profiles')
@@ -60,8 +56,7 @@ export function useMatchSpeakers(
         error: { message: string } | null
       }>)
 
-    console.info('Speakers totaux (is_available=true):', totalCount)
-    if (countError) console.error('countError:', countError)
+    if (countError) console.error('[useMatchSpeakers] count error:', countError.message)
     setRawSpeakersCount(totalCount)
 
     // 2. Appel RPC match
@@ -78,14 +73,10 @@ export function useMatchSpeakers(
     })
 
     if (err) {
-      console.error('RPC error:', err)
+      console.error('[useMatchSpeakers] RPC error:', err.message)
       const full = [err.message, err.details, err.hint, err.code].filter(Boolean).join(' | ')
       setError(full)
-    } else {
-      console.info('RPC résultat:', data?.length ?? 0, 'speakers')
-      console.table(data ?? [])
     }
-    console.groupEnd()
 
     setSpeakers(data ?? [])
     setLoading(false)

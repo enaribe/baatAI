@@ -1,0 +1,43 @@
+-- =============================================
+-- Baat-IA — Script DEV uniquement : reset complet des données
+-- =============================================
+-- /!\ NE JAMAIS EXÉCUTER EN PRODUCTION /!\
+--
+-- Ce script vide toutes les tables applicatives et tous les utilisateurs.
+-- Il a été retiré du dossier `migrations/` pour éviter une exécution
+-- accidentelle via `supabase db push` ou par la CI.
+--
+-- Pour exécuter manuellement en local :
+--   psql $DATABASE_URL_DEV -f supabase/scripts/dev/030_reset_data.sql.DEV_ONLY
+--
+-- Le guard ci-dessous bloque l'exécution si la base ressemble à une prod.
+-- =============================================
+
+DO $$
+BEGIN
+  IF current_database() ILIKE '%prod%'
+     OR current_database() ILIKE '%production%'
+     OR current_database() = 'postgres'
+  THEN
+    RAISE EXCEPTION 'Refus d''exécution : base "%" semble être une production.', current_database();
+  END IF;
+END $$;
+
+-- 1. Tables applicatives (ordre inverse des dépendances, CASCADE gère le reste)
+TRUNCATE TABLE
+  public.exports,
+  public.recordings,
+  public.recording_sessions,
+  public.phrases,
+  public.project_invitations,
+  public.projects,
+  public.peer_validations,
+  public.notifications,
+  public.wallet_transactions,
+  public.withdrawals,
+  public.speaker_profiles,
+  public.profiles
+RESTART IDENTITY CASCADE;
+
+-- 2. Supprimer tous les utilisateurs auth (cascade vers profiles via FK)
+DELETE FROM auth.users;

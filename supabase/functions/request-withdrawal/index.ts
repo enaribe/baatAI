@@ -44,9 +44,14 @@ Deno.serve(async (req) => {
 
     if (!amount_fcfa || amount_fcfa < 5000) return json({ data: null, error: 'Montant minimum : 5 000 FCFA' }, 400)
     if (!destination?.trim()) return json({ data: null, error: 'Destination requise' }, 400)
+    // Pré-check côté Edge pour message rapide. Le check authoritatif est fait par
+    // le trigger SQL `check_withdrawal_balance` (migration 036) qui verrouille
+    // la ligne speaker_profiles avec FOR UPDATE pour bloquer les race conditions.
     if (speaker.wallet_balance_fcfa < amount_fcfa) return json({ data: null, error: 'Solde insuffisant' }, 400)
 
-    // Créer la demande de retrait
+    // Créer la demande de retrait — le trigger DB peut RAISE EXCEPTION si :
+    //  - solde insuffisant (race condition entre 2 requêtes concurrentes)
+    //  - un autre retrait pending/approved existe déjà
     const { data: withdrawal, error: wErr } = await admin
       .from('withdrawals')
       .insert({ speaker_id: user.id, amount_fcfa, method, destination, status: 'pending' })
@@ -54,7 +59,18 @@ Deno.serve(async (req) => {
       .single()
 
     if (wErr || !withdrawal) {
-      console.error('Withdrawal insert error:', wErr)
+      console.error('Withdrawal insert error:', wErr?.message)
+      // Mapper les erreurs du trigger vers des messages clairs côté UI
+      const msg = wErr?.message ?? ''
+      if (msg.includes('Solde insuffisant')) {
+        return json({ data: null, error: 'Solde insuffisant' }, 400)
+      }
+      if (msg.includes('déjà en cours de traitement')) {
+        return json({ data: null, error: 'Un retrait est déjà en cours. Attendez son traitement avant d\'en créer un autre.' }, 409)
+      }
+      if (msg.includes('strictement positif')) {
+        return json({ data: null, error: 'Montant invalide' }, 400)
+      }
       return json({ data: null, error: 'Erreur de création' }, 500)
     }
 
@@ -80,7 +96,7 @@ Deno.serve(async (req) => {
 
     return json({ data: { withdrawal_id: withdrawal.id }, error: null })
   } catch (e) {
-    console.error(e)
-    return json({ data: null, error: String(e) }, 500)
+    console.error('request-withdrawal error:', e instanceof Error ? e.message : String(e))
+    return json({ data: null, error: 'Erreur interne' }, 500)
   }
 })
