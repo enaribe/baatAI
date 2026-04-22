@@ -230,7 +230,11 @@ export function SpeakerRecordPage() {
 
       const res = await fetch(`${supabaseUrl}/functions/v1/submit-recording`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authSession.access_token}`,
+          apikey: supabaseAnonKey,
+        },
         body: JSON.stringify({
           session_id: sessionData.session.id,
           phrase_id: currentPhrase.id,
