@@ -15,6 +15,8 @@ export interface MatchedSpeaker {
   match_score: number
   invitation_status: string | null
   has_active_session: boolean
+  sample_storage_path: string | null
+  sample_duration_seconds: number | null
 }
 
 export interface MatchFilters {

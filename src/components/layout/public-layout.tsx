@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Logo } from '../ui/logo'
+import { ThemeToggle } from '../ui/theme-toggle'
 
 interface PublicLayoutProps {
   children: ReactNode
@@ -19,9 +20,15 @@ interface PublicLayoutProps {
  */
 export function PublicLayout({ children, brandTitle, brandSubtitle }: PublicLayoutProps) {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#08090a] text-[#f7f8f8]">
+    <div
+      className="min-h-screen grid lg:grid-cols-2"
+      style={{ background: 'var(--t-bg)', color: 'var(--t-fg)' }}
+    >
       <BrandSide title={brandTitle} sub={brandSubtitle} />
-      <section className="flex flex-col min-h-screen overflow-y-auto p-6 sm:p-10 lg:p-11">
+      <section className="relative flex flex-col min-h-screen overflow-y-auto p-6 sm:p-10 lg:p-11">
+        <div className="absolute top-4 right-4 sm:top-5 sm:right-5 z-10">
+          <ThemeToggle size={32} />
+        </div>
         {children}
       </section>
     </div>
@@ -32,7 +39,8 @@ export function PublicLayout({ children, brandTitle, brandSubtitle }: PublicLayo
 function BrandSide({ title, sub }: { title?: ReactNode; sub?: string }) {
   return (
     <aside
-      className="hidden lg:flex relative flex-col overflow-hidden p-9 lg:p-11 border-r border-[rgba(255,255,255,0.05)]"
+      data-theme="dark"
+      className="dark-lock hidden lg:flex relative flex-col overflow-hidden p-9 lg:p-11 border-r border-[rgba(255,255,255,0.05)] text-[#f7f8f8]"
       style={{
         background:
           'radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.05), transparent 60%), #0a0b0c',

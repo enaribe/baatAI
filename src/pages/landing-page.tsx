@@ -5,10 +5,13 @@ import {
 } from 'lucide-react'
 import { Logo } from '../components/ui/logo'
 import { Waveform } from '../components/ui/waveform'
+import { ThemeToggle } from '../components/ui/theme-toggle'
 
 /* ============================================================
    Landing Baat-IA — reproduction fidèle du mock marketing
-   (Sections.jsx fourni). Dark Linear-inspired.
+   Adaptative light/dark via les tokens --t-*.
+   Les panneaux "moniteur" (dataset preview, code, API) restent
+   en dark-lock pour conserver leur esthétique.
    ============================================================ */
 
 const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)' }
@@ -20,8 +23,8 @@ const sans: React.CSSProperties = {
 export function LandingPage() {
   return (
     <div
-      className="min-h-screen text-[#f7f8f8]"
-      style={{ background: '#08090a', ...sans }}
+      className="min-h-screen"
+      style={{ background: 'var(--t-bg)', color: 'var(--t-fg)', ...sans }}
     >
       <Nav />
       <Hero />
@@ -41,15 +44,23 @@ function Nav() {
   const links = ['Produit', 'Datasets', 'Langues', 'Tarifs', 'Docs']
   return (
     <header
-      className="sticky top-0 z-20 flex items-center gap-7 px-4 sm:px-8 py-3.5 border-b border-[rgba(255,255,255,0.05)] backdrop-blur-md"
-      style={{ background: 'rgba(8,9,10,0.8)' }}
+      className="sticky top-0 z-20 flex items-center gap-7 px-4 sm:px-8 py-3.5 backdrop-blur-md"
+      style={{
+        background: 'var(--t-topbar-bg)',
+        borderBottom: '1px solid var(--t-border-subtle)',
+      }}
     >
       <div className="flex items-center gap-2">
         <Logo size={22} />
       </div>
       <span
-        className="inline-flex items-center px-2 h-[20px] rounded-full text-[11px] text-[#f7f8f8] border border-[rgba(255,255,255,0.2)]"
-        style={{ ...sans, fontWeight: 510 }}
+        className="inline-flex items-center px-2 h-[20px] rounded-full text-[11px]"
+        style={{
+          ...sans,
+          fontWeight: 510,
+          color: 'var(--t-fg)',
+          border: '1px solid var(--t-border-strong)',
+        }}
       >
         Beta
       </span>
@@ -57,25 +68,44 @@ function Nav() {
         {links.map((l) => (
           <a
             key={l}
-            className="text-[13px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors cursor-pointer"
-            style={{ ...sans, fontWeight: 510 }}
+            className="text-[13px] transition-colors cursor-pointer"
+            style={{ ...sans, fontWeight: 510, color: 'var(--t-fg-2)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--t-fg)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--t-fg-2)')}
           >
             {l}
           </a>
         ))}
       </nav>
-      <div className="ml-auto flex gap-2">
+      <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle size={32} />
         <Link
           to="/login"
-          className="inline-flex items-center h-[32px] px-3 text-[13px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-          style={{ ...sans, fontWeight: 510 }}
+          className="inline-flex items-center h-[32px] px-3 text-[13px] rounded-md transition-colors"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            color: 'var(--t-fg-2)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
           Se connecter
         </Link>
         <Link
           to="/register"
-          className="inline-flex items-center h-[32px] px-3 text-[13px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
-          style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+          className="inline-flex items-center h-[32px] px-3 text-[13px] rounded-md transition-colors"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            background: 'var(--t-solid-bg)',
+            color: 'var(--t-solid-fg)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
         >
           Demander l'accès
         </Link>
@@ -89,40 +119,70 @@ function Hero() {
   return (
     <section className="px-6 pt-20 pb-10 max-w-[1100px] mx-auto text-center">
       <h1
-        className="mx-auto text-[40px] sm:text-[56px] lg:text-[64px] leading-[1.02] text-[#f7f8f8]"
-        style={{ ...sans, fontWeight: 510, letterSpacing: '-1.408px', maxWidth: 860 }}
+        className="mx-auto text-[40px] sm:text-[56px] lg:text-[64px] leading-[1.02]"
+        style={{
+          ...sans,
+          fontWeight: 510,
+          letterSpacing: '-1.408px',
+          maxWidth: 860,
+          color: 'var(--t-fg)',
+        }}
       >
         Les voix de l'Afrique,<br />prêtes pour l'IA.
       </h1>
       <p
-        className="mx-auto mt-6 text-[16px] sm:text-[18px] leading-[1.6] text-[#8a8f98]"
-        style={{ ...sans, letterSpacing: '-0.165px', maxWidth: 620 }}
+        className="mx-auto mt-6 text-[16px] sm:text-[18px] leading-[1.6]"
+        style={{
+          ...sans,
+          letterSpacing: '-0.165px',
+          maxWidth: 620,
+          color: 'var(--t-fg-3)',
+        }}
       >
         Des datasets vocaux annotés en 34 langues africaines. Pour entraîner des modèles ASR, TTS et NLU qui parlent comme vos utilisateurs.
       </p>
       <div className="flex justify-center gap-2.5 mt-7 flex-wrap">
         <Link
           to="/register"
-          className="inline-flex items-center h-[36px] px-4 text-[14px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
-          style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+          className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            background: 'var(--t-solid-bg)',
+            color: 'var(--t-solid-fg)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
         >
           Demander l'accès
         </Link>
         <a
-          className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
-          style={{ ...sans, fontWeight: 510 }}
+          className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            color: 'var(--t-fg-2)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
           Explorer le catalogue
           <ArrowRight className="w-3.5 h-3.5" />
         </a>
       </div>
 
-      {/* Showcase dataset preview */}
+      {/* Showcase dataset preview — reste dark-lock (moniteur stylisé) */}
       <div
-        className="mt-[52px] p-3.5 rounded-[14px] relative border border-[rgba(255,255,255,0.08)]"
+        data-theme="dark"
+        className="dark-lock mt-[52px] p-3.5 rounded-[14px] relative"
         style={{
           background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.08)',
           boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.2)',
+          color: '#f7f8f8',
         }}
       >
         <div className="rounded-[10px] overflow-hidden" style={{ background: '#0f1011' }}>
@@ -264,26 +324,33 @@ function StatsRow() {
   return (
     <section className="px-6 pt-10 pb-20 max-w-[1100px] mx-auto">
       <div
-        className="grid grid-cols-2 md:grid-cols-4 rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.05)]"
-        style={{ background: 'rgba(255,255,255,0.02)' }}
+        className="grid grid-cols-2 md:grid-cols-4 rounded-[12px] overflow-hidden"
+        style={{
+          background: 'var(--t-surface)',
+          border: '1px solid var(--t-border-subtle)',
+        }}
       >
         {stats.map((s, i) => (
           <div
             key={i}
             className="p-7 text-left"
             style={{
-              borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : '0',
-              borderBottom:
-                i < 2 ? '1px solid rgba(255,255,255,0.05)' : '0',
+              borderRight: i < 3 ? '1px solid var(--t-border-subtle)' : '0',
+              borderBottom: i < 2 ? '1px solid var(--t-border-subtle)' : '0',
             }}
           >
             <div
-              className="text-[32px] md:text-[36px] text-[#f7f8f8] tabular-nums"
-              style={{ ...sans, fontWeight: 510, letterSpacing: '-0.9px' }}
+              className="text-[32px] md:text-[36px] tabular-nums"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                letterSpacing: '-0.9px',
+                color: 'var(--t-fg)',
+              }}
             >
               {s.n}
             </div>
-            <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+            <div className="text-[13px] mt-1" style={{ ...sans, color: 'var(--t-fg-3)' }}>
               {s.l}
             </div>
           </div>
@@ -304,7 +371,7 @@ function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: Rea
             ...sans,
             fontWeight: 510,
             letterSpacing: '0.08em',
-            background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+            background: 'linear-gradient(90deg, var(--t-fg) 0%, var(--t-fg-3) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -314,13 +381,23 @@ function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: Rea
         </div>
       )}
       <div
-        className="text-[32px] md:text-[40px] text-[#f7f8f8]"
-        style={{ ...sans, fontWeight: 510, lineHeight: 1.05, letterSpacing: '-0.9px', marginTop: kicker ? 12 : 0 }}
+        className="text-[32px] md:text-[40px]"
+        style={{
+          ...sans,
+          fontWeight: 510,
+          lineHeight: 1.05,
+          letterSpacing: '-0.9px',
+          marginTop: kicker ? 12 : 0,
+          color: 'var(--t-fg)',
+        }}
       >
         {title}
       </div>
       {subtitle && (
-        <div className="text-[15px] md:text-[17px] text-[#8a8f98] mt-3.5" style={{ ...sans, lineHeight: 1.55 }}>
+        <div
+          className="text-[15px] md:text-[17px] mt-3.5"
+          style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)' }}
+        >
           {subtitle}
         </div>
       )}
@@ -352,8 +429,11 @@ function LanguagesSection() {
         subtitle="Chaque langue a ses locuteurs natifs, ses annotateurs, ses validateurs. Pas de transcription croisée, pas de traduction automatique."
       />
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.05)]"
-        style={{ background: 'rgba(255,255,255,0.05)' }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-[12px] overflow-hidden"
+        style={{
+          background: 'var(--t-border-subtle)',
+          border: '1px solid var(--t-border-subtle)',
+        }}
       >
         {langs.map((l, i) => (
           <LangCell key={i} lang={l} />
@@ -361,8 +441,16 @@ function LanguagesSection() {
       </div>
       <div className="text-center mt-6">
         <a
-          className="inline-flex items-center gap-1.5 h-[32px] px-3 text-[13px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
-          style={{ ...sans, fontWeight: 510 }}
+          className="inline-flex items-center gap-1.5 h-[32px] px-3 text-[13px] rounded-md transition-colors cursor-pointer"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            color: 'var(--t-fg-2)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
           Voir les 22 autres langues
           <ArrowRight className="w-3.5 h-3.5" />
@@ -378,20 +466,20 @@ function LangCell({ lang }: { lang: [string, string, string] }) {
     <div
       ref={ref}
       className="p-5 flex flex-col gap-1 transition-colors"
-      style={{ background: '#08090a' }}
-      onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = '#0f1011')}
-      onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = '#08090a')}
+      style={{ background: 'var(--t-bg)' }}
+      onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = 'var(--t-bg-panel)')}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = 'var(--t-bg)')}
     >
       <div
-        className="text-[17px] text-[#f7f8f8]"
-        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
+        className="text-[17px]"
+        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px', color: 'var(--t-fg)' }}
       >
         {lang[0]}
       </div>
-      <div className="text-[11px] text-[#62666d] uppercase" style={mono}>
+      <div className="text-[11px] uppercase" style={{ ...mono, color: 'var(--t-fg-4)' }}>
         {lang[1]}
       </div>
-      <div className="text-[13px] text-[#8a8f98] mt-1.5" style={sans}>
+      <div className="text-[13px] mt-1.5" style={{ ...sans, color: 'var(--t-fg-3)' }}>
         {lang[2]}
       </div>
     </div>
@@ -419,18 +507,22 @@ function PipelineSection() {
           title="Annotation humaine"
           body="Transcription orthographique, phonétique quand pertinent, tags d'émotion et de chevauchement."
           demo={
-            <div className="text-[11px] leading-[1.7] text-[#d0d6e0]" style={mono}>
+            <div
+              data-theme="dark"
+              className="dark-lock text-[11px] leading-[1.7] rounded-[6px] p-2.5"
+              style={{ ...mono, background: '#0f1011', color: '#d0d6e0' }}
+            >
               <div>
-                <span className="text-[#62666d]">00:01.2</span>{' '}
-                <span className="text-[#f7f8f8]">[SPK_01]</span> ndax nga fi nekk
+                <span style={{ color: '#62666d' }}>00:01.2</span>{' '}
+                <span style={{ color: '#f7f8f8' }}>[SPK_01]</span> ndax nga fi nekk
               </div>
               <div>
-                <span className="text-[#62666d]">00:02.8</span>{' '}
-                <span className="text-[#8a8f98]">[SPK_02]</span> waaw, damay liggéey
+                <span style={{ color: '#62666d' }}>00:02.8</span>{' '}
+                <span style={{ color: '#8a8f98' }}>[SPK_02]</span> waaw, damay liggéey
               </div>
               <div>
-                <span className="text-[#62666d]">00:04.1</span>{' '}
-                <span className="text-[#62666d]">[SILENCE]</span>
+                <span style={{ color: '#62666d' }}>00:04.1</span>{' '}
+                <span style={{ color: '#62666d' }}>[SILENCE]</span>
               </div>
             </div>
           }
@@ -447,12 +539,15 @@ function PipelineSection() {
                 { l: 'Arbitre', v: 100 },
               ].map((r, i) => (
                 <div key={i} className="flex items-center gap-2.5">
-                  <span className="text-[11px] text-[#8a8f98] w-[88px]" style={sans}>
+                  <span
+                    className="text-[11px] w-[88px]"
+                    style={{ ...sans, color: 'var(--t-fg-3)' }}
+                  >
                     {r.l}
                   </span>
                   <div
                     className="flex-1 h-1 rounded-sm overflow-hidden"
-                    style={{ background: 'rgba(255,255,255,0.05)' }}
+                    style={{ background: 'var(--t-surface-active)' }}
                   >
                     <div
                       className="h-full"
@@ -460,8 +555,8 @@ function PipelineSection() {
                     />
                   </div>
                   <span
-                    className="text-[11px] text-[#d0d6e0] w-8 text-right tabular-nums"
-                    style={mono}
+                    className="text-[11px] w-8 text-right tabular-nums"
+                    style={{ ...mono, color: 'var(--t-fg-2)' }}
                   >
                     {r.v}%
                   </span>
@@ -480,30 +575,39 @@ function PipelineCard({
 }: { icon: React.ReactNode; title: string; body: string; demo: React.ReactNode }) {
   return (
     <div
-      className="p-6 flex flex-col min-h-[280px] rounded-[12px] border border-[rgba(255,255,255,0.08)]"
-      style={{ background: 'rgba(255,255,255,0.02)' }}
+      className="p-6 flex flex-col min-h-[280px] rounded-[12px]"
+      style={{
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
+      }}
     >
       <div
         className="inline-flex"
         style={{
-          background: 'linear-gradient(135deg, #f7f8f8 0%, #8a8f98 100%)',
+          background: 'linear-gradient(135deg, var(--t-fg) 0%, var(--t-fg-3) 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          color: '#f7f8f8',
+          color: 'var(--t-fg)',
         }}
       >
         {icon}
       </div>
       <div
-        className="text-[18px] text-[#f7f8f8] mt-4"
-        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
+        className="text-[18px] mt-4"
+        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px', color: 'var(--t-fg)' }}
       >
         {title}
       </div>
-      <div className="text-[14px] text-[#8a8f98] mt-1.5" style={{ ...sans, lineHeight: 1.55 }}>
+      <div
+        className="text-[14px] mt-1.5"
+        style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)' }}
+      >
         {body}
       </div>
-      <div className="mt-auto pt-6 border-t border-[rgba(255,255,255,0.05)]">
+      <div
+        className="mt-auto pt-6"
+        style={{ borderTop: '1px solid var(--t-border-subtle)' }}
+      >
         <div className="mt-4">{demo}</div>
       </div>
     </div>
@@ -522,7 +626,7 @@ function ApiSection() {
               ...sans,
               fontWeight: 510,
               letterSpacing: '0.08em',
-              background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+              background: 'linear-gradient(90deg, var(--t-fg) 0%, var(--t-fg-3) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -531,12 +635,21 @@ function ApiSection() {
             Accès
           </div>
           <div
-            className="text-[32px] md:text-[40px] text-[#f7f8f8] mt-3"
-            style={{ ...sans, fontWeight: 510, lineHeight: 1.05, letterSpacing: '-0.9px' }}
+            className="text-[32px] md:text-[40px] mt-3"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              lineHeight: 1.05,
+              letterSpacing: '-0.9px',
+              color: 'var(--t-fg)',
+            }}
           >
             Streamez, ne téléchargez pas.
           </div>
-          <div className="text-[15px] md:text-[16px] text-[#8a8f98] mt-3.5" style={{ ...sans, lineHeight: 1.6 }}>
+          <div
+            className="text-[15px] md:text-[16px] mt-3.5"
+            style={{ ...sans, lineHeight: 1.6, color: 'var(--t-fg-3)' }}
+          >
             Une API HTTP simple. Filtrez par langue, durée, locuteur, contexte. Le streaming démarre en 40 ms.
           </div>
           <div className="flex gap-5 mt-6 flex-wrap">
@@ -546,10 +659,16 @@ function ApiSection() {
               { n: 'Python', d: 'pip install baat' },
             ].map((x, i) => (
               <div key={i}>
-                <div className="text-[14px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 590 }}>
+                <div
+                  className="text-[14px]"
+                  style={{ ...sans, fontWeight: 590, color: 'var(--t-fg)' }}
+                >
                   {x.n}
                 </div>
-                <div className="text-[12px] text-[#62666d] mt-0.5" style={sans}>
+                <div
+                  className="text-[12px] mt-0.5"
+                  style={{ ...sans, color: 'var(--t-fg-4)' }}
+                >
                   {x.d}
                 </div>
               </div>
@@ -557,42 +676,50 @@ function ApiSection() {
           </div>
         </div>
 
-        {/* Code block */}
+        {/* Code block — reste dark-lock (snippet de code stylisé) */}
         <div
-          className="p-5 rounded-[10px] border border-[rgba(255,255,255,0.08)]"
-          style={{ background: '#0a0a0b', ...mono, fontSize: 13, lineHeight: 1.7, color: '#d0d6e0' }}
+          data-theme="dark"
+          className="dark-lock p-5 rounded-[10px]"
+          style={{
+            background: '#0a0a0b',
+            border: '1px solid rgba(255,255,255,0.08)',
+            ...mono,
+            fontSize: 13,
+            lineHeight: 1.7,
+            color: '#d0d6e0',
+          }}
         >
           <div className="flex gap-2 mb-3 items-center">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
-            <span className="ml-auto text-[11px] text-[#62666d]" style={mono}>
+            <span className="ml-auto text-[11px]" style={{ ...mono, color: '#62666d' }}>
               stream.py
             </span>
           </div>
           <div>
-            <span className="text-[#f7f8f8]">from</span> baat{' '}
-            <span className="text-[#f7f8f8]">import</span> Dataset
+            <span style={{ color: '#f7f8f8' }}>from</span> baat{' '}
+            <span style={{ color: '#f7f8f8' }}>import</span> Dataset
           </div>
           <div>&nbsp;</div>
           <div>
-            ds = Dataset(<span className="text-[#d0d6e0]">"wolof-conversational"</span>)
+            ds = Dataset(<span style={{ color: '#d0d6e0' }}>"wolof-conversational"</span>)
           </div>
           <div>&nbsp;</div>
-          <div className="text-[#62666d]"># 12 400h, filtré par durée</div>
+          <div style={{ color: '#62666d' }}># 12 400h, filtré par durée</div>
           <div>
-            <span className="text-[#f7f8f8]">for</span> sample{' '}
-            <span className="text-[#f7f8f8]">in</span> ds.stream(min_seconds=
-            <span className="text-[#d0d6e0]">3</span>):
+            <span style={{ color: '#f7f8f8' }}>for</span> sample{' '}
+            <span style={{ color: '#f7f8f8' }}>in</span> ds.stream(min_seconds=
+            <span style={{ color: '#d0d6e0' }}>3</span>):
           </div>
           <div>&nbsp;&nbsp;&nbsp;&nbsp;audio = sample.waveform</div>
           <div>&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;&nbsp;= sample.transcript</div>
           <div>
             &nbsp;&nbsp;&nbsp;&nbsp;lang&nbsp;&nbsp;= sample.language
-            <span className="text-[#62666d]">&nbsp;&nbsp;# "wol"</span>
+            <span style={{ color: '#62666d' }}>&nbsp;&nbsp;# "wol"</span>
           </div>
           <div>&nbsp;</div>
-          <div className="text-[#62666d]"># &gt;&gt;&gt; 40ms au premier sample</div>
+          <div style={{ color: '#62666d' }}># &gt;&gt;&gt; 40ms au premier sample</div>
         </div>
       </div>
     </section>
@@ -604,13 +731,18 @@ function QuoteSection() {
   return (
     <section className="px-6 py-20 max-w-[900px] mx-auto text-center">
       <div
-        className="text-[22px] md:text-[28px] text-[#f7f8f8]"
-        style={{ ...sans, lineHeight: 1.35, letterSpacing: '-0.4px' }}
+        className="text-[22px] md:text-[28px]"
+        style={{
+          ...sans,
+          lineHeight: 1.35,
+          letterSpacing: '-0.4px',
+          color: 'var(--t-fg)',
+        }}
       >
         «&nbsp;On a entraîné notre ASR wolof sur{' '}
         <span
           style={{
-            background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+            background: 'linear-gradient(90deg, var(--t-fg) 0%, var(--t-fg-3) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -622,16 +754,24 @@ function QuoteSection() {
       </div>
       <div className="flex items-center justify-center gap-3 mt-7">
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[#fff] text-[13px]"
-          style={{ background: '#3e3e44', ...sans, fontWeight: 590 }}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[13px]"
+          style={{
+            background: 'var(--t-surface-active)',
+            color: 'var(--t-fg)',
+            ...sans,
+            fontWeight: 590,
+          }}
         >
           AD
         </div>
         <div className="text-left">
-          <div className="text-[14px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 590 }}>
+          <div
+            className="text-[14px]"
+            style={{ ...sans, fontWeight: 590, color: 'var(--t-fg)' }}
+          >
             Aminata Diop
           </div>
-          <div className="text-[12px] text-[#8a8f98]" style={sans}>
+          <div className="text-[12px]" style={{ ...sans, color: 'var(--t-fg-3)' }}>
             Lead ML, Orange Digital Ventures
           </div>
         </div>
@@ -645,29 +785,51 @@ function CtaSection() {
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
       <div
-        className="p-10 md:p-16 rounded-[14px] text-center border border-[rgba(255,255,255,0.15)]"
+        className="p-10 md:p-16 rounded-[14px] text-center"
         style={{
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+          background: 'var(--t-surface-2)',
+          border: '1px solid var(--t-border-strong)',
         }}
       >
         <div
-          className="text-[36px] md:text-[48px] text-[#f7f8f8]"
-          style={{ ...sans, fontWeight: 510, lineHeight: 1.0, letterSpacing: '-1.056px' }}
+          className="text-[36px] md:text-[48px]"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            lineHeight: 1.0,
+            letterSpacing: '-1.056px',
+            color: 'var(--t-fg)',
+          }}
         >
           Entraînez sur ce que vos<br />utilisateurs parlent vraiment.
         </div>
         <div className="flex justify-center gap-2.5 mt-8 flex-wrap">
           <Link
             to="/register"
-            className="inline-flex items-center h-[36px] px-4 text-[14px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
-            style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+            className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              background: 'var(--t-solid-bg)',
+              color: 'var(--t-solid-fg)',
+              border: '1px solid var(--t-border)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
           >
             Demander l'accès
           </Link>
           <a
-            className="inline-flex items-center h-[36px] px-4 text-[14px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
-            style={{ ...sans, fontWeight: 510 }}
+            className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              color: 'var(--t-fg-2)',
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
           >
             Parler à l'équipe
           </a>
@@ -686,19 +848,25 @@ function Footer() {
     Légal: ['Confidentialité', 'CGU', 'Sécurité', 'Licences'],
   }
   return (
-    <footer className="px-8 pt-[60px] pb-8 max-w-[1200px] mx-auto mt-[60px] border-t border-[rgba(255,255,255,0.05)]">
+    <footer
+      className="px-8 pt-[60px] pb-8 max-w-[1200px] mx-auto mt-[60px]"
+      style={{ borderTop: '1px solid var(--t-border-subtle)' }}
+    >
       <div className="grid grid-cols-2 md:grid-cols-[2fr_repeat(4,1fr)] gap-8">
         <div>
           <Logo size={22} />
-          <div className="text-[13px] text-[#62666d] mt-4 max-w-[260px]" style={{ ...sans, lineHeight: 1.55 }}>
+          <div
+            className="text-[13px] mt-4 max-w-[260px]"
+            style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-4)' }}
+          >
             Les voix de l'Afrique, prêtes pour l'IA. Conçu à Dakar, annoté partout.
           </div>
         </div>
         {Object.entries(cols).map(([h, links]) => (
           <div key={h}>
             <div
-              className="text-[11px] text-[#62666d] uppercase tracking-[0.04em]"
-              style={{ ...sans, fontWeight: 510 }}
+              className="text-[11px] uppercase tracking-[0.04em]"
+              style={{ ...sans, fontWeight: 510, color: 'var(--t-fg-4)' }}
             >
               {h}
             </div>
@@ -706,8 +874,10 @@ function Footer() {
               {links.map((l) => (
                 <a
                   key={l}
-                  className="text-[13px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors cursor-pointer"
-                  style={sans}
+                  className="text-[13px] transition-colors cursor-pointer"
+                  style={{ ...sans, color: 'var(--t-fg-2)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--t-fg)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--t-fg-2)')}
                 >
                   {l}
                 </a>
@@ -717,13 +887,16 @@ function Footer() {
         ))}
       </div>
       <div
-        className="mt-12 pt-5 border-t border-[rgba(255,255,255,0.05)] flex justify-between text-[12px] text-[#62666d]"
-        style={sans}
+        className="mt-12 pt-5 flex justify-between text-[12px]"
+        style={{
+          borderTop: '1px solid var(--t-border-subtle)',
+          ...sans,
+          color: 'var(--t-fg-4)',
+        }}
       >
-        <span>© 2026 Baat-IA</span>
-        <span style={mono}>v2.4.1 · sn·dakar</span>
+        <span style={{ color: 'var(--t-fg-4)' }}>© 2026 Baat-IA</span>
+        <span style={{ ...mono, color: 'var(--t-fg-4)' }}>v2.4.1 · sn·dakar</span>
       </div>
     </footer>
   )
 }
-

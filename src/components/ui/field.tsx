@@ -52,7 +52,7 @@ export function Field({
       <div
         className="flex items-center gap-2 rounded-md px-3 py-[9px]"
         style={{
-          background: 'rgba(255,255,255,0.02)',
+          background: 'var(--t-surface)',
           border: `1px solid ${focus ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
           boxShadow: focus ? '0 0 0 3px rgba(255,255,255,0.04)' : 'none',
           transition: 'border-color 120ms, box-shadow 120ms',

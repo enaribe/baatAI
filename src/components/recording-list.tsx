@@ -88,7 +88,7 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: on ? '#f7f8f8' : '#8a8f98',
+                  color: on ? 'var(--t-fg)' : 'var(--t-fg-3)',
                   background: on ? 'rgba(255,255,255,0.05)' : 'transparent',
                   border: `1px solid ${on ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
                 }}
@@ -109,7 +109,7 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
         <div
           className="rounded-[8px] overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.05)',
           }}
         >
@@ -120,7 +120,7 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
               ...sans,
               fontWeight: 510,
               letterSpacing: '0.04em',
-              background: 'rgba(255,255,255,0.01)',
+              background: 'var(--t-bg-subtle)',
               borderBottom: '1px solid rgba(255,255,255,0.05)',
             }}
           >
@@ -166,8 +166,8 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] shrink-0"
                     style={{
-                      background: '#3e3e44',
-                      color: '#f7f8f8',
+                      background: 'var(--t-fg-5)',
+                      color: 'var(--t-fg)',
                       ...sans,
                       fontWeight: 590,
                     }}
@@ -188,7 +188,7 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
                 {/* SNR */}
                 <span
                   className="hidden sm:block text-right text-[12px] tabular-nums"
-                  style={{ ...mono, color: recording.snr_db != null ? '#d0d6e0' : '#3e3e44' }}
+                  style={{ ...mono, color: recording.snr_db != null ? 'var(--t-fg-2)' : 'var(--t-fg-5)' }}
                 >
                   {recording.snr_db != null ? `${recording.snr_db.toFixed(1)} dB` : '—'}
                 </span>
@@ -196,7 +196,7 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
                 {/* Durée */}
                 <span
                   className="hidden lg:block text-right text-[12px] tabular-nums"
-                  style={{ ...mono, color: recording.duration_seconds != null ? '#d0d6e0' : '#3e3e44' }}
+                  style={{ ...mono, color: recording.duration_seconds != null ? 'var(--t-fg-2)' : 'var(--t-fg-5)' }}
                 >
                   {recording.duration_seconds != null ? `${recording.duration_seconds.toFixed(1)}s` : '—'}
                 </span>
@@ -248,15 +248,15 @@ function StatusCell({ recording, reasons }: { recording: Recording; reasons: str
   const statusMap: Record<string, { Icon: typeof Clock; color: string }> = {
     pending: { Icon: Clock, color: '#8a8f98' },
     processing: { Icon: Clock, color: '#8a8f98' },
-    completed: { Icon: CircleCheck, color: '#10b981' },
-    failed: { Icon: XCircle, color: '#fca5a5' },
+    completed: { Icon: CircleCheck, color: 'var(--t-success)' },
+    failed: { Icon: XCircle, color: 'var(--t-danger-text)' },
   }
   const cfg = statusMap[recording.processing_status] ?? statusMap.pending!
   const { Icon } = cfg
 
   let effectiveColor = cfg.color
   if (recording.processing_status === 'completed' && recording.is_valid === false) {
-    effectiveColor = '#fbbf24'
+    effectiveColor = 'var(--t-warning)'
   }
 
   return (

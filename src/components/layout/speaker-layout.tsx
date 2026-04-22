@@ -55,7 +55,7 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
     : null
 
   return (
-    <div className="min-h-screen bg-[#08090a] text-[#f7f8f8]">
+    <div data-theme="dark" className="dark-lock min-h-screen bg-[#08090a] text-[#f7f8f8]">
       {/* Desktop sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[240px] lg:flex-col bg-[#0f1011] border-r border-[rgba(255,255,255,0.05)]">
         {/* Logo */}

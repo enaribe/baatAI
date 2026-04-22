@@ -76,7 +76,7 @@ export function DashboardPage() {
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: filter === k ? '#f7f8f8' : '#8a8f98',
+                color: filter === k ? 'var(--t-fg)' : 'var(--t-fg-3)',
                 background: filter === k ? 'rgba(255,255,255,0.05)' : 'transparent',
                 border: `1px solid ${filter === k ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
               }}
@@ -102,7 +102,7 @@ export function DashboardPage() {
           <div
             className="inline-flex items-center rounded-md"
             style={{
-              background: 'rgba(255,255,255,0.02)',
+              background: 'var(--t-surface)',
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
@@ -111,7 +111,7 @@ export function DashboardPage() {
               title="Vue grille"
               className="w-[26px] h-[26px] flex items-center justify-center rounded-md transition-colors"
               style={{
-                color: viewMode === 'grid' ? '#f7f8f8' : '#8a8f98',
+                color: viewMode === 'grid' ? 'var(--t-fg)' : 'var(--t-fg-3)',
                 background: viewMode === 'grid' ? 'rgba(255,255,255,0.06)' : 'transparent',
               }}
             >
@@ -122,7 +122,7 @@ export function DashboardPage() {
               title="Vue liste"
               className="w-[26px] h-[26px] flex items-center justify-center rounded-md transition-colors"
               style={{
-                color: viewMode === 'list' ? '#f7f8f8' : '#8a8f98',
+                color: viewMode === 'list' ? 'var(--t-fg)' : 'var(--t-fg-3)',
                 background: viewMode === 'list' ? 'rgba(255,255,255,0.06)' : 'transparent',
               }}
             >
@@ -204,7 +204,7 @@ export function DashboardPage() {
                 key={i}
                 className="h-[160px] rounded-[10px] animate-pulse"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'var(--t-surface)',
                   border: '1px solid rgba(255,255,255,0.06)',
                 }}
               />
@@ -293,18 +293,20 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
 
   return (
     <Link
+      data-theme="dark"
       to={`/project/${project.id}`}
       className="group flex flex-col rounded-[10px] overflow-hidden transition-all"
       style={{
-        background: 'rgba(255,255,255,0.02)',
+        background: '#0f1011',
         border: '1px solid rgba(255,255,255,0.08)',
+        color: '#f7f8f8',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.035)'
+        e.currentTarget.style.background = '#141516'
         e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
+        e.currentTarget.style.background = '#0f1011'
         e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
       }}
     >
@@ -457,9 +459,9 @@ function ProjectRow({ project }: { project: ProjectWithStats }) {
 function StatusIcon({ status }: { status: ProjectStatus }) {
   const map: Record<ProjectStatus, { Icon: typeof Circle; color: string }> = {
     draft: { Icon: CircleDashed, color: '#62666d' },
-    active: { Icon: Circle, color: '#7170ff' },
-    processing: { Icon: Clock, color: '#f59e0b' },
-    completed: { Icon: CircleCheck, color: '#10b981' },
+    active: { Icon: Circle, color: 'var(--t-accent-text)' },
+    processing: { Icon: Clock, color: 'var(--t-warning)' },
+    completed: { Icon: CircleCheck, color: 'var(--t-success)' },
     archived: { Icon: Archive, color: '#62666d' },
   }
   const { Icon, color } = map[status]
@@ -473,7 +475,7 @@ function UsagePill({ usage }: { usage: ProjectUsageType }) {
       style={{
         ...sans,
         fontWeight: 510,
-        background: 'rgba(255,255,255,0.04)',
+        background: 'var(--t-surface-active)',
         border: '1px solid rgba(255,255,255,0.05)',
       }}
     >

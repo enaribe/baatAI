@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, FileText, Users, Mic, Package, Loader2, UserPlus, Settings,
   Circle, CircleCheck, CircleDashed, Clock, Archive, Trash2, AlertTriangle,
@@ -35,8 +35,10 @@ const statusIconMap: Record<ProjectStatus, { Icon: typeof Circle; color: string;
 export function ProjectPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { project, phrases, sessions, recordings, exports, loading, error, refetch } = useProject(id)
-  const [activeTab, setActiveTab] = useState<Tab>('phrases')
+  const initialTab = (searchParams.get('tab') as Tab | null) ?? 'phrases'
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -175,13 +177,13 @@ export function ProjectPage() {
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#fca5a5',
+              color: 'var(--t-danger-text)',
               background: 'transparent',
               border: '1px solid transparent',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.18)'
+              e.currentTarget.style.background = 'var(--t-danger-muted-bg)'
+              e.currentTarget.style.borderColor = 'var(--t-danger-muted-border)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent'
@@ -205,8 +207,8 @@ export function ProjectPage() {
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#d0d6e0',
-              background: 'rgba(255,255,255,0.04)',
+              color: 'var(--t-fg-2)',
+              background: 'var(--t-surface-active)',
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
@@ -218,7 +220,7 @@ export function ProjectPage() {
             style={{
               ...sans,
               fontWeight: 510,
-              background: 'rgba(255,255,255,0.04)',
+              background: 'var(--t-surface-active)',
               border: '1px solid rgba(255,255,255,0.05)',
             }}
           >
@@ -251,7 +253,7 @@ export function ProjectPage() {
           <StatSep />
           <Stat label="enregistrements" value={String(totalRecordings)} />
           <StatSep />
-          <Stat label="validés" value={String(validRecordings)} color="#10b981" />
+          <Stat label="validés" value={String(validRecordings)} color="var(--t-success)" />
           <StatSep />
           <Stat label="sessions actives" value={String(activeSessions)} />
           <StatSep />
@@ -281,7 +283,7 @@ export function ProjectPage() {
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: on ? '#f7f8f8' : '#8a8f98',
+                color: on ? 'var(--t-fg)' : 'var(--t-fg-3)',
               }}
             >
               <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -294,7 +296,7 @@ export function ProjectPage() {
               {on && (
                 <span
                   className="absolute bottom-0 left-0 right-0 h-[2px]"
-                  style={{ background: '#f7f8f8' }}
+                  style={{ background: 'var(--t-fg)' }}
                 />
               )}
             </button>
@@ -346,7 +348,7 @@ export function ProjectPage() {
           <div
             className="rounded-[12px] p-6 w-full max-w-[420px]"
             style={{
-              background: '#191a1b',
+              background: 'var(--t-surface-2)',
               border: '1px solid rgba(255,255,255,0.08)',
               boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
             }}
@@ -355,8 +357,8 @@ export function ProjectPage() {
               <div
                 className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
                 style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.22)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 <AlertTriangle className="w-4 h-4 text-[#fca5a5]" strokeWidth={1.75} />
@@ -382,8 +384,8 @@ export function ProjectPage() {
                 className="text-[12px] text-[#fca5a5] px-3 py-2 rounded-md mt-3"
                 style={{
                   ...sans,
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.22)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 {deleteError}
@@ -407,7 +409,7 @@ export function ProjectPage() {
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: '#f7f8f8',
+                  color: '#ffffff',
                   background: '#ef4444',
                 }}
               >
@@ -436,7 +438,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
         style={{
           ...sans,
           fontWeight: 590,
-          color: color ?? '#f7f8f8',
+          color: color ?? 'var(--t-fg)',
         }}
       >
         {value}

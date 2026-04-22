@@ -106,8 +106,8 @@ export function SessionList({
           style={{
             ...sans,
             fontWeight: 510,
-            color: '#f7f8f8',
-            background: showForm ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+            color: 'var(--t-fg)',
+            background: showForm ? 'rgba(255,255,255,0.08)' : 'var(--t-surface-active)',
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -121,7 +121,7 @@ export function SessionList({
         <div
           className="rounded-[8px] p-4 mb-3 animate-scale-in"
           style={{
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -156,8 +156,8 @@ export function SessionList({
               className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md text-[12px] text-[#fca5a5]"
               style={{
                 ...sans,
-                background: 'rgba(239,68,68,0.06)',
-                border: '1px solid rgba(239,68,68,0.2)',
+                background: 'var(--t-danger-muted-bg)',
+                border: '1px solid var(--t-danger-muted-border)',
               }}
             >
               <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -180,7 +180,7 @@ export function SessionList({
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: '#ffffff',
                 background: '#5e6ad2',
               }}
             >
@@ -198,7 +198,7 @@ export function SessionList({
         <div
           className="rounded-[8px] overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.05)',
           }}
         >
@@ -227,7 +227,7 @@ export function SessionList({
           <div
             className="rounded-[12px] p-6 w-full max-w-[420px]"
             style={{
-              background: '#191a1b',
+              background: 'var(--t-surface-2)',
               border: '1px solid rgba(255,255,255,0.08)',
               boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
             }}
@@ -236,8 +236,8 @@ export function SessionList({
               <div
                 className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
                 style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.22)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 <AlertTriangle className="w-4 h-4 text-[#fca5a5]" strokeWidth={1.75} />
@@ -268,8 +268,8 @@ export function SessionList({
                 className="mt-3 text-[12px] text-[#fca5a5] px-3 py-2 rounded-md"
                 style={{
                   ...sans,
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.22)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 {deleteError}
@@ -292,7 +292,7 @@ export function SessionList({
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: '#f7f8f8',
+                  color: 'var(--t-fg)',
                   background: '#ef4444',
                 }}
               >
@@ -372,8 +372,8 @@ function SessionRow({
           style={{
             ...sans,
             fontWeight: 510,
-            color: copiedToken === session.token ? '#10b981' : '#d0d6e0',
-            background: 'rgba(255,255,255,0.02)',
+            color: copiedToken === session.token ? 'var(--t-success)' : 'var(--t-fg-2)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -427,7 +427,7 @@ function SessionRow({
               style={{
                 ...sans,
                 fontWeight: 510,
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--t-surface-hover)',
                 border: '1px solid rgba(255,255,255,0.05)',
               }}
             >

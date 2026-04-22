@@ -7,13 +7,14 @@ import {
 } from 'lucide-react'
 import type { Gender } from '../types/database'
 import { DeleteAccountModal } from '../components/delete-account-modal'
+import { VoiceSampleSection } from '../components/voice-sample-section'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
 const mono = { fontFamily: 'var(--font-mono)' }
 
 export function SpeakerProfilePage() {
   const { user } = useAuth()
-  const { profile, loading, update } = useSpeakerProfile(user?.id)
+  const { profile, loading, update, refetch } = useSpeakerProfile(user?.id)
 
   const [bio, setBio] = useState('')
   const [city, setCity] = useState('')
@@ -250,6 +251,17 @@ export function SpeakerProfilePage() {
                 {bio.length}/400
               </p>
             </Section>
+
+            {/* Échantillon de voix */}
+            {user?.id && (
+              <VoiceSampleSection
+                speakerId={user.id}
+                samplePath={profile?.sample_storage_path ?? null}
+                sampleDuration={profile?.sample_duration_seconds ?? null}
+                sampleRecordedAt={profile?.sample_recorded_at ?? null}
+                onUpdated={() => { void refetch() }}
+              />
+            )}
 
             {/* Save sticky */}
             <div

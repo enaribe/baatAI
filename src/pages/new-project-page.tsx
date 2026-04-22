@@ -212,7 +212,7 @@ export function NewProjectPage() {
           .eq('id', project.id)
         if (updateError) throw updateError
 
-        navigate(`/project/${project.id}`)
+        navigate(`/project/${project.id}?tab=recruitment&invite=1`)
       } catch (innerErr) {
         await rollback()
         throw innerErr
@@ -324,8 +324,8 @@ export function NewProjectPage() {
                           style={{
                             ...sans,
                             fontWeight: 510,
-                            color: on ? '#f7f8f8' : '#d0d6e0',
-                            background: on ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+                            color: on ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                            background: on ? 'rgba(255,255,255,0.06)' : 'var(--t-surface)',
                             border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
                           }}
                         >
@@ -364,7 +364,7 @@ export function NewProjectPage() {
               <label
                 className="flex items-start gap-2.5 p-3 rounded-md cursor-pointer"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'var(--t-surface)',
                   border: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
@@ -419,15 +419,15 @@ export function NewProjectPage() {
                       style={{
                         ...sans,
                         fontWeight: 510,
-                        color: isTarget ? '#f7f8f8' : active ? '#f7f8f8' : '#d0d6e0',
+                        color: isTarget ? 'var(--t-fg)' : active ? 'var(--t-fg)' : 'var(--t-fg-2)',
                         background: isTarget
-                          ? 'rgba(113,112,255,0.12)'
+                          ? 'var(--t-accent-muted-bg)'
                           : active
                             ? 'rgba(255,255,255,0.06)'
-                            : 'rgba(255,255,255,0.02)',
+                            : 'var(--t-surface)',
                         border: `1px solid ${
                           isTarget
-                            ? 'rgba(113,112,255,0.35)'
+                            ? 'var(--t-accent-muted-border)'
                             : active
                               ? 'rgba(255,255,255,0.22)'
                               : 'rgba(255,255,255,0.08)'
@@ -504,15 +504,15 @@ export function NewProjectPage() {
                 onDragLeave={() => setDragOver(false)}
                 className="rounded-[10px] p-5 transition-colors"
                 style={{
-                  background: dragOver ? 'rgba(113,112,255,0.06)' : 'rgba(255,255,255,0.02)',
-                  border: `1px dashed ${dragOver ? 'rgba(113,112,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+                  background: dragOver ? 'var(--t-accent-muted-bg)' : 'var(--t-surface)',
+                  border: `1px dashed ${dragOver ? 'var(--t-accent-muted-border)' : 'rgba(255,255,255,0.15)'}`,
                 }}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 flex items-center justify-center rounded-md shrink-0"
                     style={{
-                      background: 'rgba(255,255,255,0.04)',
+                      background: 'var(--t-surface-active)',
                       border: '1px solid rgba(255,255,255,0.05)',
                     }}
                   >
@@ -543,7 +543,7 @@ export function NewProjectPage() {
                 <div
                   className="rounded-md p-3"
                   style={{
-                    background: 'rgba(255,255,255,0.02)',
+                    background: 'var(--t-surface)',
                     border: '1px solid rgba(255,255,255,0.08)',
                   }}
                 >
@@ -572,7 +572,7 @@ export function NewProjectPage() {
                     style={{
                       ...sans,
                       fontWeight: 510,
-                      color: '#f7f8f8',
+                      color: 'var(--t-fg)',
                       background: 'rgba(255,255,255,0.06)',
                       border: '1px solid rgba(255,255,255,0.15)',
                     }}
@@ -625,7 +625,7 @@ export function NewProjectPage() {
             <div
               className="rounded-[10px]"
               style={{
-                background: 'rgba(255,255,255,0.02)',
+                background: 'var(--t-surface)',
                 border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
@@ -680,7 +680,7 @@ export function NewProjectPage() {
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: '#f7f8f8',
+                  color: '#ffffff',
                   background: '#5e6ad2',
                 }}
               >
@@ -788,8 +788,8 @@ function LangPill({
       style={{
         ...sans,
         fontWeight: 510,
-        color: active ? '#f7f8f8' : '#d0d6e0',
-        background: active ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+        color: active ? 'var(--t-fg)' : 'var(--t-fg-2)',
+        background: active ? 'rgba(255,255,255,0.06)' : 'var(--t-surface)',
         border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
       }}
     >
@@ -813,14 +813,14 @@ function VisibilityCard({
       onClick={onClick}
       className="relative flex items-start gap-3 p-3.5 rounded-md text-left transition-colors"
       style={{
-        background: active ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+        background: active ? 'rgba(255,255,255,0.05)' : 'var(--t-surface)',
         border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
       }}
     >
       <span
         className="w-7 h-7 flex items-center justify-center rounded-md shrink-0 text-[#d0d6e0]"
         style={{
-          background: 'rgba(255,255,255,0.03)',
+          background: 'var(--t-surface-hover)',
           border: '1px solid rgba(255,255,255,0.05)',
         }}
       >
@@ -837,9 +837,9 @@ function VisibilityCard({
       {active && (
         <span
           className="absolute top-3 right-3 w-4 h-4 rounded-full flex items-center justify-center"
-          style={{ background: '#f7f8f8' }}
+          style={{ background: 'var(--t-fg)' }}
         >
-          <Check className="w-2.5 h-2.5" strokeWidth={3} style={{ color: '#08090a' }} />
+          <Check className="w-2.5 h-2.5" strokeWidth={3} style={{ color: 'var(--t-bg)' }} />
         </span>
       )}
     </button>
@@ -861,7 +861,7 @@ function SourceCard({
       onClick={onClick}
       className="flex flex-col gap-3 p-5 rounded-md text-left transition-colors min-h-[140px]"
       style={{
-        background: active ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+        background: active ? 'rgba(255,255,255,0.05)' : 'var(--t-surface)',
         border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
       }}
     >
@@ -914,7 +914,7 @@ function FooterActions({
         style={{
           ...sans,
           fontWeight: 510,
-          color: '#f7f8f8',
+          color: '#ffffff',
           background: '#5e6ad2',
         }}
       >
@@ -963,7 +963,7 @@ function Summary({
 }
 
 function SumDivider() {
-  return <div className="h-px mx-4" style={{ background: 'rgba(255,255,255,0.05)' }} />
+  return <div className="h-px mx-4" style={{ background: 'var(--t-border-subtle)' }} />
 }
 
 // Imports inutilisés pour TS (Languages, FileText sont pas utilisés après refonte)

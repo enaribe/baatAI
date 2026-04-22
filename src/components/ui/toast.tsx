@@ -36,7 +36,7 @@ export function ToastContainer() {
             className="pointer-events-auto flex items-start gap-3 rounded-[8px] px-4 py-3 animate-slide-in-right"
             style={{
               animationDuration: '250ms',
-              background: '#191a1b',
+              background: 'var(--t-surface-2)',
               border: '1px solid rgba(255,255,255,0.08)',
               boxShadow:
                 '0 8px 2px rgba(0,0,0,0), 0 5px 2px rgba(0,0,0,0.01), 0 3px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.07), 0 0 1px rgba(0,0,0,0.08), 0 10px 40px -10px rgba(0,0,0,0.6)',

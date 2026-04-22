@@ -172,8 +172,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
           style={{
             ...sans,
             fontWeight: 510,
-            color: '#f7f8f8',
-            background: showAddPanel ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+            color: 'var(--t-fg)',
+            background: showAddPanel ? 'rgba(255,255,255,0.08)' : 'var(--t-surface-active)',
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -187,7 +187,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
         <div
           className="rounded-[8px] p-4 mb-3 animate-scale-in"
           style={{
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
@@ -212,8 +212,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               onDragLeave={() => setDragOver(false)}
               className="rounded-md p-5 text-center cursor-pointer transition-colors"
               style={{
-                background: dragOver ? 'rgba(113,112,255,0.06)' : 'rgba(255,255,255,0.02)',
-                border: `1px dashed ${dragOver ? 'rgba(113,112,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+                background: dragOver ? 'var(--t-accent-muted-bg)' : 'var(--t-surface)',
+                border: `1px dashed ${dragOver ? 'var(--t-accent-muted-border)' : 'rgba(255,255,255,0.15)'}`,
               }}
             >
               <Upload className="w-5 h-5 mx-auto mb-2 text-[#8a8f98]" strokeWidth={1.75} />
@@ -235,8 +235,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
             <div
               className="flex items-center gap-2 rounded-md px-3 py-2.5"
               style={{
-                background: 'rgba(113,112,255,0.06)',
-                border: '1px solid rgba(113,112,255,0.2)',
+                background: 'var(--t-accent-muted-bg)',
+                border: '1px solid var(--t-accent-muted-border)',
               }}
             >
               <File className="w-4 h-4 text-[#828fff] shrink-0" strokeWidth={1.75} />
@@ -269,7 +269,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
             <div
               className="rounded-md px-3 py-2.5"
               style={{
-                background: 'rgba(255,255,255,0.02)',
+                background: 'var(--t-surface)',
                 border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
@@ -289,8 +289,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md text-[12px] text-[#fca5a5]"
               style={{
                 ...sans,
-                background: 'rgba(239,68,68,0.06)',
-                border: '1px solid rgba(239,68,68,0.2)',
+                background: 'var(--t-danger-muted-bg)',
+                border: '1px solid var(--t-danger-muted-border)',
               }}
             >
               {addError}
@@ -301,8 +301,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md text-[12px] text-[#10b981]"
               style={{
                 ...sans,
-                background: 'rgba(16,185,129,0.06)',
-                border: '1px solid rgba(16,185,129,0.2)',
+                background: 'var(--t-success-muted-bg)',
+                border: '1px solid var(--t-success-muted-border)',
               }}
             >
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" strokeWidth={1.75} />
@@ -326,7 +326,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: '#ffffff',
                 background: '#5e6ad2',
               }}
             >
@@ -344,7 +344,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
         <div
           className="rounded-[8px] overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--t-surface)',
             border: '1px solid rgba(255,255,255,0.05)',
           }}
         >

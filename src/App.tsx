@@ -12,6 +12,8 @@ import { NewProjectPage } from './pages/new-project-page'
 import { ProjectPage } from './pages/project-page'
 import { RecordPage } from './pages/record-page'
 import { LandingPage } from './pages/landing-page'
+import { SpeakersPage } from './pages/speakers-page'
+import { SpeakerDetailPage } from './pages/speaker-detail-page'
 // Locuteur — public
 import { SpeakerRegisterPage } from './pages/speaker-register-page'
 import { SpeakerOnboardingPage } from './pages/speaker-onboarding-page'
@@ -151,6 +153,22 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['client', 'admin']}>
                   <AppLayout><ProjectPage /></AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/speakers"
+              element={
+                <ProtectedRoute allowedRoles={['client', 'admin']}>
+                  <AppLayout><SpeakersPage /></AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/speakers/:id"
+              element={
+                <ProtectedRoute allowedRoles={['client', 'admin']}>
+                  <AppLayout><SpeakerDetailPage /></AppLayout>
                 </ProtectedRoute>
               }
             />

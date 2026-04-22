@@ -54,7 +54,7 @@ export function AccountPage() {
           <div
             className="rounded-[10px]"
             style={{
-              background: 'rgba(255,255,255,0.02)',
+              background: 'var(--t-surface)',
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
@@ -81,16 +81,16 @@ export function AccountPage() {
           <div
             className="rounded-[10px] p-5"
             style={{
-              background: 'rgba(239,68,68,0.04)',
-              border: '1px solid rgba(239,68,68,0.18)',
+              background: 'var(--t-danger-muted-bg)',
+              border: '1px solid var(--t-danger-muted-border)',
             }}
           >
             <div className="flex items-start gap-3">
               <div
                 className="w-8 h-8 flex items-center justify-center rounded-md shrink-0"
                 style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.2)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 <AlertTriangle className="w-3.5 h-3.5 text-[#fca5a5]" strokeWidth={1.75} />
@@ -114,9 +114,9 @@ export function AccountPage() {
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: '#fca5a5',
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.22)',
+                  color: 'var(--t-danger-text)',
+                  background: 'var(--t-danger-muted-bg)',
+                  border: '1px solid var(--t-danger-muted-border)',
                 }}
               >
                 Supprimer mon compte
@@ -144,7 +144,7 @@ function Row({
       <div
         className="w-7 h-7 flex items-center justify-center rounded-md text-[#8a8f98] shrink-0"
         style={{
-          background: 'rgba(255,255,255,0.03)',
+          background: 'var(--t-surface-hover)',
           border: '1px solid rgba(255,255,255,0.05)',
         }}
       >
@@ -169,5 +169,5 @@ function Row({
 }
 
 function Divider() {
-  return <div className="h-px mx-5" style={{ background: 'rgba(255,255,255,0.05)' }} />
+  return <div className="h-px mx-5" style={{ background: 'var(--t-border-subtle)' }} />
 }

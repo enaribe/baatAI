@@ -1,50 +1,49 @@
 /* ===========================
    Baat-IA Design Tokens v3
-   Linear-inspired dark-mode-native
+   Linear-inspired — dark natif + light mode via data-theme
    Voir design.md à la racine
    =========================== */
 
 @theme {
-  /* ---------- Fonds (stacking par luminance) ---------- */
-  --color-bg: #08090a;            /* marketing, page canvas par défaut */
-  --color-bg-deep: #010102;       /* hero only */
-  --color-bg-panel: #0f1011;      /* sidebar, panels */
-  --color-bg-surface: #191a1b;    /* cards, dropdowns */
-  --color-bg-surface-2: #28282c;  /* hover, elevated */
+  /* ---------- Fonds Linear dark (legacy, toujours utilisés pour palette marketing) ---------- */
+  --color-bg: #08090a;
+  --color-bg-deep: #010102;
+  --color-bg-panel: #0f1011;
+  --color-bg-surface: #191a1b;
+  --color-bg-surface-2: #28282c;
 
-  /* ---------- Tints (superposés sur fond sombre) ---------- */
+  /* Tints (dark) */
   --color-tint-02: rgba(255, 255, 255, 0.02);
   --color-tint-03: rgba(255, 255, 255, 0.03);
   --color-tint-04: rgba(255, 255, 255, 0.04);
   --color-tint-05: rgba(255, 255, 255, 0.05);
   --color-tint-08: rgba(255, 255, 255, 0.08);
 
-  /* ---------- Texte ---------- */
-  --color-fg: #f7f8f8;   /* primary (pas pur blanc) */
-  --color-fg-2: #d0d6e0; /* secondary / body */
-  --color-fg-3: #8a8f98; /* tertiary / muted */
-  --color-fg-4: #62666d; /* quaternary / disabled */
+  /* Texte (dark) */
+  --color-fg: #f7f8f8;
+  --color-fg-2: #d0d6e0;
+  --color-fg-3: #8a8f98;
+  --color-fg-4: #62666d;
 
-  /* ---------- Brand ---------- */
-  --color-brand: #5e6ad2;          /* primary CTA (rare) */
-  --color-brand-accent: #7170ff;   /* interactive accent */
-  --color-brand-hi: #828fff;       /* hover accent */
-  --color-brand-lavender: #7a7fad; /* security / muted */
+  /* Brand */
+  --color-brand: #5e6ad2;
+  --color-brand-accent: #7170ff;
+  --color-brand-hi: #828fff;
+  --color-brand-lavender: #7a7fad;
 
-  /* ---------- Sémantique ---------- */
+  /* Sémantique */
   --color-success: #27a644;
   --color-emerald: #10b981;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
 
-  /* Shortcuts Tailwind : primary = brand pour compat */
   --color-primary-500: #5e6ad2;
   --color-primary-400: #7170ff;
   --color-primary-300: #828fff;
   --color-primary-600: #4e5bbf;
   --color-primary-700: #3f4ba8;
 
-  /* ---------- Bordures ---------- */
+  /* Bordures (dark) */
   --color-border: #23252a;
   --color-border-2: #34343a;
   --color-border-3: #3e3e44;
@@ -53,7 +52,7 @@
   --color-line-tint: #141516;
   --color-line-tertiary: #18191a;
 
-  /* ---------- Radii ---------- */
+  /* Radii */
   --radius-micro: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -62,34 +61,152 @@
   --radius-lg: 22px;
   --radius-pill: 9999px;
 
-  /* ---------- Shadows / Elevation ---------- */
-  --shadow-subtle: 0 1.2px 0 0 rgba(0, 0, 0, 0.03);
-  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.2);
-  --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.2);
-  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-dialog:
-    0 8px 2px rgba(0, 0, 0, 0),
-    0 5px 2px rgba(0, 0, 0, 0.01),
-    0 3px 2px rgba(0, 0, 0, 0.04),
-    0 1px 1px rgba(0, 0, 0, 0.07),
-    0 0 1px rgba(0, 0, 0, 0.08);
-  --shadow-hero: 0 40px 80px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2);
-
-  /* ---------- Typography ---------- */
+  /* Typography */
   --font-heading: 'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif;
   --font-body: 'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Berkeley Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 /* ============================================================
-   Base — tout est dark par défaut
+   THEME TOKENS — variables sémantiques qui switchent light/dark
+   ============================================================
+
+   Usage dans le code :
+     color: var(--t-fg);
+     background: var(--t-surface);
+     border-color: var(--t-border);
+
+   Les écrans client utilisent ces variables --t-* pour basculer.
+   Les écrans locuteur et auth restent sur les couleurs Linear dark
+   directement (hardcodées).
+   ============================================================ */
+
+:root,
+html[data-theme='dark'] {
+  /* Surfaces */
+  --t-bg: #08090a;                /* canvas principal */
+  --t-bg-panel: #0f1011;          /* sidebar, panels */
+  --t-bg-subtle: rgba(255, 255, 255, 0.01);
+  --t-surface: rgba(255, 255, 255, 0.02);     /* card par défaut */
+  --t-surface-hover: rgba(255, 255, 255, 0.035);
+  --t-surface-active: rgba(255, 255, 255, 0.05);
+  --t-surface-2: rgba(255, 255, 255, 0.04);   /* card plus prononcée */
+  --t-surface-2-hover: rgba(255, 255, 255, 0.06);
+
+  /* Texte */
+  --t-fg: #f7f8f8;                /* primary */
+  --t-fg-2: #d0d6e0;              /* body */
+  --t-fg-3: #8a8f98;              /* muted */
+  --t-fg-4: #62666d;              /* disabled / tertiary */
+  --t-fg-5: #3e3e44;              /* ultra subtle (séparateurs texte) */
+  --t-fg-on-accent: #f7f8f8;      /* texte sur CTA accent */
+  --t-fg-on-solid: #08090a;       /* texte sur bouton blanc */
+
+  /* Bordures */
+  --t-border: rgba(255, 255, 255, 0.08);
+  --t-border-subtle: rgba(255, 255, 255, 0.05);
+  --t-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Top bar (sticky avec backdrop blur) */
+  --t-topbar-bg: rgba(8, 9, 10, 0.9);
+
+  /* Section header (rangée avec chevron + compteur) */
+  --t-section-bg: rgba(255, 255, 255, 0.01);
+
+  /* Accent brand (CTAs primaires, active states) — même en dark/light */
+  --t-accent: #5e6ad2;
+  --t-accent-hover: #6b77dd;
+  --t-accent-muted-bg: rgba(113, 112, 255, 0.08);
+  --t-accent-muted-border: rgba(113, 112, 255, 0.22);
+  --t-accent-text: #828fff;
+
+  /* Sémantique */
+  --t-success: #10b981;
+  --t-success-muted-bg: rgba(16, 185, 129, 0.08);
+  --t-success-muted-border: rgba(16, 185, 129, 0.22);
+  --t-warning: #fbbf24;
+  --t-warning-muted-bg: rgba(245, 158, 11, 0.08);
+  --t-warning-muted-border: rgba(245, 158, 11, 0.22);
+  --t-danger: #ef4444;
+  --t-danger-text: #fca5a5;
+  --t-danger-muted-bg: rgba(239, 68, 68, 0.06);
+  --t-danger-muted-border: rgba(239, 68, 68, 0.22);
+
+  /* Bouton secondaire "blanc gradient" (dark → blanc ; light → noir) */
+  --t-solid-bg: #f7f8f8;
+  --t-solid-bg-hover: #ffffff;
+  --t-solid-fg: #08090a;
+
+  /* Scheme natif (form controls, scrollbars) */
+  color-scheme: dark;
+}
+
+html[data-theme='light'] {
+  /* Surfaces */
+  --t-bg: #ffffff;
+  --t-bg-panel: #f8f9fa;          /* sidebar gris très clair */
+  --t-bg-subtle: rgba(0, 0, 0, 0.015);
+  --t-surface: rgba(0, 0, 0, 0.015);
+  --t-surface-hover: rgba(0, 0, 0, 0.03);
+  --t-surface-active: rgba(0, 0, 0, 0.05);
+  --t-surface-2: rgba(0, 0, 0, 0.03);
+  --t-surface-2-hover: rgba(0, 0, 0, 0.05);
+
+  /* Texte */
+  --t-fg: #1a1b1e;                /* primary */
+  --t-fg-2: #3a3d43;              /* body */
+  --t-fg-3: #6f7680;              /* muted */
+  --t-fg-4: #9ea4ad;              /* disabled / tertiary */
+  --t-fg-5: #c9cdd2;              /* ultra subtle */
+  --t-fg-on-accent: #ffffff;
+  --t-fg-on-solid: #ffffff;       /* texte sur bouton noir */
+
+  /* Bordures */
+  --t-border: rgba(0, 0, 0, 0.08);
+  --t-border-subtle: rgba(0, 0, 0, 0.05);
+  --t-border-strong: rgba(0, 0, 0, 0.15);
+
+  /* Top bar */
+  --t-topbar-bg: rgba(255, 255, 255, 0.9);
+
+  /* Section header */
+  --t-section-bg: rgba(0, 0, 0, 0.015);
+
+  /* Accent brand (reste indigo-violet, légèrement plus sombre) */
+  --t-accent: #5e6ad2;
+  --t-accent-hover: #4e5bbf;
+  --t-accent-muted-bg: rgba(94, 106, 210, 0.08);
+  --t-accent-muted-border: rgba(94, 106, 210, 0.22);
+  --t-accent-text: #4e5bbf;
+
+  /* Sémantique */
+  --t-success: #059669;
+  --t-success-muted-bg: rgba(16, 185, 129, 0.08);
+  --t-success-muted-border: rgba(16, 185, 129, 0.25);
+  --t-warning: #d97706;
+  --t-warning-muted-bg: rgba(245, 158, 11, 0.1);
+  --t-warning-muted-border: rgba(245, 158, 11, 0.3);
+  --t-danger: #dc2626;
+  --t-danger-text: #b91c1c;
+  --t-danger-muted-bg: rgba(239, 68, 68, 0.06);
+  --t-danger-muted-border: rgba(239, 68, 68, 0.22);
+
+  /* Bouton solide : noir en light mode */
+  --t-solid-bg: #1a1b1e;
+  --t-solid-bg-hover: #28282c;
+  --t-solid-fg: #ffffff;
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   Base
    ============================================================ */
 
 html,
 body {
-  background: var(--color-bg);
-  color: var(--color-fg);
+  background: var(--t-bg);
+  color: var(--t-fg);
   font-family: var(--font-body);
   font-feature-settings: 'cv01', 'ss03';
   font-weight: 400;
@@ -100,136 +217,44 @@ body {
 
 #root {
   min-height: 100vh;
-  background: var(--color-bg);
+  background: var(--t-bg);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 ::selection {
-  background: var(--color-brand);
-  color: var(--color-fg);
+  background: var(--t-accent);
+  color: #ffffff;
 }
 
-/* Scrollbar dark */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
-}
+/* Scrollbar adaptatif */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--t-bg); }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-2);
+  background: var(--t-border-strong);
   border-radius: 999px;
-  border: 2px solid var(--color-bg);
+  border: 2px solid var(--t-bg);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-3);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--t-fg-4); }
 
 /* ============================================================
    Typo helpers (Linear scale)
    ============================================================ */
 
-.t-display-xl {
-  font-size: 72px;
-  font-weight: 510;
-  line-height: 1;
-  letter-spacing: -1.584px;
-}
-.t-display-lg {
-  font-size: 64px;
-  font-weight: 510;
-  line-height: 1.02;
-  letter-spacing: -1.408px;
-}
-.t-display {
-  font-size: 48px;
-  font-weight: 510;
-  line-height: 1;
-  letter-spacing: -1.056px;
-}
-.t-h1 {
-  font-size: 32px;
-  font-weight: 400;
-  line-height: 1.13;
-  letter-spacing: -0.704px;
-}
-.t-h2 {
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1.33;
-  letter-spacing: -0.288px;
-}
-.t-h3 {
-  font-size: 20px;
-  font-weight: 590;
-  line-height: 1.33;
-  letter-spacing: -0.24px;
-}
-.t-body-lg {
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: -0.165px;
-}
-.t-body {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.5;
-}
-.t-body-med {
-  font-size: 16px;
-  font-weight: 510;
-  line-height: 1.5;
-}
-.t-sm {
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: -0.165px;
-}
-.t-sm-med {
-  font-size: 15px;
-  font-weight: 510;
-  line-height: 1.6;
-  letter-spacing: -0.165px;
-}
-.t-caption-lg {
-  font-size: 14px;
-  font-weight: 510;
-  line-height: 1.5;
-  letter-spacing: -0.182px;
-}
-.t-caption {
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: -0.13px;
-}
-.t-label {
-  font-size: 12px;
-  font-weight: 510;
-  line-height: 1.4;
-}
-.t-micro {
-  font-size: 11px;
-  font-weight: 510;
-  line-height: 1.4;
-}
-.t-mono {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.5;
-}
-.t-mono-xs {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.4;
-}
+.t-display-xl { font-size: 72px; font-weight: 510; line-height: 1; letter-spacing: -1.584px; }
+.t-display-lg { font-size: 64px; font-weight: 510; line-height: 1.02; letter-spacing: -1.408px; }
+.t-display    { font-size: 48px; font-weight: 510; line-height: 1; letter-spacing: -1.056px; }
+.t-h1         { font-size: 32px; font-weight: 400; line-height: 1.13; letter-spacing: -0.704px; }
+.t-h2         { font-size: 24px; font-weight: 400; line-height: 1.33; letter-spacing: -0.288px; }
+.t-h3         { font-size: 20px; font-weight: 590; line-height: 1.33; letter-spacing: -0.24px; }
+.t-body-lg    { font-size: 18px; font-weight: 400; line-height: 1.6; letter-spacing: -0.165px; }
+.t-body       { font-size: 16px; font-weight: 400; line-height: 1.5; }
+.t-body-med   { font-size: 16px; font-weight: 510; line-height: 1.5; }
+.t-sm         { font-size: 15px; font-weight: 400; line-height: 1.6; letter-spacing: -0.165px; }
+.t-sm-med     { font-size: 15px; font-weight: 510; line-height: 1.6; letter-spacing: -0.165px; }
+.t-caption-lg { font-size: 14px; font-weight: 510; line-height: 1.5; letter-spacing: -0.182px; }
+.t-caption    { font-size: 13px; font-weight: 400; line-height: 1.5; letter-spacing: -0.13px; }
+.t-label      { font-size: 12px; font-weight: 510; line-height: 1.4; }
+.t-micro      { font-size: 11px; font-weight: 510; line-height: 1.4; }
+.t-mono       { font-family: var(--font-mono); font-size: 13px; font-weight: 400; line-height: 1.5; }
+.t-mono-xs    { font-family: var(--font-mono); font-size: 11px; font-weight: 400; line-height: 1.4; }

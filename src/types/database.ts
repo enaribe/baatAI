@@ -70,6 +70,10 @@ export interface SpeakerProfile {
   total_withdrawn_fcfa: number
   is_available: boolean
   verification_status: VerificationStatus
+  /** Échantillon de voix (démo facultative) */
+  sample_storage_path: string | null
+  sample_duration_seconds: number | null
+  sample_recorded_at: string | null
   created_at: string
   updated_at: string
 }

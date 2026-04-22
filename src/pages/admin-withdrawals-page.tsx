@@ -131,7 +131,7 @@ export function AdminWithdrawalsPage() {
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: filter === t.key ? '#f7f8f8' : '#8a8f98',
+                color: filter === t.key ? 'var(--t-fg)' : 'var(--t-fg-3)',
                 background: filter === t.key ? 'rgba(255,255,255,0.05)' : 'transparent',
                 border: `1px solid ${filter === t.key ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
               }}
@@ -147,11 +147,11 @@ export function AdminWithdrawalsPage() {
 
       {/* Stats row */}
       <div className="px-5 lg:px-8 py-5 flex items-center gap-6 flex-wrap">
-        <Stat label="en attente" value={String(counts.pending)} color="#fbbf24" />
+        <Stat label="en attente" value={String(counts.pending)} color="var(--t-warning)" />
         <StatSep />
-        <Stat label="approuvés" value={String(counts.approved)} color="#7170ff" />
+        <Stat label="approuvés" value={String(counts.approved)} color="var(--t-accent-text)" />
         <StatSep />
-        <Stat label="payés" value={String(counts.paid)} color="#10b981" />
+        <Stat label="payés" value={String(counts.paid)} color="var(--t-success)" />
         <StatSep />
         <Stat label="rejetés" value={String(counts.rejected)} color="#8a8f98" />
       </div>
@@ -235,7 +235,7 @@ function Row({
         </span>
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center text-[#f7f8f8] text-[10px] shrink-0"
-          style={{ background: '#3e3e44', ...sans, fontWeight: 590 }}
+          style={{ background: 'var(--t-fg-5)', ...sans, fontWeight: 590 }}
         >
           {initials}
         </div>
@@ -269,9 +269,9 @@ function Row({
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#fca5a5',
-                background: 'rgba(239,68,68,0.06)',
-                border: '1px solid rgba(239,68,68,0.18)',
+                color: 'var(--t-danger-text)',
+                background: 'var(--t-danger-muted-bg)',
+                border: '1px solid var(--t-danger-muted-border)',
               }}
             >
               <X className="w-3 h-3" strokeWidth={1.75} />
@@ -284,7 +284,7 @@ function Row({
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: '#ffffff',
                 background: '#5e6ad2',
               }}
             >
@@ -301,9 +301,9 @@ function Row({
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#10b981',
-              background: 'rgba(16,185,129,0.06)',
-              border: '1px solid rgba(16,185,129,0.22)',
+              color: 'var(--t-success)',
+              background: 'var(--t-success-muted-bg)',
+              border: '1px solid var(--t-success-muted-border)',
             }}
           >
             {processing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2} />}
@@ -316,7 +316,7 @@ function Row({
       {w.status === 'pending' && isRejecting && (
         <div
           className="px-5 lg:px-8 py-3 border-t border-[rgba(255,255,255,0.05)]"
-          style={{ background: 'rgba(239,68,68,0.03)' }}
+          style={{ background: 'var(--t-danger-muted-bg)' }}
         >
           <div className="flex gap-2 items-center">
             <input
@@ -341,7 +341,7 @@ function Row({
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: 'var(--t-fg)',
                 background: '#ef4444',
               }}
             >

@@ -1,7 +1,10 @@
 import { type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderPlus, LogOut, User } from 'lucide-react'
+import {
+  LayoutDashboard, FolderPlus, LogOut, User, Users, Sun, Moon,
+} from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
+import { useDarkMode } from '../../hooks/use-dark-mode'
 import { Logo } from '../ui/logo'
 
 interface AppLayoutProps {
@@ -11,10 +14,12 @@ interface AppLayoutProps {
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/project/new', icon: FolderPlus, label: 'Nouveau projet' },
+  { to: '/speakers', icon: Users, label: 'Locuteurs' },
 ]
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { signOut, user } = useAuth()
+  const { isDark, toggle } = useDarkMode()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -31,15 +36,33 @@ export function AppLayout({ children }: AppLayoutProps) {
     .toUpperCase() || '?'
 
   return (
-    <div className="min-h-screen bg-[#08090a] text-[#f7f8f8]">
+    <div
+      className="min-h-screen"
+      style={{ background: 'var(--t-bg)', color: 'var(--t-fg)' }}
+    >
       {/* Desktop sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[240px] lg:flex-col bg-[#0f1011] border-r border-[rgba(255,255,255,0.05)]">
+      <aside
+        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[240px] lg:flex-col"
+        style={{
+          background: 'var(--t-bg-panel)',
+          borderRight: '1px solid var(--t-border-subtle)',
+        }}
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-[rgba(255,255,255,0.05)]">
+        <div
+          className="flex items-center gap-2 px-5 py-5"
+          style={{ borderBottom: '1px solid var(--t-border-subtle)' }}
+        >
           <Logo size={22} />
           <span
-            className="ml-auto inline-flex items-center px-2 h-[18px] rounded-full text-[10px] text-[#d0d6e0] border border-[rgba(255,255,255,0.2)]"
-            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+            className="ml-auto inline-flex items-center px-2 h-[18px] rounded-full text-[10px]"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontFeatureSettings: "'cv01','ss03'",
+              fontWeight: 510,
+              color: 'var(--t-fg-2)',
+              border: '1px solid var(--t-border-strong)',
+            }}
           >
             Beta
           </span>
@@ -48,8 +71,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <p
-            className="px-2.5 mb-2 text-[10px] text-[#62666d] uppercase tracking-[0.08em]"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            className="px-2.5 mb-2 text-[10px] uppercase tracking-[0.08em]"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-fg-4)' }}
           >
             Navigation
           </p>
@@ -60,9 +83,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               className={({ isActive }) =>
                 [
                   'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150',
-                  isActive
-                    ? 'bg-[rgba(255,255,255,0.04)] text-[#f7f8f8]'
-                    : 'text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.03)] hover:text-[#f7f8f8]',
+                  isActive ? 'nav-item-active' : 'nav-item',
                 ].join(' ')
               }
               style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
@@ -74,39 +95,61 @@ export function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         {/* Bottom */}
-        <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.05)] space-y-0.5">
+        <div
+          className="px-3 py-4 space-y-0.5"
+          style={{ borderTop: '1px solid var(--t-border-subtle)' }}
+        >
           <NavLink
             to="/account"
             className={({ isActive }) =>
               [
                 'flex items-center gap-3 px-2.5 py-2 mb-1 rounded-md transition-colors',
-                isActive
-                  ? 'bg-[rgba(255,255,255,0.04)]'
-                  : 'hover:bg-[rgba(255,255,255,0.03)]',
+                isActive ? 'nav-item-active' : 'nav-item',
               ].join(' ')
             }
           >
-            <div className="w-7 h-7 rounded-full bg-[#3e3e44] flex items-center justify-center text-[#f7f8f8] text-[10px] shrink-0"
-              style={{ fontWeight: 590 }}
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] shrink-0"
+              style={{
+                background: 'var(--t-surface-2)',
+                color: 'var(--t-fg)',
+                fontWeight: 590,
+              }}
             >
               {initials}
             </div>
             <div className="min-w-0 flex-1">
               <p
-                className="text-[12px] text-[#f7f8f8] truncate"
-                style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+                className="text-[12px] truncate"
+                style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510, color: 'var(--t-fg)' }}
               >
                 {fullName}
               </p>
-              <p className="text-[11px] text-[#62666d] truncate" style={{ fontFamily: 'var(--font-mono)' }}>
+              <p
+                className="text-[11px] truncate"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-fg-4)' }}
+              >
                 {user?.email}
               </p>
             </div>
           </NavLink>
 
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] nav-item w-full"
+            style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+            title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+          >
+            {isDark
+              ? <Sun className="w-4 h-4 shrink-0 opacity-80" strokeWidth={1.75} />
+              : <Moon className="w-4 h-4 shrink-0 opacity-80" strokeWidth={1.75} />}
+            {isDark ? 'Mode clair' : 'Mode sombre'}
+          </button>
+
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] text-[#8a8f98] hover:bg-[rgba(255,255,255,0.03)] hover:text-[#f7f8f8] transition-colors w-full"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] nav-item w-full"
             style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
           >
             <LogOut className="w-4 h-4 shrink-0 opacity-80" strokeWidth={1.75} />
@@ -116,16 +159,36 @@ export function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       {/* Mobile header */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-40 bg-[rgba(8,9,10,0.9)] backdrop-blur-lg border-b border-[rgba(255,255,255,0.05)]">
+      <header
+        className="lg:hidden fixed top-0 inset-x-0 z-40 backdrop-blur-lg"
+        style={{
+          background: 'var(--t-topbar-bg)',
+          borderBottom: '1px solid var(--t-border-subtle)',
+        }}
+      >
         <div className="flex items-center justify-between px-4 h-14">
           <Logo size={20} />
-          <NavLink
-            to="/account"
-            className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors text-[#d0d6e0]"
-            aria-label="Mon compte"
-          >
-            <User className="w-4 h-4" strokeWidth={1.75} />
-          </NavLink>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggle}
+              className="w-9 h-9 flex items-center justify-center rounded-md transition-colors"
+              style={{ color: 'var(--t-fg-2)' }}
+              aria-label="Basculer le thème"
+              title={isDark ? 'Mode clair' : 'Mode sombre'}
+            >
+              {isDark
+                ? <Sun className="w-4 h-4" strokeWidth={1.75} />
+                : <Moon className="w-4 h-4" strokeWidth={1.75} />}
+            </button>
+            <NavLink
+              to="/account"
+              className="w-9 h-9 flex items-center justify-center rounded-md transition-colors"
+              style={{ color: 'var(--t-fg-2)' }}
+              aria-label="Mon compte"
+            >
+              <User className="w-4 h-4" strokeWidth={1.75} />
+            </NavLink>
+          </div>
         </div>
       </header>
 
@@ -137,7 +200,13 @@ export function AppLayout({ children }: AppLayoutProps) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[rgba(8,9,10,0.9)] backdrop-blur-lg border-t border-[rgba(255,255,255,0.05)]">
+      <nav
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 backdrop-blur-lg"
+        style={{
+          background: 'var(--t-topbar-bg)',
+          borderTop: '1px solid var(--t-border-subtle)',
+        }}
+      >
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -146,7 +215,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               className={({ isActive }) =>
                 [
                   'flex flex-col items-center gap-1 px-4 py-1.5 rounded-md text-[10px] transition-colors',
-                  isActive ? 'text-[#f7f8f8]' : 'text-[#62666d] hover:text-[#d0d6e0]',
+                  isActive ? 'mobile-nav-active' : 'mobile-nav',
                 ].join(' ')
               }
               style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
@@ -157,14 +226,35 @@ export function AppLayout({ children }: AppLayoutProps) {
           ))}
           <button
             onClick={handleSignOut}
-            className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-md text-[10px] text-[#62666d] hover:text-[#f87171] transition-colors"
-            style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+            className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-md text-[10px] transition-colors"
+            style={{
+              fontFeatureSettings: "'cv01','ss03'",
+              fontWeight: 510,
+              color: 'var(--t-fg-4)',
+            }}
           >
             <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
             Quitter
           </button>
         </div>
       </nav>
+
+      <style>{`
+        .nav-item {
+          color: var(--t-fg-2);
+        }
+        .nav-item:hover {
+          background: var(--t-surface-hover);
+          color: var(--t-fg);
+        }
+        .nav-item-active {
+          background: var(--t-surface-active);
+          color: var(--t-fg);
+        }
+        .mobile-nav { color: var(--t-fg-4); }
+        .mobile-nav:hover { color: var(--t-fg-2); }
+        .mobile-nav-active { color: var(--t-fg); }
+      `}</style>
     </div>
   )
 }

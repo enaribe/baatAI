@@ -1,0 +1,234 @@
+/* ============================================================
+   Theme remap — light mode
+   ============================================================
+
+   Les écrans client ont des couleurs Linear-dark en dur (ex:
+   text-[#f7f8f8], bg-[rgba(255,255,255,0.02)]). En light mode,
+   on les remappe vers les couleurs light via CSS avec !important.
+
+   Les sous-arbres avec data-theme="dark" restaurent les couleurs
+   dark originales — pour protéger auth, landing, locuteur.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   LIGHT MODE — override des classes Tailwind arbitraires
+   ------------------------------------------------------------ */
+html[data-theme='light'] .bg-\[\#08090a\] { background-color: #ffffff !important; }
+html[data-theme='light'] .bg-\[\#0f1011\] { background-color: #f8f9fa !important; }
+html[data-theme='light'] .bg-\[\#191a1b\] { background-color: #ffffff !important; }
+html[data-theme='light'] .bg-\[\#0a0b0c\] { background-color: #f8f9fa !important; }
+html[data-theme='light'] .bg-\[\#28282c\] { background-color: rgba(0,0,0,0.06) !important; }
+
+/* Fonds avec alpha blanche */
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.01\)\] { background-color: rgba(0,0,0,0.015) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.02\)\] { background-color: rgba(0,0,0,0.02) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.025\)\] { background-color: rgba(0,0,0,0.03) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.03\)\] { background-color: rgba(0,0,0,0.035) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.035\)\] { background-color: rgba(0,0,0,0.04) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.04\)\] { background-color: rgba(0,0,0,0.05) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.05\)\] { background-color: rgba(0,0,0,0.06) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.06\)\] { background-color: rgba(0,0,0,0.07) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.08\)\] { background-color: rgba(0,0,0,0.08) !important; }
+html[data-theme='light'] .bg-\[rgba\(255\,255\,255\,0\.12\)\] { background-color: rgba(0,0,0,0.1) !important; }
+
+/* Hover states */
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.02\)\]:hover { background-color: rgba(0,0,0,0.02) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.025\)\]:hover { background-color: rgba(0,0,0,0.03) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.03\)\]:hover { background-color: rgba(0,0,0,0.035) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.04\)\]:hover { background-color: rgba(0,0,0,0.05) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.05\)\]:hover { background-color: rgba(0,0,0,0.06) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.06\)\]:hover { background-color: rgba(0,0,0,0.07) !important; }
+html[data-theme='light'] .hover\:bg-\[rgba\(255\,255\,255\,0\.08\)\]:hover { background-color: rgba(0,0,0,0.08) !important; }
+
+/* Top bar backdrop */
+html[data-theme='light'] .bg-\[rgba\(8\,9\,10\,0\.9\)\] { background-color: rgba(255,255,255,0.9) !important; }
+html[data-theme='light'] .bg-\[rgba\(8\,9\,10\,0\.6\)\] { background-color: rgba(255,255,255,0.85) !important; }
+html[data-theme='light'] .bg-\[rgba\(8\,9\,10\,0\.7\)\] { background-color: rgba(255,255,255,0.88) !important; }
+
+/* ------------------------------------------------------------
+   Textes
+   ------------------------------------------------------------ */
+html[data-theme='light'] .text-\[\#f7f8f8\] { color: #0d0e10 !important; }
+html[data-theme='light'] .text-\[\#d0d6e0\] { color: #1f2125 !important; }
+html[data-theme='light'] .text-\[\#8a8f98\] { color: #4a4e56 !important; }
+html[data-theme='light'] .text-\[\#62666d\] { color: #5d6169 !important; }
+html[data-theme='light'] .text-\[\#3e3e44\] { color: #8a8f98 !important; }
+html[data-theme='light'] .text-\[\#e2e4e7\] { color: #1f2125 !important; }
+
+/* Placeholder */
+html[data-theme='light'] .placeholder\:text-\[\#62666d\]::placeholder { color: #6f7680 !important; }
+
+/* Text hover */
+html[data-theme='light'] .hover\:text-white:hover { color: #000000 !important; }
+html[data-theme='light'] .hover\:text-\[\#f7f8f8\]:hover { color: #000000 !important; }
+html[data-theme='light'] .group:hover .group-hover\:text-white { color: #000000 !important; }
+html[data-theme='light'] .group:hover .group-hover\:text-\[\#f7f8f8\] { color: #000000 !important; }
+
+/* text-white hors hover (rare, fait souvent référence à texte blanc sur CTA coloré — OK en light) */
+/* On NE remap PAS text-white par défaut, car il est souvent utilisé sur bouton violet/rouge/vert où il doit rester blanc.
+   Cas litigieux : mobile-nav-active, etc. — à traiter au cas par cas. */
+
+/* ------------------------------------------------------------
+   Bordures
+   ------------------------------------------------------------ */
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.05\)\] { border-color: rgba(0,0,0,0.06) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.06\)\] { border-color: rgba(0,0,0,0.06) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: rgba(0,0,0,0.08) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.12\)\] { border-color: rgba(0,0,0,0.1) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.14\)\] { border-color: rgba(0,0,0,0.12) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.15\)\] { border-color: rgba(0,0,0,0.12) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.2\)\] { border-color: rgba(0,0,0,0.15) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.22\)\] { border-color: rgba(0,0,0,0.18) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.25\)\] { border-color: rgba(0,0,0,0.2) !important; }
+html[data-theme='light'] .border-\[rgba\(255\,255\,255\,0\.35\)\] { border-color: rgba(0,0,0,0.25) !important; }
+html[data-theme='light'] .border-\[\#23252a\] { border-color: rgba(0,0,0,0.12) !important; }
+html[data-theme='light'] .border-\[\#3e3e44\] { border-color: rgba(0,0,0,0.15) !important; }
+
+html[data-theme='light'] .hover\:border-\[rgba\(255\,255\,255\,0\.14\)\]:hover { border-color: rgba(0,0,0,0.15) !important; }
+html[data-theme='light'] .focus\:border-\[rgba\(255\,255\,255\,0\.2\)\]:focus { border-color: rgba(0,0,0,0.2) !important; }
+html[data-theme='light'] .focus\:border-\[rgba\(255\,255\,255\,0\.22\)\]:focus { border-color: rgba(0,0,0,0.22) !important; }
+
+/* ------------------------------------------------------------
+   Bouton primaire (gradient blanc→gris en dark) → noir solide en light
+   ------------------------------------------------------------ */
+html[data-theme='light'] .from-white.to-\[\#d0d6e0\],
+html[data-theme='light'] .from-white.to-\[\#f7f8f8\] {
+  background-image: linear-gradient(135deg, #1a1b1e 0%, #28282c 100%) !important;
+}
+html[data-theme='light'] .hover\:from-white:hover,
+html[data-theme='light'] .hover\:to-\[\#f7f8f8\]:hover {
+  background-image: linear-gradient(135deg, #28282c 0%, #3a3d43 100%) !important;
+}
+
+/* Texte sur ces boutons : reste clair */
+html[data-theme='light'] [class*="from-white"][class*="to-\[\#d0d6e0\]"].text-\[\#08090a\],
+html[data-theme='light'] [class*="from-white"][class*="to-\[\#f7f8f8\]"].text-\[\#08090a\] {
+  color: #ffffff !important;
+}
+html[data-theme='light'] [class*="from-white"][class*="to-\[\#d0d6e0\]"] .text-\[\#08090a\],
+html[data-theme='light'] [class*="from-white"][class*="to-\[\#f7f8f8\]"] .text-\[\#08090a\] {
+  color: #ffffff !important;
+}
+
+/* Par défaut, text-[#08090a] reste noir en light sauf sur un CTA solide */
+html[data-theme='light'] .text-\[\#08090a\] { color: #1a1b1e !important; }
+
+/* Border white/N dans les boutons primary */
+html[data-theme='light'] .border-white\/20 { border-color: rgba(0,0,0,0.2) !important; }
+
+/* ------------------------------------------------------------
+   Shadow hero
+   ------------------------------------------------------------ */
+html[data-theme='light'] .shadow-\[0_40px_80px_-20px_rgba\(0\,0\,0\,0\.6\)\] {
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.15) !important;
+}
+
+/* ------------------------------------------------------------
+   Couleurs sémantiques pastels — assombries pour contraste AA
+   ------------------------------------------------------------ */
+/* Rouge / danger */
+html[data-theme='light'] .text-\[\#fca5a5\] { color: #b91c1c !important; }
+html[data-theme='light'] .bg-\[rgba\(239\,68\,68\,0\.04\)\] { background-color: rgba(239,68,68,0.06) !important; }
+html[data-theme='light'] .bg-\[rgba\(239\,68\,68\,0\.06\)\] { background-color: rgba(239,68,68,0.08) !important; }
+html[data-theme='light'] .bg-\[rgba\(239\,68\,68\,0\.08\)\] { background-color: rgba(239,68,68,0.1) !important; }
+html[data-theme='light'] .bg-\[rgba\(239\,68\,68\,0\.1\)\] { background-color: rgba(239,68,68,0.12) !important; }
+
+/* Vert / success */
+html[data-theme='light'] .text-\[\#10b981\] { color: #047857 !important; }
+html[data-theme='light'] .bg-\[rgba\(16\,185\,129\,0\.04\)\] { background-color: rgba(16,185,129,0.08) !important; }
+html[data-theme='light'] .bg-\[rgba\(16\,185\,129\,0\.06\)\] { background-color: rgba(16,185,129,0.1) !important; }
+html[data-theme='light'] .bg-\[rgba\(16\,185\,129\,0\.08\)\] { background-color: rgba(16,185,129,0.12) !important; }
+
+/* Jaune / warning */
+html[data-theme='light'] .text-\[\#fbbf24\] { color: #b45309 !important; }
+
+/* Violet clair / accent secondaire */
+html[data-theme='light'] .text-\[\#828fff\] { color: #4f46e5 !important; }
+html[data-theme='light'] .text-\[\#7170ff\] { color: #4f46e5 !important; }
+html[data-theme='light'] .hover\:text-\[\#828fff\]:hover { color: #3730a3 !important; }
+html[data-theme='light'] .bg-\[rgba\(113\,112\,255\,0\.04\)\] { background-color: rgba(94,106,210,0.08) !important; }
+html[data-theme='light'] .bg-\[rgba\(113\,112\,255\,0\.06\)\] { background-color: rgba(94,106,210,0.1) !important; }
+html[data-theme='light'] .bg-\[rgba\(113\,112\,255\,0\.08\)\] { background-color: rgba(94,106,210,0.12) !important; }
+html[data-theme='light'] .bg-\[rgba\(113\,112\,255\,0\.12\)\] { background-color: rgba(94,106,210,0.16) !important; }
+
+/* Restauration sous dark-lock */
+html[data-theme='light'] [data-theme='dark'] .text-\[\#fca5a5\] { color: #fca5a5 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#10b981\] { color: #10b981 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#fbbf24\] { color: #fbbf24 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#828fff\] { color: #828fff !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#7170ff\] { color: #7170ff !important; }
+html[data-theme='light'] [data-theme='dark'] .hover\:text-\[\#828fff\]:hover { color: #828fff !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(239\,68\,68\,0\.04\)\] { background-color: rgba(239,68,68,0.04) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(239\,68\,68\,0\.06\)\] { background-color: rgba(239,68,68,0.06) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(239\,68\,68\,0\.08\)\] { background-color: rgba(239,68,68,0.08) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(239\,68\,68\,0\.1\)\] { background-color: rgba(239,68,68,0.1) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(16\,185\,129\,0\.04\)\] { background-color: rgba(16,185,129,0.04) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(16\,185\,129\,0\.06\)\] { background-color: rgba(16,185,129,0.06) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(16\,185\,129\,0\.08\)\] { background-color: rgba(16,185,129,0.08) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(113\,112\,255\,0\.04\)\] { background-color: rgba(113,112,255,0.04) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(113\,112\,255\,0\.06\)\] { background-color: rgba(113,112,255,0.06) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(113\,112\,255\,0\.08\)\] { background-color: rgba(113,112,255,0.08) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(113\,112\,255\,0\.12\)\] { background-color: rgba(113,112,255,0.12) !important; }
+
+/* ============================================================
+   DARK LOCK — restaure les couleurs dark sous [data-theme='dark']
+   (auth, landing, locuteur)
+   ============================================================ */
+html[data-theme='light'] [data-theme='dark'] { color-scheme: dark; }
+
+html[data-theme='light'] [data-theme='dark'] .bg-\[\#08090a\] { background-color: #08090a !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[\#0f1011\] { background-color: #0f1011 !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[\#191a1b\] { background-color: #191a1b !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[\#0a0b0c\] { background-color: #0a0b0c !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[\#28282c\] { background-color: #28282c !important; }
+
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.01\)\] { background-color: rgba(255,255,255,0.01) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.02\)\] { background-color: rgba(255,255,255,0.02) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.025\)\] { background-color: rgba(255,255,255,0.025) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.03\)\] { background-color: rgba(255,255,255,0.03) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.035\)\] { background-color: rgba(255,255,255,0.035) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.04\)\] { background-color: rgba(255,255,255,0.04) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.05\)\] { background-color: rgba(255,255,255,0.05) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.06\)\] { background-color: rgba(255,255,255,0.06) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.08\)\] { background-color: rgba(255,255,255,0.08) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(255\,255\,255\,0\.12\)\] { background-color: rgba(255,255,255,0.12) !important; }
+
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(8\,9\,10\,0\.9\)\] { background-color: rgba(8,9,10,0.9) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(8\,9\,10\,0\.6\)\] { background-color: rgba(8,9,10,0.6) !important; }
+html[data-theme='light'] [data-theme='dark'] .bg-\[rgba\(8\,9\,10\,0\.7\)\] { background-color: rgba(8,9,10,0.7) !important; }
+
+html[data-theme='light'] [data-theme='dark'] .text-\[\#f7f8f8\] { color: #f7f8f8 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#d0d6e0\] { color: #d0d6e0 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#8a8f98\] { color: #8a8f98 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#62666d\] { color: #62666d !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#3e3e44\] { color: #3e3e44 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#e2e4e7\] { color: #e2e4e7 !important; }
+html[data-theme='light'] [data-theme='dark'] .text-\[\#08090a\] { color: #08090a !important; }
+html[data-theme='light'] [data-theme='dark'] .text-white { color: #ffffff !important; }
+html[data-theme='light'] [data-theme='dark'] .group:hover .group-hover\:text-white { color: #ffffff !important; }
+html[data-theme='light'] [data-theme='dark'] .group:hover .group-hover\:text-\[\#f7f8f8\] { color: #f7f8f8 !important; }
+
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.05\)\] { border-color: rgba(255,255,255,0.05) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.06\)\] { border-color: rgba(255,255,255,0.06) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: rgba(255,255,255,0.08) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.12\)\] { border-color: rgba(255,255,255,0.12) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.14\)\] { border-color: rgba(255,255,255,0.14) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.15\)\] { border-color: rgba(255,255,255,0.15) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.2\)\] { border-color: rgba(255,255,255,0.2) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.22\)\] { border-color: rgba(255,255,255,0.22) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.25\)\] { border-color: rgba(255,255,255,0.25) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[rgba\(255\,255\,255\,0\.35\)\] { border-color: rgba(255,255,255,0.35) !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[\#23252a\] { border-color: #23252a !important; }
+html[data-theme='light'] [data-theme='dark'] .border-\[\#3e3e44\] { border-color: #3e3e44 !important; }
+html[data-theme='light'] [data-theme='dark'] .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
+
+html[data-theme='light'] [data-theme='dark'] .from-white.to-\[\#d0d6e0\],
+html[data-theme='light'] [data-theme='dark'] .from-white.to-\[\#f7f8f8\] {
+  background-image: linear-gradient(135deg, #ffffff 0%, #d0d6e0 100%) !important;
+}
+
+html[data-theme='light'] [data-theme='dark'] .placeholder\:text-\[\#62666d\]::placeholder { color: #62666d !important; }
+
+html[data-theme='light'] [data-theme='dark'] .shadow-\[0_40px_80px_-20px_rgba\(0\,0\,0\,0\.6\)\] {
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6) !important;
+}
