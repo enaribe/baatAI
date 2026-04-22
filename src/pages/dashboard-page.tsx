@@ -5,6 +5,7 @@ import {
   CircleDashed, Clock, Archive, ChevronDown, Mic, FileText,
   LayoutGrid, List as ListIcon,
 } from 'lucide-react'
+import { StaticWaveform } from '../components/ui/static-waveform'
 import { useProjects } from '../hooks/use-projects'
 import type { ProjectWithStats } from '../hooks/use-projects'
 import { useAuth } from '../hooks/use-auth'
@@ -390,39 +391,6 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
   )
 }
 
-/* Waveform statique décorative pour les cards de projet.
-   Déterministe (basée sur l'ID) pour que chaque projet ait son pattern unique stable. */
-function StaticWaveform({ seed }: { seed: string }) {
-  // Génère un tableau de hauteurs déterministes à partir de l'ID
-  const bars = 60
-  const heights = Array.from({ length: bars }, (_, i) => {
-    const charCode = seed.charCodeAt(i % seed.length)
-    const h = ((charCode * (i + 7)) % 100) / 100
-    return 0.15 + h * 0.85
-  })
-
-  return (
-    <div className="absolute inset-0 flex items-center gap-[2px] px-4 py-4">
-      {heights.map((h, i) => {
-        const t = i / (bars - 1)
-        const shade = `rgb(${Math.round(247 - t * 170)}, ${Math.round(248 - t * 172)}, ${Math.round(248 - t * 170)})`
-        return (
-          <div
-            key={i}
-            style={{
-              flex: 1,
-              height: `${h * 100}%`,
-              minHeight: 2,
-              background: shade,
-              borderRadius: 1,
-              opacity: 0.35 + (1 - t) * 0.35,
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
 
 function ProjectRow({ project }: { project: ProjectWithStats }) {
   const progress = project.total_phrases > 0
