@@ -4,7 +4,6 @@ import { ToastProvider } from './contexts/toast-context'
 import { ToastContainer } from './components/ui/toast'
 import { ProtectedRoute } from './components/protected-route'
 import { AppLayout } from './components/layout/app-layout'
-import { PublicLayout } from './components/layout/public-layout'
 import { SpeakerLayout } from './components/layout/speaker-layout'
 import { LoginPage } from './pages/login-page'
 import { RegisterPage } from './pages/register-page'
@@ -37,10 +36,10 @@ export function App() {
         <ToastProvider>
           <ToastContainer />
           <Routes>
-            {/* ── Public routes ── */}
-            <Route path="/login" element={<PublicLayout><LoginPage /></PublicLayout>} />
-            <Route path="/register" element={<PublicLayout><RegisterPage /></PublicLayout>} />
-            <Route path="/speaker/register" element={<PublicLayout><SpeakerRegisterPage /></PublicLayout>} />
+            {/* ── Public routes (chaque page gère son propre PublicLayout) ── */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/speaker/register" element={<SpeakerRegisterPage />} />
 
             {/* ── Record token anonyme (compat rétro) ── */}
             <Route path="/record/:token" element={<RecordPage />} />

@@ -2,7 +2,12 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/use-auth'
-import { Loader2, Mic, AlertCircle, Mail, Lock } from 'lucide-react'
+import {
+  Loader2, AlertCircle, Mail, Lock, ArrowRight, ShieldCheck,
+} from 'lucide-react'
+import { PublicLayout } from '../components/layout/public-layout'
+import { Field } from '../components/ui/field'
+import { Button } from '../components/ui/button'
 
 export function LoginPage() {
   const { signIn, user, loading: authLoading, role } = useAuth()
@@ -13,8 +18,8 @@ export function LoginPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sand-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-screen flex items-center justify-center bg-[#08090a]">
+        <Loader2 className="w-6 h-6 animate-spin text-[#d0d6e0]" />
       </div>
     )
   }
@@ -41,104 +46,107 @@ export function LoginPage() {
   }
 
   return (
-    <div className="w-full">
-      {/* Logo + titre */}
-      <div className="text-center mb-8">
-        <div className="relative inline-flex items-center justify-center mb-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 animate-pulse-soft">
-            <Mic className="w-8 h-8 text-white" />
-          </div>
-          {/* Glow ring */}
-          <div className="absolute inset-0 rounded-2xl bg-primary-500/20 blur-md scale-110 pointer-events-none" />
-        </div>
-        <h1
-          className="text-3xl font-extrabold text-sand-900 leading-none"
-          style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.03em' }}
-        >
-          Baat-IA
-        </h1>
-        <p className="text-sand-500 mt-2 text-sm">Connectez-vous à votre espace</p>
+    <PublicLayout
+      brandTitle={<>Reprenez<br />là où vous<br />vous étiez.</>}
+      brandSubtitle="Vos projets, vos datasets et vos paiements — au même endroit."
+    >
+      {/* En-tête top bar */}
+      <div className="flex justify-between items-center">
+        <span className="text-[11px] text-[#62666d]" style={{ fontFamily: 'var(--font-mono)' }}>
+          /login
+        </span>
+        <span className="text-[12px] text-[#62666d]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}>
+          Pas encore de compte ?{' '}
+          <Link
+            to="/register"
+            className="text-[#f7f8f8] underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
+            style={{ textUnderlineOffset: 3 }}
+          >
+            Créer un compte
+          </Link>
+        </span>
       </div>
 
-      {/* Card */}
-      <div className="bg-white rounded-2xl shadow-xl shadow-sand-900/8 border border-sand-200/60 p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Formulaire centré */}
+      <div className="flex-1 flex flex-col justify-center max-w-[420px] w-full mx-auto">
+        <h1
+          className="text-[28px] sm:text-[32px] text-[#f7f8f8] m-0"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            fontWeight: 510,
+            lineHeight: 1.1,
+            letterSpacing: '-0.7px',
+          }}
+        >
+          Content de vous revoir.
+        </h1>
+        <p
+          className="text-[15px] text-[#8a8f98] mt-2.5"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            lineHeight: 1.55,
+          }}
+        >
+          Connectez-vous pour reprendre vos projets.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3.5">
           {error && (
-            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]" style={{ fontFeatureSettings: "'cv01','ss03'" }}>
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-sand-700 mb-1.5">
-              Email
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="votre@email.com"
-              />
-            </div>
-          </div>
+          <Field
+            label="Email"
+            type="email"
+            icon={<Mail className="w-3.5 h-3.5" strokeWidth={1.75} />}
+            placeholder="vous@exemple.com"
+            value={email}
+            onChange={setEmail}
+          />
+          <Field
+            label="Mot de passe"
+            type="password"
+            icon={<Lock className="w-3.5 h-3.5" strokeWidth={1.75} />}
+            placeholder="••••••••"
+            value={password}
+            onChange={setPassword}
+            rightSlot={
+              <a
+                className="text-[11px] text-[#8a8f98] whitespace-nowrap cursor-pointer hover:text-[#f7f8f8] transition-colors"
+                style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+              >
+                Oublié ?
+              </a>
+            }
+          />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-sand-700 mb-1.5">
-              Mot de passe
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="••••••••"
-              />
-            </div>
+          <div className="mt-[14px]">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              iconRight={!loading ? <ArrowRight className="w-4 h-4" strokeWidth={1.75} /> : undefined}
+              className="w-full justify-center"
+            >
+              Se connecter
+            </Button>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg shadow-primary-500/25 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            {loading ? (
-              <span className="inline-flex items-center gap-2 justify-center">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Connexion...
-              </span>
-            ) : (
-              'Se connecter'
-            )}
-          </button>
         </form>
-      </div>
 
-      <p className="text-center mt-5 text-sand-500 text-sm">
-        Pas encore de compte ?{' '}
-        <Link
-          to="/register"
-          className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300"
+        <div
+          className="flex items-center justify-center gap-2 mt-6 text-[12px] text-[#62666d]"
+          style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
         >
-          Compte client
-        </Link>
-        {' '}·{' '}
-        <Link
-          to="/speaker/register"
-          className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300"
-        >
-          Devenir locuteur
-        </Link>
-      </p>
-    </div>
+          <ShieldCheck className="w-3.5 h-3.5 text-[#62666d]" strokeWidth={1.75} />
+          <span>Connexion chiffrée · 2FA recommandé</span>
+        </div>
+      </div>
+    </PublicLayout>
   )
 }

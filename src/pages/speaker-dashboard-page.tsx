@@ -1,72 +1,16 @@
+import { Link } from 'react-router-dom'
+import {
+  Mic, Compass, ChevronRight, Play, Inbox, Clock,
+  ArrowRight, Star, TrendingUp,
+} from 'lucide-react'
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerProfile } from '../hooks/use-speaker-profile'
 import { useSpeakerActiveProjects, type ActiveSpeakerProject } from '../hooks/use-speaker-active-projects'
 import { useSpeakerInvitations } from '../hooks/use-speaker-invitations'
 import { useCountUp } from '../hooks/use-count-up'
-import { Mic, TrendingUp, Clock, Star, ChevronRight, Zap, Play, Compass } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { getLanguageLabel } from '../lib/languages'
 
-function ActiveProjectCard({ project }: { project: ActiveSpeakerProject }) {
-  const rateDisplay = project.rate_per_hour_fcfa > 0
-    ? new Intl.NumberFormat('fr-SN').format(project.rate_per_hour_fcfa) + ' FCFA/h'
-    : 'Bénévole'
-
-  const progress = project.total_phrases > 0
-    ? Math.min(100, Math.round((project.recorded_phrases / project.total_phrases) * 100))
-    : 0
-
-  return (
-    <Link
-      to={`/speaker/record/${project.session_id}`}
-      className="block bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-5 hover:shadow-lg hover:shadow-sand-900/8 hover:-translate-y-0.5 transition-all duration-200 group"
-    >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex-1 min-w-0">
-          <p
-            className="font-bold text-sand-900 dark:text-sand-100 text-sm leading-snug truncate"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            {project.project_name}
-          </p>
-          <p className="text-xs text-sand-500 mt-0.5">
-            {getLanguageLabel(project.target_language)}
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1 shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700">
-          <Play className="w-2.5 h-2.5 fill-secondary-700" />
-          En cours
-        </span>
-      </div>
-
-      {/* Progression */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-semibold text-sand-600 dark:text-sand-400 tabular-nums">
-            {project.recorded_phrases} / {project.total_phrases} phrases
-          </span>
-          <span className="text-[11px] font-bold text-secondary-700 dark:text-secondary-400 tabular-nums">
-            {progress}%
-          </span>
-        </div>
-        <div className="h-1.5 bg-sand-100 dark:bg-sand-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-secondary-400 to-secondary-600 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-sand-500">{rateDisplay}</span>
-        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-400 group-hover:gap-1.5 transition-all">
-          Reprendre
-          <ChevronRight className="w-3.5 h-3.5" />
-        </span>
-      </div>
-    </Link>
-  )
-}
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
 
 export function SpeakerDashboardPage() {
   const { user } = useAuth()
@@ -78,132 +22,257 @@ export function SpeakerDashboardPage() {
   const totalValidated = useCountUp(profile?.total_validated ?? 0)
   const reliabilityPct = useCountUp(Math.round((profile?.reliability_score ?? 1) * 100))
 
-  const pendingInvitations = invitations.filter(i => i.status === 'pending')
+  const pendingInvitations = invitations.filter((i) => i.status === 'pending')
   const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'Locuteur'
 
   return (
-    <div className="max-w-[42rem] mx-auto px-4 py-8">
-      {/* Greeting */}
-      <div className="mb-6">
+    <div className="min-h-screen">
+      {/* Top bar */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
+        <Mic className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          Accueil
+        </span>
+      </header>
+
+      <div className="px-5 lg:px-8 py-7">
+        {/* Greeting */}
         <h1
-          className="text-2xl font-extrabold text-sand-900 dark:text-sand-100"
-          style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
+          className="text-[24px] text-[#f7f8f8] m-0"
+          style={{ ...sans, fontWeight: 510, letterSpacing: '-0.3px' }}
         >
-          Bonjour, {firstName} 👋
+          Bonjour, {firstName}
         </h1>
-        <p className="text-sand-500 text-sm mt-0.5">Prêt à enregistrer aujourd'hui ?</p>
-      </div>
+        <p className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+          Prêt à enregistrer aujourd'hui ?
+        </p>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-7">
-        <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-4 text-center">
-          <div className="w-8 h-8 rounded-xl bg-secondary-100 flex items-center justify-center mx-auto mb-2">
-            <TrendingUp className="w-4 h-4 text-secondary-600" />
-          </div>
-          <p className="text-lg font-extrabold text-sand-900 dark:text-sand-100 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-            {new Intl.NumberFormat('fr-SN').format(balance)}
-          </p>
-          <p className="text-[10px] font-semibold text-sand-400 uppercase tracking-wide mt-0.5">FCFA</p>
-        </div>
-
-        <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-4 text-center">
-          <div className="w-8 h-8 rounded-xl bg-primary-100 flex items-center justify-center mx-auto mb-2">
-            <Mic className="w-4 h-4 text-primary-600" />
-          </div>
-          <p className="text-lg font-extrabold text-sand-900 dark:text-sand-100 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-            {totalValidated}
-          </p>
-          <p className="text-[10px] font-semibold text-sand-400 uppercase tracking-wide mt-0.5">Validés</p>
-        </div>
-
-        <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-4 text-center">
-          <div className="w-8 h-8 rounded-xl bg-accent-100 flex items-center justify-center mx-auto mb-2">
-            <Star className="w-4 h-4 text-accent-600" />
-          </div>
-          <p className="text-lg font-extrabold text-sand-900 dark:text-sand-100 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-            {reliabilityPct}%
-          </p>
-          <p className="text-[10px] font-semibold text-sand-400 uppercase tracking-wide mt-0.5">Fiabilité</p>
+        {/* Stats inline */}
+        <div className="mt-5 flex items-center gap-6 flex-wrap">
+          <StatInline
+            label="solde"
+            value={new Intl.NumberFormat('fr-SN').format(balance) + ' FCFA'}
+            icon={<TrendingUp className="w-3 h-3" strokeWidth={2} />}
+          />
+          <StatSep />
+          <StatInline
+            label="validés"
+            value={String(totalValidated)}
+            icon={<Mic className="w-3 h-3" strokeWidth={2} />}
+          />
+          <StatSep />
+          <StatInline
+            label="fiabilité"
+            value={`${reliabilityPct}%`}
+            icon={<Star className="w-3 h-3" strokeWidth={2} />}
+          />
         </div>
       </div>
 
       {/* Invitations en attente */}
       {pendingInvitations.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-600" />
-              <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                {pendingInvitations.length} invitation{pendingInvitations.length > 1 ? 's' : ''} en attente
-              </p>
-            </div>
-            <Link to="/speaker/invitations" className="text-xs font-semibold text-amber-700 hover:text-amber-900 transition-colors">
-              Voir tout →
-            </Link>
-          </div>
-          {pendingInvitations.slice(0, 2).map(inv => (
-            <div key={inv.id} className="flex items-center justify-between py-2 border-t border-amber-200/60">
-              <div>
-                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">{inv.project?.name}</p>
-                <p className="text-xs text-amber-600">{inv.project?.language_label}</p>
-              </div>
-              {inv.project?.rate_per_hour_fcfa && inv.project.rate_per_hour_fcfa > 0 && (
-                <span className="text-sm font-bold text-amber-800 tabular-nums">
-                  {new Intl.NumberFormat('fr-SN').format(inv.project.rate_per_hour_fcfa)} FCFA/h
+        <section className="mx-5 lg:mx-8 mb-6">
+          <div
+            className="rounded-[10px] p-4"
+            style={{
+              background: 'rgba(245,158,11,0.04)',
+              border: '1px solid rgba(245,158,11,0.15)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Inbox className="w-3.5 h-3.5 text-[#fbbf24]" strokeWidth={1.75} />
+                <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+                  {pendingInvitations.length} invitation{pendingInvitations.length > 1 ? 's' : ''} en attente
                 </span>
-              )}
+              </div>
+              <Link
+                to="/speaker/invitations"
+                className="inline-flex items-center gap-1 text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors"
+                style={sans}
+              >
+                Voir tout
+                <ChevronRight className="w-3 h-3" strokeWidth={2} />
+              </Link>
             </div>
+            <div className="flex flex-col gap-1 mt-3">
+              {pendingInvitations.slice(0, 2).map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center gap-3 py-1.5 text-[12px]"
+                  style={sans}
+                >
+                  <span className="text-[#d0d6e0] truncate flex-1" style={{ fontWeight: 510 }}>
+                    {inv.project?.name ?? '—'}
+                  </span>
+                  <span className="text-[11px] text-[#62666d]" style={sans}>
+                    {inv.project?.language_label ?? ''}
+                  </span>
+                  {inv.project?.rate_per_hour_fcfa != null && inv.project.rate_per_hour_fcfa > 0 && (
+                    <span className="text-[11px] text-[#f7f8f8] tabular-nums" style={mono}>
+                      {new Intl.NumberFormat('fr-SN').format(inv.project.rate_per_hour_fcfa)} FCFA/h
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Section Mes projets en cours */}
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
+        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          Mes projets en cours
+        </span>
+        <span className="text-[11px] text-[#62666d]" style={mono}>
+          {activeProjects.length}
+        </span>
+        <Link
+          to="/speaker/projects"
+          className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+          style={sans}
+        >
+          <Compass className="w-3 h-3" strokeWidth={1.75} />
+          Découvrir
+        </Link>
+      </div>
+
+      {projectsLoading ? (
+        <div className="px-5 lg:px-8 pt-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="h-[68px] mb-2 rounded-sm animate-pulse bg-[rgba(255,255,255,0.02)]" />
+          ))}
+        </div>
+      ) : activeProjects.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div>
+          {activeProjects.map((p) => (
+            <ActiveRow key={p.session_id} project={p} />
           ))}
         </div>
       )}
+    </div>
+  )
+}
 
-      {/* Projets en cours du locuteur */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2
-            className="text-base font-bold text-sand-800 dark:text-sand-200"
-            style={{ fontFamily: 'var(--font-heading)' }}
+/* ---------- Sub-components ---------- */
+
+function StatInline({
+  label, value, icon,
+}: {
+  label: string
+  value: string
+  icon?: React.ReactNode
+}) {
+  return (
+    <div className="flex items-baseline gap-1.5">
+      {icon && <span className="text-[#8a8f98]">{icon}</span>}
+      <span
+        className="text-[15px] text-[#f7f8f8] tabular-nums"
+        style={{ ...sans, fontWeight: 590 }}
+      >
+        {value}
+      </span>
+      <span className="text-[12px] text-[#62666d]" style={sans}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function StatSep() {
+  return <span className="w-px h-3 bg-[rgba(255,255,255,0.08)]" />
+}
+
+function ActiveRow({ project }: { project: ActiveSpeakerProject }) {
+  const progress = project.total_phrases > 0
+    ? Math.round((project.recorded_phrases / project.total_phrases) * 100)
+    : 0
+
+  const rateDisplay = project.rate_per_hour_fcfa > 0
+    ? new Intl.NumberFormat('fr-SN').format(project.rate_per_hour_fcfa) + ' FCFA/h'
+    : 'Bénévole'
+
+  return (
+    <Link
+      to={`/speaker/record/${project.session_id}`}
+      className="group flex items-center gap-3 px-5 lg:px-8 py-3 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+    >
+      <span
+        className="inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"
+        style={{
+          background: 'rgba(113,112,255,0.1)',
+          border: '1px solid rgba(113,112,255,0.2)',
+        }}
+      >
+        <Play className="w-3 h-3 text-[#7170ff] ml-0.5" strokeWidth={2} />
+      </span>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[13px] text-[#f7f8f8] truncate"
+            style={{ ...sans, fontWeight: 510 }}
           >
-            Mes projets en cours
-          </h2>
-          <Link
-            to="/speaker/projects"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            Découvrir
-          </Link>
+            {project.project_name}
+          </span>
+          <span className="text-[11px] text-[#62666d]" style={sans}>
+            {project.language_label ?? project.target_language}
+          </span>
         </div>
-
-        {projectsLoading ? (
-          <div className="space-y-3">
-            {[1, 2].map(i => (
-              <div key={i} className="bg-sand-100 dark:bg-sand-800 rounded-2xl h-28 animate-pulse" />
-            ))}
+        <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex-1 max-w-[200px] h-[3px] bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#f7f8f8] rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-        ) : activeProjects.length === 0 ? (
-          <div className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-8 text-center">
-            <Clock className="w-8 h-8 text-sand-300 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-sand-500">Aucun projet en cours</p>
-            <p className="text-xs text-sand-400 mt-1 mb-4">
-              Parcourez les projets disponibles pour commencer
-            </p>
-            <Link
-              to="/speaker/projects"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold shadow-sm transition-colors"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              Voir les projets disponibles
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {activeProjects.map(p => (
-              <ActiveProjectCard key={p.session_id} project={p} />
-            ))}
-          </div>
-        )}
+          <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
+            {project.recorded_phrases}/{project.total_phrases} · {progress}%
+          </span>
+        </div>
       </div>
+
+      <span className="text-[11px] text-[#d0d6e0] tabular-nums hidden sm:inline" style={mono}>
+        {rateDisplay}
+      </span>
+
+      <ArrowRight className="w-3.5 h-3.5 text-[#62666d] group-hover:text-[#f7f8f8] group-hover:translate-x-0.5 transition-all" strokeWidth={1.75} />
+    </Link>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+      <div
+        className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <Clock className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+      </div>
+      <h3
+        className="text-[16px] text-[#f7f8f8] m-0"
+        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
+      >
+        Aucun projet en cours
+      </h3>
+      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+        Parcourez les projets disponibles pour commencer à enregistrer votre voix.
+      </p>
+      <Link
+        to="/speaker/projects"
+        className="inline-flex items-center gap-1.5 h-[32px] px-3.5 text-[13px] bg-[#5e6ad2] hover:bg-[#6b77dd] text-white rounded-md mt-5 transition-colors"
+        style={{ ...sans, fontWeight: 510 }}
+      >
+        <Compass className="w-[13px] h-[13px]" strokeWidth={1.75} />
+        Explorer les projets
+      </Link>
     </div>
   )
 }

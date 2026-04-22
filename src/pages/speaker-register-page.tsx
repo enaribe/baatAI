@@ -1,48 +1,45 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import {
-  Loader2, Mic, AlertCircle, Mail, Lock, User, Phone, MapPin, Calendar,
-  ChevronRight, ChevronLeft, Check, Sparkles, Globe, Heart,
+  Loader2, AlertCircle, Mail, Lock, User, Phone, MapPin, Calendar,
+  ArrowRight, ArrowLeft, Check, Pencil,
 } from 'lucide-react'
 import { useAuth } from '../hooks/use-auth'
 import { supabase } from '../lib/supabase'
 import { LANGUAGES } from '../lib/languages'
+import { PublicLayout } from '../components/layout/public-layout'
+import { Field } from '../components/ui/field'
+import { Button } from '../components/ui/button'
+import { Stepper } from '../components/ui/stepper'
 import type { Gender } from '../types/database'
 
 type Step = 1 | 2 | 3 | 4 | 5
 
 interface SpeakerForm {
-  fullName: string
+  name: string
   email: string
-  password: string
   phone: string
+  password: string
   gender: Gender | ''
-  dateOfBirth: string
+  dob: string
   city: string
-  languages: string[]
-  dialects: Record<string, string[]>
+  langs: Record<string, string[]>
   bio: string
 }
 
 const INITIAL: SpeakerForm = {
-  fullName: '',
-  email: '',
-  password: '',
-  phone: '',
-  gender: '',
-  dateOfBirth: '',
-  city: '',
-  languages: [],
-  dialects: {},
-  bio: '',
+  name: '', email: '', phone: '', password: '',
+  gender: '', dob: '', city: '',
+  langs: {}, bio: '',
 }
 
-const STEPS: { id: Step; label: string; hint: string }[] = [
-  { id: 1, label: 'Compte', hint: 'Email & mot de passe' },
-  { id: 2, label: 'Identité', hint: 'Genre, âge, ville' },
-  { id: 3, label: 'Langues', hint: 'Ce que vous parlez' },
-  { id: 4, label: 'Voix', hint: 'Présentez-vous' },
-  { id: 5, label: 'C\'est parti', hint: 'Créer le compte' },
+const LABELS = ['Compte', 'Identité', 'Langues', 'Présentation', 'Récap']
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: 'male', label: 'Homme' },
+  { value: 'female', label: 'Femme' },
+  { value: 'other', label: 'Autre' },
+  { value: 'prefer_not_to_say', label: 'Non précisé' },
 ]
 
 export function SpeakerRegisterPage() {
@@ -50,13 +47,17 @@ export function SpeakerRegisterPage() {
   const navigate = useNavigate()
 
   const [step, setStep] = useState<Step>(1)
-  const [form, setForm] = useState<SpeakerForm>(INITIAL)
+  const [data, setData] = useState<SpeakerForm>(INITIAL)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   if (authLoading) {
-    return <FullscreenLoader />
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#08090a]">
+        <Loader2 className="w-6 h-6 animate-spin text-[#d0d6e0]" />
+      </div>
+    )
   }
 
   if (user && role && !submitted) {
@@ -65,74 +66,47 @@ export function SpeakerRegisterPage() {
     return <Navigate to="/dashboard" replace />
   }
 
-  const toggleLanguage = (code: string) => {
-    setForm(f => {
-      const has = f.languages.includes(code)
-      const languages = has ? f.languages.filter(l => l !== code) : [...f.languages, code]
-      const dialects = { ...f.dialects }
-      if (has) delete dialects[code]
-      else dialects[code] = []
-      return { ...f, languages, dialects }
-    })
-  }
+  const update = <K extends keyof SpeakerForm>(k: K, v: SpeakerForm[K]) =>
+    setData((d) => ({ ...d, [k]: v }))
 
-  const toggleDialect = (lang: string, dialect: string) => {
-    setForm(f => {
-      const current = f.dialects[lang] ?? []
-      const updated = current.includes(dialect)
-        ? current.filter(d => d !== dialect)
-        : [...current, dialect]
-      return { ...f, dialects: { ...f.dialects, [lang]: updated } }
-    })
-  }
-
-  const canProceed = (): boolean => {
-    if (step === 1) {
-      return form.fullName.trim().length >= 2
-        && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-        && form.password.length >= 8
-        && form.phone.trim().length >= 8
-    }
-    if (step === 2) return form.gender !== '' && form.city.trim().length >= 2
-    if (step === 3) return form.languages.length > 0
-    return true
-  }
-
-  const goNext = () => {
-    setError('')
-    if (!canProceed()) return
-    if (step < 5) setStep((s) => (s + 1) as Step)
+  const canNext: Record<Step, boolean> = {
+    1: !!data.name && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) && !!data.phone && data.password.length >= 8,
+    2: !!data.gender && !!data.city,
+    3: Object.keys(data.langs).length >= 1,
+    4: data.bio.length <= 400,
+    5: true,
   }
 
   const goBack = () => {
     setError('')
-    if (step > 1) setStep((s) => (s - 1) as Step)
+    if (step === 1) navigate('/register')
+    else setStep((s) => (s - 1) as Step)
+  }
+
+  const goNext = () => {
+    setError('')
+    if (!canNext[step]) return
+    if (step < 5) setStep((s) => (s + 1) as Step)
   }
 
   const submit = async () => {
     setError('')
-    setLoading(true)
+    setSubmitting(true)
     setSubmitted(true)
 
     const { error: signUpError } = await signUp(
-      form.email.trim(),
-      form.password,
-      form.fullName.trim(),
-      'speaker',
+      data.email.trim(), data.password, data.name.trim(), 'speaker',
     )
-
     if (signUpError) {
       setError(signUpError.message)
-      setLoading(false)
-      setSubmitted(false)
+      setSubmitting(false); setSubmitted(false)
       return
     }
 
     const { data: { user: u } } = await supabase.auth.getUser()
     if (!u) {
-      setError('Session introuvable après inscription. Réessayez.')
-      setLoading(false)
-      setSubmitted(false)
+      setError('Session introuvable après inscription.')
+      setSubmitting(false); setSubmitted(false)
       return
     }
 
@@ -140,21 +114,20 @@ export function SpeakerRegisterPage() {
       .from('speaker_profiles')
       .upsert({
         id: u.id,
-        phone: form.phone.trim() || null,
-        gender: form.gender || null,
-        date_of_birth: form.dateOfBirth || null,
-        city: form.city.trim() || null,
-        languages: form.languages,
-        dialects: form.dialects,
-        bio: form.bio.trim() || null,
+        phone: data.phone.trim() || null,
+        gender: data.gender || null,
+        date_of_birth: data.dob || null,
+        city: data.city.trim() || null,
+        languages: Object.keys(data.langs),
+        dialects: data.langs,
+        bio: data.bio.trim() || null,
         verification_status: 'approved',
         is_available: true,
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
     if (profileError) {
       setError(profileError.message)
-      setLoading(false)
-      setSubmitted(false)
+      setSubmitting(false); setSubmitted(false)
       return
     }
 
@@ -162,299 +135,217 @@ export function SpeakerRegisterPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#FEF9F3] relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div
-          className="absolute top-[-15%] right-[-10%] w-[520px] h-[520px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.14) 0%, transparent 65%)' }}
+    <PublicLayout
+      brandTitle={<>Votre voix<br />compte.<br />Littéralement.</>}
+      brandSubtitle="Chaque projet terminé est payé via Wave ou Orange Money. Inscription en 5 minutes depuis votre téléphone."
+    >
+      {/* Top bar */}
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <div className="flex items-center gap-3.5">
+          <button
+            type="button"
+            onClick={goBack}
+            className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+          >
+            <ArrowLeft className="w-[13px] h-[13px]" strokeWidth={1.75} />
+            Retour
+          </button>
+          <span
+            className="text-[11px] text-[#62666d]"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            /speaker/register
+          </span>
+        </div>
+        <Stepper
+          current={step}
+          total={5}
+          labels={LABELS}
+          onJump={(n) => n < step && setStep(n as Step)}
         />
-        <div
-          className="absolute bottom-[-20%] left-[-15%] w-[560px] h-[560px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 65%)' }}
-        />
-        <svg
-          className="absolute inset-0 w-full h-full opacity-[0.04] mix-blend-multiply"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <pattern id="wax-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 0 30 Q 15 0 30 30 T 60 30" stroke="currentColor" fill="none" strokeWidth="1.5" className="text-primary-900" />
-              <path d="M 0 45 Q 15 15 30 45 T 60 45" stroke="currentColor" fill="none" strokeWidth="1.5" className="text-primary-900" />
-              <circle cx="15" cy="15" r="1.5" fill="currentColor" className="text-primary-900" />
-              <circle cx="45" cy="45" r="1.5" fill="currentColor" className="text-primary-900" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#wax-pattern)" />
-        </svg>
       </div>
 
-      <div className="relative z-10 w-full max-w-[560px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* En-tête */}
-        <header className="mb-6 sm:mb-8">
-          <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group">
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:scale-105 transition-transform">
-              <Mic className="w-5 h-5 text-white" />
-              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-secondary-500 border-2 border-[#FEF9F3]" />
-            </div>
-            <span
-              className="text-xl font-extrabold text-sand-900 leading-none"
-              style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.03em' }}
-            >
-              Baat-IA
-            </span>
-          </Link>
-
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-primary-600 uppercase tracking-[0.18em] mb-1.5">
-                {String(step).padStart(2, '0')} / 05
-              </p>
-              <h1
-                className="text-[28px] sm:text-[34px] font-extrabold text-sand-900 leading-[1.05]"
-                style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.035em' }}
-              >
-                {step === 1 && <>Prêtez votre <span className="text-primary-600">voix</span>, gagnez de l'argent.</>}
-                {step === 2 && <>Parlez-nous de <span className="text-primary-600">vous</span>.</>}
-                {step === 3 && <>Quelles <span className="text-secondary-600">langues</span> parlez-vous ?</>}
-                {step === 4 && <>Votre <span className="text-accent-600">voix</span> en quelques mots.</>}
-                {step === 5 && <>Tout est <span className="text-secondary-600">prêt</span>.</>}
-              </h1>
-              <p className="text-sand-500 text-sm mt-2 leading-relaxed">
-                {step === 1 && 'Créez votre compte pour rejoindre la communauté des locuteurs Baat-IA.'}
-                {step === 2 && 'Ces informations permettent aux clients de vous proposer des projets adaptés.'}
-                {step === 3 && 'Sélectionnez toutes les langues que vous parlez couramment.'}
-                {step === 4 && 'Un petit texte de présentation (optionnel mais conseillé).'}
-                {step === 5 && 'Validez pour créer votre compte et accéder à votre espace locuteur.'}
-              </p>
-            </div>
+      {/* Contenu */}
+      <div className="flex-1 flex flex-col justify-center max-w-[520px] w-full mx-auto mt-8">
+        {error && (
+          <div className="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>{error}</span>
           </div>
-        </header>
+        )}
 
-        {/* Stepper */}
-        <nav className="mb-6 sm:mb-8" aria-label="Progression">
-          <ol className="flex items-center gap-1.5">
-            {STEPS.map((s) => {
-              const done = s.id < step
-              const active = s.id === step
-              return (
-                <li key={s.id} className="flex-1 flex flex-col gap-1.5">
-                  <div
-                    className={[
-                      'h-1.5 rounded-full transition-all duration-500',
-                      done
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600'
-                        : active
-                          ? 'bg-gradient-to-r from-primary-500 to-primary-300'
-                          : 'bg-sand-200',
-                    ].join(' ')}
-                  />
-                  <span
-                    className={[
-                      'text-[10px] font-bold uppercase tracking-wider hidden sm:block',
-                      active ? 'text-primary-700' : done ? 'text-sand-600' : 'text-sand-400',
-                    ].join(' ')}
-                  >
-                    {s.label}
-                  </span>
-                </li>
-              )
-            })}
-          </ol>
-        </nav>
-
-        {/* Card principale */}
-        <div className="bg-white rounded-[28px] shadow-[0_12px_40px_-12px_rgba(28,25,23,0.12)] border border-sand-200/70 p-6 sm:p-8 relative">
-          {/* Décoration coin */}
-          <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none overflow-hidden rounded-tr-[28px]">
-            <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br from-primary-100 to-transparent" />
-          </div>
-
-          {error && (
-            <div className="flex items-start gap-2.5 bg-red-50 border border-red-200/70 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{error}</span>
-            </div>
-          )}
-
-          {/* Étape 1 — Compte */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <FormField label="Nom complet" required icon={<User className="w-4 h-4" />}>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  value={form.fullName}
-                  onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                  className="peer-input"
-                  placeholder="Moussa Diallo"
-                />
-              </FormField>
-
-              <FormField label="Email" required icon={<Mail className="w-4 h-4" />}>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="peer-input"
-                  placeholder="moussa@email.com"
-                />
-              </FormField>
-
-              <FormField
+        {step === 1 && (
+          <>
+            <StepTitle title="Votre compte" subtitle="Ces informations servent à vous connecter et vous payer." />
+            <div className="flex flex-col gap-3.5 mt-6">
+              <Field label="Nom complet" icon={<User className="w-3.5 h-3.5" strokeWidth={1.75} />} placeholder="Aminata Diop" required value={data.name} onChange={(v) => update('name', v)} />
+              <Field label="Email" type="email" icon={<Mail className="w-3.5 h-3.5" strokeWidth={1.75} />} placeholder="aminata@exemple.com" required value={data.email} onChange={(v) => update('email', v)} />
+              <Field
                 label="Téléphone"
+                icon={<Phone className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="+221 77 000 00 00"
                 required
-                icon={<Phone className="w-4 h-4" />}
-                helper="Pour recevoir vos paiements via Wave ou Orange Money"
-              >
-                <input
-                  type="tel"
-                  required
-                  value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                  className="peer-input"
-                  placeholder="+221 77 000 00 00"
-                />
-              </FormField>
-
-              <FormField
+                hint="Pour les paiements Wave / Orange Money. Vérifié par SMS."
+                value={data.phone}
+                onChange={(v) => update('phone', v)}
+              />
+              <Field
                 label="Mot de passe"
+                type="password"
+                icon={<Lock className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="8 caractères minimum"
                 required
-                icon={<Lock className="w-4 h-4" />}
-                helper="8 caractères minimum"
-              >
-                <input
-                  type="password"
-                  required
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className="peer-input"
-                  placeholder="••••••••"
-                />
-              </FormField>
+                value={data.password}
+                onChange={(v) => update('password', v)}
+                hint={
+                  data.password.length > 0 && data.password.length < 8
+                    ? `${data.password.length}/8`
+                    : '8 caractères minimum.'
+                }
+              />
             </div>
-          )}
+          </>
+        )}
 
-          {/* Étape 2 — Identité */}
-          {step === 2 && (
-            <div className="space-y-5">
+        {step === 2 && (
+          <>
+            <StepTitle title="Votre identité" subtitle="Nous filtrons les projets selon le profil demandé." />
+            <div className="flex flex-col gap-4 mt-6">
               <div>
-                <label className="block text-sm font-bold text-sand-800 mb-2.5">
-                  Genre <span className="text-primary-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    ['male', 'Homme'],
-                    ['female', 'Femme'],
-                    ['other', 'Autre'],
-                    ['prefer_not_to_say', 'Non précisé'],
-                  ] as const).map(([val, lbl]) => {
-                    const selected = form.gender === val
+                <div
+                  className="text-[12px] text-[#d0d6e0] mb-2"
+                  style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+                >
+                  Genre <span className="text-[#62666d]">*</span>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {GENDER_OPTIONS.map((g) => {
+                    const on = data.gender === g.value
                     return (
                       <button
-                        key={val}
+                        key={g.value}
                         type="button"
-                        onClick={() => setForm((f) => ({ ...f, gender: val }))}
-                        className={[
-                          'relative py-3 rounded-2xl border-2 text-sm font-bold transition-all duration-200',
-                          selected
-                            ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md shadow-primary-500/10'
-                            : 'border-sand-200 text-sand-600 hover:border-sand-300 hover:bg-sand-50',
-                        ].join(' ')}
+                        onClick={() => update('gender', g.value)}
+                        className="px-3.5 h-[34px] rounded-md text-[13px]"
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontFeatureSettings: "'cv01','ss03'",
+                          fontWeight: 510,
+                          color: on ? '#f7f8f8' : '#d0d6e0',
+                          background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${on ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                        }}
                       >
-                        {selected && (
-                          <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary-500 flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                          </span>
-                        )}
-                        {lbl}
+                        {g.label}
                       </button>
                     )
                   })}
                 </div>
               </div>
-
-              <FormField
+              <Field
                 label="Date de naissance"
-                icon={<Calendar className="w-4 h-4" />}
-                helper="Optionnel — améliore le matching avec les projets"
-              >
-                <input
-                  type="date"
-                  value={form.dateOfBirth}
-                  onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                  className="peer-input"
-                />
-              </FormField>
-
-              <FormField label="Ville" required icon={<MapPin className="w-4 h-4" />}>
-                <input
-                  type="text"
-                  value={form.city}
-                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                  className="peer-input"
-                  placeholder="Dakar, Thiès, Bamako…"
-                />
-              </FormField>
+                type="date"
+                icon={<Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="jj/mm/aaaa"
+                value={data.dob}
+                onChange={(v) => update('dob', v)}
+                hint="Optionnel."
+              />
+              <Field
+                label="Ville"
+                icon={<MapPin className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="Dakar"
+                required
+                value={data.city}
+                onChange={(v) => update('city', v)}
+              />
             </div>
-          )}
+          </>
+        )}
 
-          {/* Étape 3 — Langues */}
-          {step === 3 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-sand-500 bg-sand-50 px-3 py-2 rounded-xl mb-1">
-                <Globe className="w-3.5 h-3.5 text-primary-500" />
-                Choisissez au moins une langue. Ajoutez vos dialectes si vous en avez.
-              </div>
-
+        {step === 3 && (
+          <>
+            <StepTitle
+              title="Langues parlées"
+              subtitle="Sélectionnez au moins une langue. Ajoutez les dialectes si vous les connaissez."
+            />
+            <div className="flex flex-col gap-2.5 mt-6">
               {Object.entries(LANGUAGES).map(([code, lang]) => {
-                const selected = form.languages.includes(code)
+                const active = code in data.langs
+                const selectedDialects = data.langs[code] ?? []
                 return (
-                  <div key={code}>
+                  <div
+                    key={code}
+                    className="rounded-lg p-3"
+                    style={{
+                      background: active ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
                     <button
                       type="button"
-                      onClick={() => toggleLanguage(code)}
-                      className={[
-                        'w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all duration-200',
-                        selected
-                          ? 'bg-secondary-50 border-secondary-500 text-secondary-700 shadow-md shadow-secondary-500/10'
-                          : 'border-sand-200 text-sand-700 hover:border-sand-300 hover:bg-sand-50',
-                      ].join(' ')}
+                      onClick={() => {
+                        const next = { ...data.langs }
+                        if (active) delete next[code]
+                        else next[code] = []
+                        update('langs', next)
+                      }}
+                      className="w-full flex items-center gap-2.5 cursor-pointer"
                     >
-                      <span className="flex items-center gap-2.5">
-                        <span
-                          className={[
-                            'w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors',
-                            selected ? 'bg-secondary-500 border-secondary-500' : 'border-sand-300',
-                          ].join(' ')}
-                        >
-                          {selected && <Check className="w-3 h-3 text-white" strokeWidth={3.5} />}
-                        </span>
+                      <span
+                        className="w-[18px] h-[18px] rounded-sm flex items-center justify-center shrink-0"
+                        style={{
+                          border: `1.5px solid ${active ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
+                          background: active ? '#f7f8f8' : 'transparent',
+                        }}
+                      >
+                        {active && <Check className="w-3 h-3" strokeWidth={3} style={{ color: '#08090a' }} />}
+                      </span>
+                      <span
+                        className="text-[14px] text-[#f7f8f8]"
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontFeatureSettings: "'cv01','ss03'",
+                          fontWeight: 510,
+                        }}
+                      >
                         {lang.label}
                       </span>
-                      <span className="text-xs text-sand-400 font-semibold">
-                        {lang.dialects.length} variantes
+                      <span
+                        className="ml-auto text-[11px] text-[#62666d]"
+                        style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+                      >
+                        {active
+                          ? `${selectedDialects.length} dialecte${selectedDialects.length > 1 ? 's' : ''}`
+                          : ''}
                       </span>
                     </button>
 
-                    {selected && lang.dialects.length > 0 && (
-                      <div className="mt-2 ml-2 pl-4 border-l-2 border-secondary-200 flex flex-wrap gap-1.5 py-1">
+                    {active && lang.dialects.length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap mt-2.5 pl-7">
                         {lang.dialects.map((d) => {
-                          const active = (form.dialects[code] ?? []).includes(d)
+                          const on = selectedDialects.includes(d)
                           return (
                             <button
                               key={d}
                               type="button"
-                              onClick={() => toggleDialect(code, d)}
-                              className={[
-                                'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
-                                active
-                                  ? 'bg-accent-500 border-accent-500 text-white shadow-sm'
-                                  : 'border-sand-200 text-sand-500 hover:border-sand-300 bg-white',
-                              ].join(' ')}
+                              onClick={() => {
+                                const next = { ...data.langs }
+                                next[code] = on
+                                  ? selectedDialects.filter((x) => x !== d)
+                                  : [...selectedDialects, d]
+                                update('langs', next)
+                              }}
+                              className="px-2.5 py-[3px] text-[12px] rounded-full cursor-pointer"
+                              style={{
+                                fontFamily: 'var(--font-body)',
+                                fontFeatureSettings: "'cv01','ss03'",
+                                fontWeight: 510,
+                                color: on ? '#f7f8f8' : '#d0d6e0',
+                                background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                                border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                              }}
                             >
                               {d}
                             </button>
@@ -466,195 +357,227 @@ export function SpeakerRegisterPage() {
                 )
               })}
             </div>
-          )}
+          </>
+        )}
 
-          {/* Étape 4 — Bio */}
-          {step === 4 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-sand-500 bg-sand-50 px-3 py-2 rounded-xl mb-1">
-                <Heart className="w-3.5 h-3.5 text-accent-500" />
-                Optionnel — mais ça augmente vos chances d'être sélectionné.
+        {step === 4 && (
+          <>
+            <StepTitle
+              title="Présentation"
+              subtitle="Une courte bio aide les clients à vous choisir. Optionnel."
+            />
+            <div className="mt-6">
+              <label
+                className="block text-[12px] text-[#d0d6e0] mb-1.5"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontFeatureSettings: "'cv01','ss03'",
+                  fontWeight: 510,
+                }}
+              >
+                Bio
+              </label>
+              <div
+                className="rounded-md px-3 py-2.5"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <textarea
+                  value={data.bio}
+                  onChange={(e) => update('bio', e.target.value.slice(0, 400))}
+                  placeholder="Ex : Journaliste radio à Dakar, locuteur natif wolof, 12 ans d'expérience en voix-off."
+                  className="w-full bg-transparent border-0 outline-none text-[#f7f8f8] text-[14px] resize-y"
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontFeatureSettings: "'cv01','ss03'",
+                    lineHeight: 1.5,
+                    minHeight: 120,
+                  }}
+                />
               </div>
-              <textarea
-                value={form.bio}
-                onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                rows={6}
-                maxLength={400}
-                className="w-full px-4 py-3.5 rounded-2xl border-2 border-sand-200 bg-sand-50/60 text-sand-900 placeholder-sand-400 text-sm leading-relaxed focus:outline-none focus:border-primary-400 focus:bg-white transition-all resize-none"
-                placeholder="Ex : Locuteur Wolof natif de Dakar, je parle également le Pulaar. Voix claire et articulée, expérience en narration et doublage…"
-              />
-              <p className="text-xs text-sand-400 text-right tabular-nums">{form.bio.length}/400</p>
-            </div>
-          )}
-
-          {/* Étape 5 — Récap */}
-          {step === 5 && (
-            <div className="space-y-5">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-50 to-primary-50 border border-secondary-200/60 rounded-full px-3 py-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-secondary-600" />
-                <span className="text-xs font-bold text-secondary-700">Profil prêt à être validé</span>
-              </div>
-
-              <RecapRow label="Nom" value={form.fullName} />
-              <RecapRow label="Email" value={form.email} />
-              <RecapRow label="Téléphone" value={form.phone} />
-              <RecapRow
-                label="Genre"
-                value={
-                  form.gender === 'male' ? 'Homme'
-                    : form.gender === 'female' ? 'Femme'
-                    : form.gender === 'other' ? 'Autre'
-                    : form.gender ? 'Non précisé' : '—'
-                }
-              />
-              <RecapRow label="Ville" value={form.city} />
-              <RecapRow
-                label="Langues"
-                value={form.languages.length
-                  ? form.languages.map((c) => LANGUAGES[c]?.label ?? c).join(', ')
-                  : '—'}
-              />
-
-              <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 border border-primary-200/50 rounded-2xl p-4">
-                <p className="text-sm font-bold text-sand-800 mb-1">
-                  Et ensuite ?
-                </p>
-                <p className="text-xs text-sand-600 leading-relaxed">
-                  Vous accéderez à votre espace locuteur pour parcourir les projets disponibles,
-                  enregistrer vos voix et suivre vos gains en temps réel.
-                </p>
+              <div
+                className="text-[11px] text-[#62666d] mt-1.5 text-right tabular-nums"
+                style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+              >
+                {data.bio.length}/400
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {/* Navigation */}
-          <div className="flex items-center gap-2.5 mt-7 pt-5 border-t border-sand-100">
-            {step > 1 && !loading && (
-              <button
-                type="button"
-                onClick={goBack}
-                className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-sand-600 text-sm font-bold hover:bg-sand-100 active:scale-[0.97] transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Retour
-              </button>
-            )}
-            {step < 5 ? (
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!canProceed()}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-extrabold text-[15px] shadow-lg shadow-primary-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-md"
-              >
-                Continuer
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={submit}
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-extrabold text-[15px] shadow-lg shadow-secondary-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-secondary-500/30 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Création en cours…
-                  </>
+        {step === 5 && (
+          <>
+            <StepTitle
+              title="Récapitulatif"
+              subtitle="Vérifiez vos informations avant de créer votre compte."
+            />
+            <div
+              className="mt-6 p-5 rounded-[10px] flex flex-col gap-3.5"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <SummaryRow label="Compte" onEdit={() => setStep(1)}>
+                <div>
+                  <strong className="text-[#f7f8f8]" style={{ fontWeight: 590 }}>
+                    {data.name || '—'}
+                  </strong>
+                </div>
+                <div>
+                  {data.email || '—'}{data.phone ? ` · ${data.phone}` : ''}
+                </div>
+              </SummaryRow>
+              <Divider />
+              <SummaryRow label="Identité" onEdit={() => setStep(2)}>
+                <div>
+                  {GENDER_OPTIONS.find((g) => g.value === data.gender)?.label || '—'}
+                  {data.dob ? ` · né(e) le ${data.dob}` : ''}
+                </div>
+                <div>{data.city || '—'}</div>
+              </SummaryRow>
+              <Divider />
+              <SummaryRow label="Langues" onEdit={() => setStep(3)}>
+                {Object.entries(data.langs).length === 0 ? (
+                  <div>—</div>
                 ) : (
-                  <>
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                    Créer mon compte locuteur
-                  </>
+                  Object.entries(data.langs).map(([code, ds]) => (
+                    <div key={code}>
+                      <strong className="text-[#f7f8f8]" style={{ fontWeight: 590 }}>
+                        {LANGUAGES[code]?.label ?? code}
+                      </strong>
+                      {ds.length > 0 && (
+                        <span className="text-[#8a8f98]"> — {ds.join(', ')}</span>
+                      )}
+                    </div>
+                  ))
                 )}
-              </button>
-            )}
-          </div>
-        </div>
+              </SummaryRow>
+              <Divider />
+              <SummaryRow label="Bio" onEdit={() => setStep(4)}>
+                <div
+                  className={data.bio ? 'text-[#d0d6e0]' : 'text-[#62666d] italic'}
+                >
+                  {data.bio || 'Non renseignée.'}
+                </div>
+              </SummaryRow>
+            </div>
+          </>
+        )}
 
-        {/* Footer */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-sand-500">
-          <Link to="/login" className="hover:text-primary-600 transition-colors">
-            Déjà inscrit ? <span className="font-bold text-primary-600">Se connecter</span>
-          </Link>
-          <Link to="/register" className="hover:text-primary-600 transition-colors">
-            Vous êtes une entreprise ? <span className="font-bold text-primary-600">Compte client</span>
-          </Link>
+        {/* Footer actions */}
+        <div className="flex justify-between items-center mt-6 gap-3">
+          {step > 1 ? (
+            <Button
+              variant="ghost"
+              size="lg"
+              icon={<ArrowLeft className="w-4 h-4" strokeWidth={1.75} />}
+              onClick={() => setStep((s) => (s - 1) as Step)}
+            >
+              Retour
+            </Button>
+          ) : (
+            <span />
+          )}
+          {step < 5 ? (
+            <Button
+              variant="primary"
+              size="lg"
+              iconRight={<ArrowRight className="w-4 h-4" strokeWidth={1.75} />}
+              disabled={!canNext[step]}
+              onClick={goNext}
+            >
+              Continuer
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="lg"
+              iconRight={<Check className="w-4 h-4" strokeWidth={2.5} />}
+              loading={submitting}
+              onClick={submit}
+            >
+              Créer mon compte locuteur
+            </Button>
+          )}
         </div>
       </div>
-
-      <style>{`
-        .peer-input {
-          width: 100%;
-          padding: 0.875rem 1rem 0.875rem 2.75rem;
-          border-radius: 1rem;
-          border: 2px solid rgb(231 225 217 / 1);
-          background-color: rgb(250 247 242 / 0.6);
-          color: rgb(28 25 23 / 1);
-          font-size: 0.9375rem;
-          font-weight: 500;
-          transition: all 200ms ease-out;
-        }
-        .peer-input::placeholder { color: rgb(180 173 162 / 1); font-weight: 400; }
-        .peer-input:focus {
-          outline: none;
-          border-color: rgb(249 115 22 / 1);
-          background-color: white;
-          box-shadow: 0 0 0 4px rgb(249 115 22 / 0.08);
-        }
-      `}</style>
-    </div>
+    </PublicLayout>
   )
 }
 
-// ─── Composants auxiliaires ─────────────────────────────────────────────────
+/* ---------- Helpers ---------- */
 
-interface FormFieldProps {
-  label: string
-  required?: boolean
-  icon: React.ReactNode
-  helper?: string
-  children: React.ReactNode
+function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <>
+      <h1
+        className="text-[24px] sm:text-[28px] text-[#f7f8f8] m-0"
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontFeatureSettings: "'cv01','ss03'",
+          fontWeight: 510,
+          lineHeight: 1.1,
+          letterSpacing: '-0.5px',
+        }}
+      >
+        {title}
+      </h1>
+      <p
+        className="text-[14px] text-[#8a8f98] mt-2"
+        style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+      >
+        {subtitle}
+      </p>
+    </>
+  )
 }
 
-function FormField({ label, required, icon, helper, children }: FormFieldProps) {
+function SummaryRow({
+  label, onEdit, children,
+}: {
+  label: string
+  onEdit: () => void
+  children: React.ReactNode
+}) {
   return (
-    <div>
-      <label className="block text-sm font-bold text-sand-800 mb-1.5">
+    <div className="grid grid-cols-[110px_1fr_auto] gap-4 items-start">
+      <div
+        className="text-[11px] text-[#62666d] uppercase pt-0.5"
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontFeatureSettings: "'cv01','ss03'",
+          fontWeight: 510,
+          letterSpacing: '0.04em',
+        }}
+      >
         {label}
-        {required && <span className="text-primary-500 ml-0.5">*</span>}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sand-400 pointer-events-none">
-          {icon}
-        </span>
+      </div>
+      <div
+        className="text-[13px] text-[#d0d6e0]"
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontFeatureSettings: "'cv01','ss03'",
+          lineHeight: 1.6,
+        }}
+      >
         {children}
       </div>
-      {helper && <p className="text-xs text-sand-400 mt-1.5 pl-1">{helper}</p>}
+      <button
+        type="button"
+        onClick={onEdit}
+        className="inline-flex items-center gap-1 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors bg-transparent border-0 cursor-pointer"
+        style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+      >
+        <Pencil className="w-[11px] h-[11px]" strokeWidth={1.75} />
+        Modifier
+      </button>
     </div>
   )
 }
 
-interface RecapRowProps {
-  label: string
-  value: string
-}
-
-function RecapRow({ label, value }: RecapRowProps) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-2.5 border-b border-sand-100 last:border-b-0">
-      <span className="text-xs font-bold text-sand-500 uppercase tracking-wider">{label}</span>
-      <span className="text-sm font-semibold text-sand-800 text-right truncate max-w-[60%]">
-        {value || '—'}
-      </span>
-    </div>
-  )
-}
-
-function FullscreenLoader() {
-  return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-sand-50">
-      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-    </div>
-  )
+function Divider() {
+  return <div className="h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
 }

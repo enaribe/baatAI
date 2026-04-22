@@ -1,11 +1,15 @@
 import { useState, useRef, useCallback } from 'react'
 import type { ChangeEvent, DragEvent } from 'react'
-import { FileText, ChevronDown, ChevronUp, Plus, Upload, File, X, Loader2 } from 'lucide-react'
+import {
+  FileText, ChevronDown, ChevronUp, Plus, Upload, File, X, Loader2,
+  CheckCircle2,
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { parseTextToPhrases } from '../lib/text-parser'
-import { Button } from './ui/button'
-import { Textarea } from './ui/textarea'
 import type { Phrase, Recording } from '../types/database'
+
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
 
 interface PhraseListProps {
   phrases: Phrase[]
@@ -20,7 +24,6 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
   const [expanded, setExpanded] = useState(false)
   const [showAddPanel, setShowAddPanel] = useState(false)
 
-  // Add panel state
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [manualText, setManualText] = useState('')
@@ -30,7 +33,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
   const [addSuccess, setAddSuccess] = useState('')
 
   const recordedPhraseIds = new Set(recordings.map((r) => r.phrase_id))
-  const visiblePhrases = expanded ? phrases : phrases.slice(0, 10)
+  const visiblePhrases = expanded ? phrases : phrases.slice(0, 15)
 
   const isValidFile = (file: File): boolean => {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
@@ -42,10 +45,8 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
       setAddError('Format non supporté. Utilisez .txt, .pdf ou .docx.')
       return
     }
-    setAddError('')
-    setAddSuccess('')
-    setSelectedFile(file)
-    setManualText('')
+    setAddError(''); setAddSuccess('')
+    setSelectedFile(file); setManualText('')
   }, [])
 
   const handleFileInputChange = useCallback(
@@ -58,8 +59,7 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
 
   const handleDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      setDragOver(false)
+      e.preventDefault(); setDragOver(false)
       const file = e.dataTransfer.files?.[0]
       if (file) handleFileSelect(file)
     },
@@ -67,40 +67,30 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
   )
 
   const resetPanel = useCallback(() => {
-    setSelectedFile(null)
-    setManualText('')
-    setAddError('')
-    setAddSuccess('')
+    setSelectedFile(null); setManualText(''); setAddError(''); setAddSuccess('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
   const handleClosePanel = useCallback(() => {
-    setShowAddPanel(false)
-    resetPanel()
+    setShowAddPanel(false); resetPanel()
   }, [resetPanel])
 
   const handleAddPhrases = useCallback(async () => {
-    setAdding(true)
-    setAddError('')
-    setAddSuccess('')
-
+    setAdding(true); setAddError(''); setAddSuccess('')
     try {
-      // Calculer la prochaine position disponible
       const nextPosition = phrases.length > 0
         ? Math.max(...phrases.map((p) => p.position)) + 1
         : 1
 
       if (selectedFile) {
-        // Upload via Edge Function (Python extrait + insère)
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session) throw new Error('Session expirée, veuillez vous reconnecter.')
+        if (!session) throw new Error('Session expirée, reconnectez-vous.')
 
         const formData = new FormData()
         formData.append('file', selectedFile)
         formData.append('project_id', projectId)
         formData.append('start_position', String(nextPosition))
 
-        // Utiliser fetch directement : supabase.functions.invoke perd l'apikey header avec FormData
         const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-phrases`
         const fnRes = await fetch(fnUrl, {
           method: 'POST',
@@ -111,22 +101,20 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
           body: formData,
         })
         const fnJson = await fnRes.json()
-        if (!fnRes.ok) {
-          throw new Error(fnJson.error ?? 'Erreur du serveur de traitement')
-        }
-
+        if (!fnRes.ok) throw new Error(fnJson.error ?? 'Erreur du serveur')
         const count: number = fnJson.data?.total_phrases ?? 0
-        setAddSuccess(`${count} phrase${count > 1 ? 's' : ''} ajoutée${count > 1 ? 's' : ''} avec succès.`)
+        setAddSuccess(`${count} phrase${count > 1 ? 's' : ''} ajoutée${count > 1 ? 's' : ''}.`)
       } else if (manualText.trim()) {
-        // Saisie manuelle → insertion directe, en filtrant les doublons
         const parsed = parseTextToPhrases(manualText)
-        if (parsed.length === 0) throw new Error('Aucune phrase détectée dans le texte saisi.')
+        if (parsed.length === 0) throw new Error('Aucune phrase détectée.')
 
-        const existingNormalized = new Set(phrases.map((p) => p.normalized_content?.toLowerCase().trim() ?? p.content.toLowerCase().trim()))
+        const existingNormalized = new Set(
+          phrases.map((p) => p.normalized_content?.toLowerCase().trim() ?? p.content.toLowerCase().trim()),
+        )
         const newPhrases = parsed.filter((p) => !existingNormalized.has(p.toLowerCase().trim()))
 
         if (newPhrases.length === 0) {
-          throw new Error('Toutes les phrases saisies existent déjà dans ce projet.')
+          throw new Error('Toutes les phrases saisies existent déjà.')
         }
 
         const batchSize = 500
@@ -142,19 +130,18 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
         }
 
         const skipped = parsed.length - newPhrases.length
-        const msg = `${newPhrases.length} phrase${newPhrases.length > 1 ? 's' : ''} ajoutée${newPhrases.length > 1 ? 's' : ''}.`
-          + (skipped > 0 ? ` (${skipped} doublon${skipped > 1 ? 's' : ''} ignoré${skipped > 1 ? 's' : ''})` : '')
-        setAddSuccess(msg)
+        setAddSuccess(
+          `${newPhrases.length} phrase${newPhrases.length > 1 ? 's' : ''} ajoutée${newPhrases.length > 1 ? 's' : ''}.` +
+          (skipped > 0 ? ` (${skipped} doublon${skipped > 1 ? 's' : ''} ignoré${skipped > 1 ? 's' : ''})` : ''),
+        )
       } else {
-        throw new Error('Choisissez un fichier ou saisissez des phrases manuellement.')
+        throw new Error('Choisissez un fichier ou saisissez des phrases.')
       }
 
       resetPanel()
       onPhrasesAdded()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de l\'ajout des phrases'
-      setAddError(message)
-      console.error('Add phrases error:', err)
+      setAddError(err instanceof Error ? err.message : 'Erreur lors de l\'ajout')
     } finally {
       setAdding(false)
     }
@@ -162,45 +149,57 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-primary-500" />
-          <h3
-            className="text-base font-bold text-sand-900 dark:text-sand-100"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Phrases ({phrases.length})
-          </h3>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-sand-400">
-            {recordedPhraseIds.size}/{phrases.length} enregistrées
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => { setShowAddPanel(!showAddPanel); setAddError(''); setAddSuccess('') }}
-            icon={<Plus className="w-3.5 h-3.5" />}
-          >
-            Ajouter
-          </Button>
-        </div>
+      {/* Section header */}
+      <div className="flex items-center gap-2 h-[36px] mb-2 -mx-5 lg:-mx-8 px-5 lg:px-8 border-b border-[rgba(255,255,255,0.05)]">
+        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          Phrases
+        </span>
+        <span className="text-[11px] text-[#62666d]" style={mono}>
+          {phrases.length}
+        </span>
+        {phrases.length > 0 && (
+          <>
+            <span className="text-[#3e3e44]">·</span>
+            <span className="text-[11px] text-[#10b981] tabular-nums" style={mono}>
+              {recordedPhraseIds.size} enregistrées
+            </span>
+          </>
+        )}
+        <button
+          onClick={() => { setShowAddPanel(!showAddPanel); setAddError(''); setAddSuccess('') }}
+          className="ml-auto inline-flex items-center gap-1 h-[26px] px-2.5 text-[12px] rounded-md transition-colors"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            color: '#f7f8f8',
+            background: showAddPanel ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <Plus className="w-3 h-3" strokeWidth={2} />
+          Ajouter
+        </button>
       </div>
 
-      {/* Panel ajout de phrases */}
+      {/* Panel ajout */}
       {showAddPanel && (
-        <div className="bg-sand-50 dark:bg-sand-800/50 rounded-xl p-4 mb-4 space-y-3 border border-sand-200/60 dark:border-sand-700 animate-scale-in">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-sand-700 dark:text-sand-300">
+        <div
+          className="rounded-[8px] p-4 mb-3 animate-scale-in"
+          style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
               Ajouter des phrases
             </p>
             <button
-              type="button"
               onClick={handleClosePanel}
-              className="text-sand-400 hover:text-sand-600 dark:hover:text-sand-200 transition-colors"
-              aria-label="Fermer"
+              className="w-[22px] h-[22px] flex items-center justify-center rounded-sm text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
           </div>
 
@@ -211,15 +210,18 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               onDrop={handleDrop}
               onDragOver={(e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
-              className={`border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-colors ${
-                dragOver
-                  ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-900/20'
-                  : 'border-sand-300 dark:border-sand-700 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/40 dark:hover:bg-primary-900/10'
-              }`}
+              className="rounded-md p-5 text-center cursor-pointer transition-colors"
+              style={{
+                background: dragOver ? 'rgba(113,112,255,0.06)' : 'rgba(255,255,255,0.02)',
+                border: `1px dashed ${dragOver ? 'rgba(113,112,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+              }}
             >
-              <Upload className="w-6 h-6 mx-auto mb-1.5 text-sand-400" />
-              <p className="text-xs font-medium text-sand-600 dark:text-sand-400">
-                Déposer ou cliquer · .txt · .pdf · .docx
+              <Upload className="w-5 h-5 mx-auto mb-2 text-[#8a8f98]" strokeWidth={1.75} />
+              <p className="text-[12px] text-[#d0d6e0]" style={sans}>
+                Déposer un fichier ou cliquer
+              </p>
+              <p className="text-[11px] text-[#62666d] mt-0.5" style={mono}>
+                .txt · .pdf · .docx
               </p>
               <input
                 ref={fileInputRef}
@@ -230,110 +232,191 @@ export function PhraseList({ phrases, recordings, projectId, onPhrasesAdded }: P
               />
             </div>
           ) : (
-            <div className="flex items-center gap-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg px-3 py-2">
-              <File className="w-4 h-4 text-primary-500 shrink-0" />
-              <span className="text-xs font-medium text-primary-700 dark:text-primary-300 flex-1 truncate">
+            <div
+              className="flex items-center gap-2 rounded-md px-3 py-2.5"
+              style={{
+                background: 'rgba(113,112,255,0.06)',
+                border: '1px solid rgba(113,112,255,0.2)',
+              }}
+            >
+              <File className="w-4 h-4 text-[#828fff] shrink-0" strokeWidth={1.75} />
+              <span className="text-[12px] text-[#f7f8f8] flex-1 truncate" style={sans}>
                 {selectedFile.name}
               </span>
               <button
-                type="button"
                 onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                className="text-primary-400 hover:text-red-500 transition-colors"
-                aria-label="Retirer le fichier"
+                className="text-[#8a8f98] hover:text-[#fca5a5] transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" strokeWidth={1.75} />
               </button>
             </div>
           )}
 
           {/* Séparateur */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-sand-200 dark:bg-sand-700" />
-            <span className="text-[10px] text-sand-400 uppercase font-medium">ou</span>
-            <div className="flex-1 h-px bg-sand-200 dark:bg-sand-700" />
+          <div className="flex items-center gap-2 my-4">
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            <span className="text-[10px] text-[#62666d] uppercase" style={{ ...sans, fontWeight: 510, letterSpacing: '0.08em' }}>
+              ou
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
           </div>
 
           {/* Saisie manuelle */}
-          <Textarea
-            id="add-phrases-manual"
-            label="Saisie manuelle (une phrase par ligne)"
-            value={manualText}
-            onChange={(e) => { setManualText(e.target.value); setSelectedFile(null) }}
-            placeholder={"Nanga def ?\nMaa ngi fi rekk."}
-            rows={4}
-          />
+          <div>
+            <label className="block text-[12px] text-[#d0d6e0] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
+              Saisie manuelle (une phrase par ligne)
+            </label>
+            <div
+              className="rounded-md px-3 py-2.5"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <textarea
+                value={manualText}
+                onChange={(e) => { setManualText(e.target.value); setSelectedFile(null) }}
+                placeholder={'Nanga def ?\nMaa ngi fi rekk.'}
+                rows={4}
+                className="w-full bg-transparent border-0 outline-none text-[#f7f8f8] text-[13px] resize-y"
+                style={{ ...sans, lineHeight: 1.5, minHeight: 80 }}
+              />
+            </div>
+          </div>
 
           {addError && (
-            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">
+            <div
+              className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md text-[12px] text-[#fca5a5]"
+              style={{
+                ...sans,
+                background: 'rgba(239,68,68,0.06)',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+            >
               {addError}
-            </p>
+            </div>
           )}
           {addSuccess && (
-            <p className="text-xs text-secondary-700 dark:text-secondary-400 bg-secondary-50 dark:bg-secondary-900/20 px-3 py-2 rounded-lg">
-              {addSuccess}
-            </p>
+            <div
+              className="mt-3 flex items-start gap-2 px-3 py-2 rounded-md text-[12px] text-[#10b981]"
+              style={{
+                ...sans,
+                background: 'rgba(16,185,129,0.06)',
+                border: '1px solid rgba(16,185,129,0.2)',
+              }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" strokeWidth={1.75} />
+              <span>{addSuccess}</span>
+            </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" size="sm" onClick={handleClosePanel} disabled={adding}>
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              onClick={handleClosePanel}
+              disabled={adding}
+              className="h-[30px] px-3 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+              style={{ ...sans, fontWeight: 510 }}
+            >
               Annuler
-            </Button>
-            <Button
-              size="sm"
-              loading={adding}
+            </button>
+            <button
               onClick={handleAddPhrases}
               disabled={adding || (!selectedFile && !manualText.trim())}
-              icon={adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              className="inline-flex items-center gap-1.5 h-[30px] px-3 text-[12px] rounded-md transition-colors disabled:opacity-40"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#f7f8f8',
+                background: '#5e6ad2',
+              }}
             >
-              {adding ? 'Ajout en cours...' : 'Ajouter les phrases'}
-            </Button>
+              {adding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" strokeWidth={2} />}
+              {adding ? 'Ajout…' : 'Ajouter les phrases'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Liste des phrases */}
+      {/* Liste */}
       {phrases.length === 0 ? (
-        <p className="text-sm text-sand-400 dark:text-sand-500 py-6 text-center">
-          Aucune phrase dans ce projet.
-        </p>
+        <EmptyState />
       ) : (
-        <div className="space-y-1">
-          {visiblePhrases.map((phrase) => {
+        <div
+          className="rounded-[8px] overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
+          {visiblePhrases.map((phrase, idx) => {
             const isRecorded = recordedPhraseIds.has(phrase.id)
+            const last = idx === visiblePhrases.length - 1
             return (
               <div
                 key={phrase.id}
-                className={`flex items-start gap-3 py-2.5 px-3 rounded-lg text-sm ${
-                  isRecorded
-                    ? 'bg-secondary-50/50 dark:bg-secondary-900/10'
-                    : 'hover:bg-sand-50 dark:hover:bg-sand-800/50'
-                }`}
+                className="flex items-start gap-3 px-4 py-2.5 hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+                style={{
+                  borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                }}
               >
-                <span className="text-sand-400 tabular-nums shrink-0 w-7 text-right text-xs pt-0.5">
-                  {phrase.position}
+                <span
+                  className="text-[11px] text-[#62666d] tabular-nums shrink-0 w-8 text-right"
+                  style={mono}
+                >
+                  #{phrase.position}
                 </span>
-                <span className="text-sand-800 dark:text-sand-200 flex-1">{phrase.content}</span>
-                {isRecorded && (
-                  <span className="shrink-0 w-2 h-2 rounded-full bg-secondary-500 mt-1.5" />
+                {isRecorded ? (
+                  <CheckCircle2 className="w-3 h-3 text-[#10b981] shrink-0 mt-0.5" strokeWidth={2} />
+                ) : (
+                  <span className="w-3 h-3 rounded-full border border-[#3e3e44] shrink-0 mt-0.5" />
                 )}
+                <span className="text-[13px] text-[#f7f8f8] flex-1" style={sans}>
+                  {phrase.content}
+                </span>
               </div>
             )
           })}
         </div>
       )}
 
-      {phrases.length > 10 && (
+      {phrases.length > 15 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 mt-3 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+          className="inline-flex items-center gap-1 mt-3 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+          style={{ ...sans, fontWeight: 510 }}
         >
           {expanded ? (
-            <><ChevronUp className="w-4 h-4" />Réduire</>
+            <>
+              <ChevronUp className="w-3.5 h-3.5" strokeWidth={1.75} />
+              Réduire
+            </>
           ) : (
-            <><ChevronDown className="w-4 h-4" />Voir les {phrases.length - 10} autres</>
+            <>
+              <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
+              Voir les {phrases.length - 15} autres
+            </>
           )}
         </button>
       )}
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div
+        className="w-10 h-10 rounded-md flex items-center justify-center mb-3"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <FileText className="w-4 h-4 text-[#8a8f98]" strokeWidth={1.5} />
+      </div>
+      <p className="text-[13px] text-[#8a8f98]" style={sans}>
+        Aucune phrase dans ce projet.
+      </p>
     </div>
   )
 }

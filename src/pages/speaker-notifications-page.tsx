@@ -3,13 +3,17 @@ import type { ErrorInfo, ReactNode } from 'react'
 import { useAuth } from '../hooks/use-auth'
 import { useNotifications } from '../hooks/use-notifications'
 import { Link } from 'react-router-dom'
-import { Loader2, Bell, Mail, Check, X, AlertCircle, Clock, ChevronRight, CheckCheck, AlertTriangle } from 'lucide-react'
+import {
+  Loader2, Bell, Mail, Check, X, AlertTriangle, Clock, ChevronRight,
+  CheckCheck, Circle,
+} from 'lucide-react'
 import type { Notification, NotificationType } from '../types/database'
 
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
+
 interface NotifDisplay {
-  icon: typeof Mail
-  iconBg: string
-  iconColor: string
+  icon: React.ReactNode
   title: string
   body: string
   href?: string
@@ -23,57 +27,45 @@ function buildDisplay(n: Notification): NotifDisplay {
     ? ` · ${new Intl.NumberFormat('fr-SN').format(rate)} FCFA/h`
     : ''
 
+  const iconProps = { className: 'w-3.5 h-3.5', strokeWidth: 1.75 as const }
+
   const map: Record<NotificationType, NotifDisplay> = {
     invitation_received: {
-      icon: Mail,
-      iconBg: 'bg-primary-100',
-      iconColor: 'text-primary-600',
+      icon: <Mail {...iconProps} className="w-3.5 h-3.5 text-[#7170ff]" strokeWidth={1.75} />,
       title: 'Nouvelle invitation',
       body: `Vous êtes invité sur ${projectName}${rateStr}`,
       href: p.invitation_id ? `/speaker/invitations/${p.invitation_id}` : '/speaker/invitations',
     },
     invitation_reminder: {
-      icon: Clock,
-      iconBg: 'bg-amber-100',
-      iconColor: 'text-amber-600',
-      title: 'Rappel d\'invitation',
+      icon: <Clock {...iconProps} className="w-3.5 h-3.5 text-[#fbbf24]" strokeWidth={1.75} />,
+      title: "Rappel d'invitation",
       body: `${projectName} attend votre réponse${rateStr}`,
       href: p.invitation_id ? `/speaker/invitations/${p.invitation_id}` : '/speaker/invitations',
     },
     invitation_accepted: {
-      icon: Check,
-      iconBg: 'bg-secondary-100',
-      iconColor: 'text-secondary-600',
+      icon: <Check {...iconProps} className="w-3.5 h-3.5 text-[#10b981]" strokeWidth={1.75} />,
       title: 'Invitation acceptée',
       body: `${(p.speaker_name as string) ?? 'Un locuteur'} a accepté votre invitation sur ${projectName}`,
     },
     invitation_declined: {
-      icon: X,
-      iconBg: 'bg-sand-100',
-      iconColor: 'text-sand-500',
+      icon: <X {...iconProps} className="w-3.5 h-3.5 text-[#8a8f98]" strokeWidth={1.75} />,
       title: 'Invitation déclinée',
       body: `${(p.speaker_name as string) ?? 'Un locuteur'} a décliné votre invitation sur ${projectName}`,
     },
     recording_rejected: {
-      icon: AlertCircle,
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600',
+      icon: <AlertTriangle {...iconProps} className="w-3.5 h-3.5 text-[#fca5a5]" strokeWidth={1.75} />,
       title: 'Enregistrement rejeté',
-      body: `Un enregistrement sur ${projectName} n\'a pas passé le contrôle qualité`,
+      body: `Un enregistrement sur ${projectName} n'a pas passé le contrôle qualité`,
     },
     project_completed: {
-      icon: Check,
-      iconBg: 'bg-secondary-100',
-      iconColor: 'text-secondary-600',
+      icon: <Check {...iconProps} className="w-3.5 h-3.5 text-[#10b981]" strokeWidth={1.75} />,
       title: 'Projet terminé',
       body: `${projectName} est complet. Merci pour votre participation !`,
     },
   }
 
   return map[n.type] ?? {
-    icon: Bell,
-    iconBg: 'bg-sand-100',
-    iconColor: 'text-sand-500',
+    icon: <Bell {...iconProps} className="w-3.5 h-3.5 text-[#8a8f98]" strokeWidth={1.75} />,
     title: 'Notification',
     body: '',
   }
@@ -92,23 +84,20 @@ function relativeTime(iso: string): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
-interface BoundaryState { error: Error | null }
-class LocalErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
-  state: BoundaryState = { error: null }
+/* Error boundary local (page en blanc risqué sans ça) */
+class LocalErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
   static getDerivedStateFromError(error: Error) { return { error } }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[SpeakerNotificationsPage] render crash:', error, info)
+    console.error('[NotificationsPage crash]', error, info)
   }
   render() {
     if (this.state.error) {
       return (
-        <div className="max-w-[42rem] mx-auto px-4 py-8">
-          <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="font-bold mb-1">Erreur d'affichage de la page</p>
-              <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed">{this.state.error.message}{'\n\n'}{this.state.error.stack}</pre>
-            </div>
+        <div className="p-8">
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]" style={sans}>
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>Erreur d'affichage : {this.state.error.message}</span>
           </div>
         </div>
       )
@@ -117,86 +106,96 @@ class LocalErrorBoundary extends Component<{ children: ReactNode }, BoundaryStat
   }
 }
 
-function NotificationsPageInner() {
+export function SpeakerNotificationsPage() {
+  return (
+    <LocalErrorBoundary>
+      <Inner />
+    </LocalErrorBoundary>
+  )
+}
+
+function Inner() {
   const { user } = useAuth()
   const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead } = useNotifications(user?.id)
 
   return (
-    <div className="max-w-[42rem] mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1
-          className="text-2xl font-extrabold text-sand-900 dark:text-sand-100"
-          style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-        >
+    <div className="min-h-screen">
+      {/* Top bar */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
+        <Bell className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
           Notifications
-        </h1>
+        </span>
+        {unreadCount > 0 && (
+          <span
+            className="inline-flex items-center justify-center px-1.5 min-w-[18px] h-[18px] rounded-full text-[10px] text-white tabular-nums"
+            style={{ ...sans, fontWeight: 590, background: '#5e6ad2' }}
+          >
+            {unreadCount}
+          </span>
+        )}
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+            className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+            style={sans}
           >
-            <CheckCheck className="w-3.5 h-3.5" />
+            <CheckCheck className="w-3 h-3" strokeWidth={1.75} />
             Tout marquer lu
           </button>
         )}
-      </div>
+      </header>
 
       {error && (
-        <div className="mb-4 flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="font-bold mb-1">Erreur de chargement</p>
-            <pre className="whitespace-pre-wrap break-words font-mono text-[11px]">{error}</pre>
-          </div>
+        <div className="mx-5 lg:mx-8 mt-4 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.06)]" style={sans}>
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
         </div>
       ) : notifications.length === 0 ? (
-        <div className="text-center py-16">
-          <Bell className="w-10 h-10 text-sand-300 mx-auto mb-3" />
-          <p className="text-sand-500 font-semibold">Aucune notification pour l{"'"}instant</p>
-          <p className="text-sand-400 text-sm mt-1">Vous serez prévenu ici des invitations et mises à jour</p>
-        </div>
+        <EmptyState />
       ) : (
-        <div className="space-y-2">
-          {notifications.map(n => {
+        <div>
+          {notifications.map((n) => {
             const d = buildDisplay(n)
-            const Icon = d.icon
             const isUnread = !n.read_at
+
             const content = (
-              <div
-                className={`flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
-                  isUnread
-                    ? 'bg-primary-50/60 dark:bg-primary-900/10 border-primary-200/70 dark:border-primary-800/40'
-                    : 'bg-white dark:bg-sand-900 border-sand-200/70 dark:border-sand-800/70'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl ${d.iconBg} flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-5 h-5 ${d.iconColor}`} />
-                </div>
+              <div className="flex items-center gap-3 h-[56px] px-5 lg:px-8 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors">
+                {isUnread ? (
+                  <Circle className="w-1.5 h-1.5 shrink-0 fill-[#7170ff] text-[#7170ff]" strokeWidth={0} />
+                ) : (
+                  <span className="w-1.5 h-1.5 shrink-0" />
+                )}
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-md shrink-0"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                  }}
+                >
+                  {d.icon}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-bold text-sand-900 dark:text-sand-100 truncate">
-                      {d.title}
-                    </p>
-                    {isUnread && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-xs text-sand-600 dark:text-sand-400 leading-relaxed">
+                  <p
+                    className="text-[13px] text-[#f7f8f8] truncate"
+                    style={{ ...sans, fontWeight: isUnread ? 510 : 400 }}
+                  >
+                    {d.title}
+                  </p>
+                  <p className="text-[11px] text-[#8a8f98] truncate" style={sans}>
                     {d.body}
                   </p>
-                  <p className="text-[11px] text-sand-400 mt-1">
-                    {relativeTime(n.created_at)}
-                  </p>
                 </div>
-                {d.href && (
-                  <ChevronRight className="w-4 h-4 text-sand-300 shrink-0 mt-1" />
-                )}
+                <span className="text-[11px] text-[#62666d] shrink-0 hidden sm:inline" style={mono}>
+                  {relativeTime(n.created_at)}
+                </span>
+                {d.href && <ChevronRight className="w-3.5 h-3.5 text-[#62666d]" strokeWidth={1.75} />}
               </div>
             )
 
@@ -206,7 +205,7 @@ function NotificationsPageInner() {
                   key={n.id}
                   to={d.href}
                   onClick={() => isUnread && markAsRead(n.id)}
-                  className="block hover:opacity-95 transition-opacity"
+                  className="block"
                 >
                   {content}
                 </Link>
@@ -217,7 +216,7 @@ function NotificationsPageInner() {
               <button
                 key={n.id}
                 onClick={() => isUnread && markAsRead(n.id)}
-                className="block w-full text-left hover:opacity-95 transition-opacity"
+                className="block w-full text-left bg-transparent border-0"
               >
                 {content}
               </button>
@@ -229,10 +228,24 @@ function NotificationsPageInner() {
   )
 }
 
-export function SpeakerNotificationsPage() {
+function EmptyState() {
   return (
-    <LocalErrorBoundary>
-      <NotificationsPageInner />
-    </LocalErrorBoundary>
+    <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+      <div
+        className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <Bell className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+      </div>
+      <h3 className="text-[16px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+        Tout est calme
+      </h3>
+      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+        Vous serez prévenu ici des invitations et mises à jour sur vos projets.
+      </p>
+    </div>
   )
 }

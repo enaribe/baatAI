@@ -1,908 +1,729 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Mic, ArrowRight, Play, CheckCircle, Globe, Zap, Shield, ChevronDown, FolderPlus, Users, Download, Microscope, Rocket, Check, Info, Target, Sparkles } from 'lucide-react'
+import {
+  Mic, FileText, ShieldCheck, ArrowRight,
+} from 'lucide-react'
+import { Logo } from '../components/ui/logo'
+import { Waveform } from '../components/ui/waveform'
 
-// Langues africaines supportées avec leurs noms natifs
-const LANGUAGES = [
-  { code: 'wol', name: 'Wolof', region: 'Sénégal', speakers: '5M+', color: 'from-primary-400 to-primary-600' },
-  { code: 'fuc', name: 'Pulaar', region: 'Sahel', speakers: '20M+', color: 'from-secondary-400 to-secondary-600' },
-  { code: 'srr', name: 'Sereer', region: 'Sénégal', speakers: '1.2M+', color: 'from-accent-400 to-accent-600' },
-  { code: 'bam', name: 'Bambara', region: 'Mali', speakers: '15M+', color: 'from-amber-400 to-amber-600' },
-]
+/* ============================================================
+   Landing Baat-IA — reproduction fidèle du mock marketing
+   (Sections.jsx fourni). Dark Linear-inspired.
+   ============================================================ */
 
-const STATS = [
-  { value: '50K+', label: 'Heures collectées', sub: 'et en croissance' },
-  { value: '12+', label: 'Projets actifs', sub: 'par des chercheurs' },
-  { value: '98%', label: 'Taux de qualité', sub: 'après validation QC' },
-]
-
-const FEATURES = [
-  {
-    icon: Mic,
-    title: 'Collecte mobile-first',
-    desc: 'Vos locuteurs enregistrent depuis n\'importe quel téléphone, sans compte, via un simple lien. Conçu pour le réseau 3G.',
-    color: 'text-primary-500',
-    bg: 'bg-primary-50 dark:bg-primary-950/30',
-  },
-  {
-    icon: Zap,
-    title: 'Validation automatique',
-    desc: 'Chaque enregistrement est analysé : SNR, écrêtage, ratio de silence. Seules les pistes de qualité rejoignent votre dataset.',
-    color: 'text-secondary-600',
-    bg: 'bg-secondary-50 dark:bg-secondary-950/30',
-  },
-  {
-    icon: Globe,
-    title: 'Export prêt pour l\'IA',
-    desc: 'Formats LJSpeech, HuggingFace et CSV/WAV. Téléchargez un dataset structuré, prêt à entraîner vos modèles ASR/TTS.',
-    color: 'text-accent-600',
-    bg: 'bg-accent-50 dark:bg-accent-950/30',
-  },
-  {
-    icon: Shield,
-    title: 'Infrastructure Supabase',
-    desc: 'Stockage chiffré, RLS sur chaque table, uploads résumables TUS. Vos données vocales sont protégées et accessibles.',
-    color: 'text-amber-600',
-    bg: 'bg-amber-50 dark:bg-amber-950/30',
-  },
-]
-
-const PRICING = [
-  {
-    name: 'Découverte',
-    target: 'Chercheurs, étudiants, universitaires',
-    price: 'Gratuit',
-    currency: '',
-    period: 'pour toujours',
-    euro: null,
-    cta: 'Commencer gratuitement',
-    ctaLink: '/register',
-    highlight: false,
-    theme: 'sand',
-    features: [
-      '1 projet',
-      '500 phrases maximum',
-      '3 locuteurs par projet',
-      'Export LJSpeech uniquement',
-      'QC automatique (profil ASR)',
-      'Enregistrement phrase par phrase',
-      'Upload TUS resumable (3G friendly)',
-      'Stockage audio 30 jours',
-      'Les exports restent téléchargeables 30 jours',
-      '+ 4 fonctionnalités',
-    ],
-    conditions: [
-      'Badge « Powered by Baat-IA » ajouté automatiquement dans les métadonnées du dataset exporté',
-      'Les données sont contribuées sous licence CC-BY-4.0 — elles rejoignent le corpus ouvert Baat-IA pour les langues africaines',
-      'Pas de support dédié — documentation et communauté uniquement',
-    ],
-    idealFor: "Vous faites un mémoire de master sur le NLP Wolof, un projet de recherche à l'UCAD ou à l'UGB, ou vous voulez simplement tester la plateforme avant de vous engager.",
-  },
-  {
-    name: 'Pro',
-    target: 'Startups IA, équipes R&D, freelances NLP',
-    price: '25 000',
-    currency: 'FCFA',
-    period: '/ mois',
-    euro: '~38€',
-    cta: 'Démarrer en Pro',
-    ctaLink: '/register',
-    highlight: true,
-    badge: 'Le plus populaire',
-    theme: 'primary',
-    features: [
-      'Projets illimités',
-      'Phrases illimitées par projet',
-      '20 locuteurs par projet',
-      'Tous les formats d\'export (LJSpeech, HuggingFace Datasets, CSV+WAV, NeMo manifest)',
-      'Profils QC ASR et TTS',
-      'Enregistrement phrase par phrase',
-      'Upload TUS resumable (3G friendly)',
-      'Stockage audio 90 jours',
-      '+ 7 fonctionnalités',
-    ],
-    conditions: [
-      'Paiement mensuel via Wave, Orange Money ou carte bancaire (PayDunya)',
-      'Annulation possible à tout moment — vos données restent accessibles 30 jours après annulation',
-      'Option : contribuez vos données en CC-BY-4.0 et obtenez -50% (12 500 FCFA/mois)',
-    ],
-    idealFor: "Vous développez un assistant vocal pour votre startup, vous entraînez un modèle TTS Pulaar pour un client, ou vous avez besoin de datasets de qualité production avec des critères ASR/TTS adaptés.",
-  },
-  {
-    name: 'Entreprise',
-    target: 'Entreprises tech, ESN, centres de recherche',
-    price: '150 000',
-    currency: 'FCFA',
-    period: '/ mois',
-    euro: '~230€',
-    cta: 'Contacter l\'équipe',
-    ctaLink: 'mailto:contact@baat-ia.com',
-    highlight: false,
-    theme: 'accent',
-    features: [
-      'Tout le plan Pro inclus',
-      'Locuteurs illimités par projet',
-      'Multi-utilisateurs (jusqu\'à 10 membres) avec des rôles : admin, éditeur, lecteur',
-      'Support prioritaire (WhatsApp + email, réponse sous 24h en jours ouvrés)',
-      'Analytics avancés (Distribution par dialecte, par genre, par tranche d\'âge, heatmap QC, évolution temporelle)',
-      'API REST d\'accès aux données (Endpoints pour lister, filtrer et télécharger vos segments programmatiquement)',
-      'Webhooks de notification (Recevez un POST quand un export est prêt ou un locuteur a fini)',
-      'Export automatisé (Programmez un export quotidien/hebdomadaire automatique)',
-      '+ 3 fonctionnalités',
-    ],
-    conditions: [
-      'Paiement mensuel ou trimestriel (-10%) via virement, Wave, OM ou carte',
-      'Facturation avec TVA si applicable',
-      'Engagement minimum : 3 mois',
-    ],
-    idealFor: "Vous êtes Orange et vous construisez un IVR vocal en Wolof, vous êtes une ESN qui livre des projets IA pour des clients, ou vous êtes un centre de recherche avec une équipe de 5 personnes qui travaille sur le NLP des langues sénégalaises.",
-  },
-  {
-    name: 'Sur-mesure',
-    target: 'Grands comptes, institutions, ONG internationales',
-    price: '500 000+',
-    currency: 'FCFA',
-    period: '/ projet',
-    euro: 'à partir de ~760€',
-    cta: 'Demander un devis',
-    ctaLink: 'mailto:contact@baat-ia.com',
-    highlight: false,
-    theme: 'dark',
-    features: [
-      'Tout le plan Entreprise inclus',
-      'Accompagnement dédié (On vous aide à rédiger les phrases, choisir les dialectes, recruter les locuteurs)',
-      'Recrutement de locuteurs (Baat-IA recrute et gère les locuteurs pour vous via notre réseau au Sénégal et en Afrique de l\'Ouest)',
-      'SLA garanti (Temps de traitement garanti, uptime 99.5%, pénalités en cas de non-respect)',
-      'Hébergement dédié (Vos données restent au Sénégal sur un serveur dédié — conformité RGPD et souveraineté des données)',
-      'Intégration custom (Connexion à votre SI, formats d\'export spécifiques, pipeline personnalisé)',
-      'Facturation sur devis (Bon de commande, virement bancaire, facturation en FCFA ou EUR)',
-      'Interlocuteur dédié',
-      '+ 1 fonctionnalités',
-    ],
-    conditions: [
-      'Devis personnalisé après un appel de cadrage (30 min)',
-      'Le prix dépend du volume (nombre d\'heures cible), du nombre de langues, et du niveau d\'accompagnement',
-      'Possibilité de paiement en plusieurs tranches',
-    ],
-    idealFor: "Vous êtes Orange Sénégal et vous voulez 10 000 heures de Wolof pour votre call center IA. Vous êtes le Ministère de l'Éducation et vous voulez un dataset de lecture en Pulaar pour un outil d'alphabétisation. Vous êtes une ONG internationale qui finance la préservation des langues sénégalaises.",
-  },
-]
-
-// (Removed SAMPLE_PHRASES as it is now hardcoded in the visual composition)
+const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)' }
+const sans: React.CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontFeatureSettings: "'cv01', 'ss03'",
+}
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-sand-50 dark:bg-sand-950 overflow-x-hidden">
-      {/* =========================================
-          NAV
-      ========================================= */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-sand-50/80 dark:bg-sand-950/80 backdrop-blur-xl border-b border-sand-200/50 dark:border-sand-800/50">
-        <div className="max-w-[72rem] mx-auto px-5 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-md shadow-primary-500/30">
-              <Mic className="w-4 h-4 text-white" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-secondary-500 border-2 border-sand-50 dark:border-sand-950" />
-            </div>
-            <span
-              className="text-lg font-extrabold text-sand-900 dark:text-sand-100 tracking-tight"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Baat-IA
-            </span>
-          </div>
-
-          {/* CTA nav */}
-          <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="hidden sm:block text-sm font-semibold text-sand-600 dark:text-sand-400 hover:text-sand-900 dark:hover:text-sand-100 transition-colors"
-            >
-              Connexion
-            </Link>
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/30 active:scale-[0.98] transition-all duration-200"
-            >
-              Démarrer gratuitement
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* =========================================
-          HÉRO — Asymmetrical Editorial
-      ========================================= */}
-      <section className="relative min-h-screen flex flex-col justify-center pt-28 pb-20 px-5 overflow-hidden">
-        {/* Background elements */}
-        <div className="absolute inset-0 wax-pattern opacity-[0.03] dark:opacity-[0.05] pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-primary-500/10 via-accent-500/5 to-transparent rounded-full blur-3xl pointer-events-none translate-x-1/3 -translate-y-1/4" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-secondary-500/10 to-transparent rounded-full blur-3xl pointer-events-none -translate-x-1/3 translate-y-1/4" />
-
-        <div className="max-w-[76rem] mx-auto w-full grid lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
-
-          {/* Left Column: Copy & CTAs */}
-          <div className="lg:col-span-6 flex flex-col items-start text-left">
-            {/* Pill badge */}
-            <div className="mb-6 animate-fade-in-up">
-              <span className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/60 dark:bg-sand-900/60 backdrop-blur-md text-sand-800 dark:text-sand-200 text-xs font-bold uppercase tracking-widest border border-sand-200/80 dark:border-sand-800 shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
-                </span>
-                Plateforme open data
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1
-              className="text-sand-900 dark:text-sand-100 leading-[0.95] mb-6 animate-fade-in-up animation-delay-100"
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'clamp(3rem, 7vw, 5.5rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              La voix de{' '}
-              <span className="relative inline-block whitespace-nowrap">
-                <span className="relative z-10 text-primary-600 dark:text-primary-500">
-                  l'Afrique
-                </span>
-                <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
-                  <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="4" fill="none" className="text-primary-200 dark:text-primary-900/50" strokeLinecap="round"/>
-                </svg>
-              </span>
-              <br />
-              mérite l'IA.
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-sand-600 dark:text-sand-400 text-lg sm:text-xl leading-relaxed mb-10 max-w-[32rem] animate-fade-in-up animation-delay-200">
-              Collectez, validez et exportez des <strong className="text-sand-900 dark:text-sand-100 font-semibold">datasets vocaux de haute qualité</strong> pour le Wolof, Pulaar, Sereer et Bambara. Conçu pour les chercheurs et les entreprises.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto animate-fade-in-up animation-delay-300">
-              <Link
-                to="/register"
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-sand-900 dark:bg-sand-100 text-white dark:text-sand-900 font-bold text-base overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto shadow-xl shadow-sand-900/20 dark:shadow-white/10"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Mic className="w-5 h-5 relative z-10" />
-                <span className="relative z-10">Créer mon projet</span>
-              </Link>
-              <Link
-                to="/login"
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white/50 dark:bg-sand-900/50 backdrop-blur-sm border border-sand-200 dark:border-sand-800 text-sand-800 dark:text-sand-200 font-semibold text-base hover:bg-white dark:hover:bg-sand-800 hover:border-sand-300 dark:hover:border-sand-700 transition-all duration-200 w-full sm:w-auto"
-              >
-                <div className="w-6 h-6 rounded-full bg-sand-100 dark:bg-sand-800 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30 transition-colors">
-                  <Play className="w-3 h-3 fill-sand-600 dark:fill-sand-400 group-hover:fill-primary-600 dark:group-hover:fill-primary-400" />
-                </div>
-                Voir la démo
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Column: Visual Composition */}
-          <div className="lg:col-span-6 relative h-[500px] sm:h-[600px] w-full mt-12 lg:mt-0 animate-fade-in-up animation-delay-400">
-            {/* Central Decorative Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border border-sand-200/50 dark:border-sand-800/50 border-dashed animate-[spin_60s_linear_infinite]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full border border-sand-200/30 dark:border-sand-800/30 border-dashed animate-[spin_90s_linear_infinite_reverse]" />
-
-            {/* Card 1: Wolof (Top Left) */}
-            <div className="absolute top-[10%] left-[5%] sm:left-[10%] w-[260px] p-4 rounded-2xl bg-white/80 dark:bg-sand-900/80 backdrop-blur-xl border border-sand-200/60 dark:border-sand-800 shadow-lg shadow-sand-900/5 transform -rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300 z-20">
-              <div className="flex items-center justify-between mb-3">
-                <span className="px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 text-[10px] font-bold uppercase tracking-wider">Wolof</span>
-                <div className="flex gap-1">
-                  <div className="w-1 h-3 bg-sand-200 dark:bg-sand-700 rounded-full" />
-                  <div className="w-1 h-4 bg-sand-200 dark:bg-sand-700 rounded-full" />
-                  <div className="w-1 h-2 bg-sand-200 dark:bg-sand-700 rounded-full" />
-                </div>
-              </div>
-              <p className="text-sand-900 dark:text-sand-100 font-semibold text-lg leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-                Maa ngi dem ca kër gi
-              </p>
-            </div>
-
-            {/* Card 2: Pulaar (Center Right - ACTIVE) */}
-            <div className="absolute top-[35%] right-[0%] sm:right-[5%] w-[300px] p-5 rounded-3xl bg-gradient-to-br from-sand-900 to-black dark:from-sand-800 dark:to-sand-950 border border-sand-800 dark:border-sand-700 shadow-2xl shadow-primary-500/20 transform rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 z-30">
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">Pulaar</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-primary-400">
-                  <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
-                  Enregistrement...
-                </span>
-              </div>
-              <p className="text-white font-bold text-xl leading-tight mb-5" style={{ fontFamily: 'var(--font-heading)' }}>
-                Mi wii e galle ngam
-              </p>
-              {/* Active Waveform */}
-              <div className="flex items-center justify-between gap-1 h-8 px-2">
-                {[40, 70, 40, 100, 60, 80, 30, 90, 50, 70, 40, 80, 60, 30].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 bg-primary-500 rounded-full animate-pulse"
-                    style={{
-                      height: `${h}%`,
-                      animationDelay: `${i * 0.1}s`,
-                      animationDuration: '0.8s'
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Card 3: Bambara (Bottom Left) */}
-            <div className="absolute bottom-[15%] left-[0%] sm:left-[15%] w-[240px] p-4 rounded-2xl bg-white/80 dark:bg-sand-900/80 backdrop-blur-xl border border-sand-200/60 dark:border-sand-800 shadow-lg shadow-sand-900/5 transform -rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 z-20">
-              <div className="flex items-center justify-between mb-3">
-                <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">Bambara</span>
-                <CheckCircle className="w-4 h-4 text-secondary-500" />
-              </div>
-              <p className="text-sand-900 dark:text-sand-100 font-semibold text-base leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-                Ne bɛ taa so la
-              </p>
-            </div>
-
-            {/* Floating Mic Button */}
-            <div className="absolute top-[65%] left-[45%] -translate-x-1/2 -translate-y-1/2 z-40">
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/40 border-4 border-white dark:border-sand-950 hover:scale-110 transition-transform cursor-pointer">
-                <Mic className="w-7 h-7 text-white" />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-sand-400 animate-float animation-delay-500">
-          <span className="text-[10px] uppercase tracking-widest font-semibold">Découvrir</span>
-          <ChevronDown className="w-4 h-4" />
-        </div>
-      </section>
-
-      {/* =========================================
-          STATS — bande pleine largeur
-      ========================================= */}
-      <section className="relative bg-gradient-to-r from-sand-900 via-sand-900 to-sand-950 dark:from-sand-950 dark:to-sand-900 py-14 overflow-hidden">
-        <div className="absolute inset-0 wax-pattern opacity-[0.04] pointer-events-none" />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(249,115,22,0.08) 0%, transparent 70%)' }}
-        />
-        <div className="relative max-w-[56rem] mx-auto px-5">
-          <div className="grid grid-cols-3 gap-6 sm:gap-10">
-            {STATS.map((stat, i) => (
-              <div
-                key={stat.label}
-                className="text-center animate-stagger-in"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <p
-                  className="text-white leading-none mb-1 tabular-nums"
-                  style={{
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.04em',
-                  }}
-                >
-                  {stat.value}
-                </p>
-                <p className="text-sand-300 text-xs sm:text-sm font-semibold mb-0.5">{stat.label}</p>
-                <p className="text-sand-500 text-[11px] hidden sm:block">{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================
-          LANGUES — grille éditoriale
-      ========================================= */}
-      <section className="py-20 px-5 max-w-[72rem] mx-auto">
-        <div className="flex flex-col lg:flex-row gap-12 items-center">
-          {/* Texte gauche */}
-          <div className="flex-1 max-w-[28rem]">
-            <div className="mb-4">
-              <span className="text-[11px] font-bold text-primary-500 uppercase tracking-widest">Langues supportées</span>
-            </div>
-            <h2
-              className="text-sand-900 dark:text-sand-100 mb-4"
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-                lineHeight: 0.95,
-              }}
-            >
-              Des millions de locuteurs,
-              <br />
-              <span className="text-primary-500">enfin représentés</span>
-            </h2>
-            <p className="text-sand-600 dark:text-sand-400 leading-relaxed text-sm sm:text-base">
-              Wolof, Pulaar, Sereer, Bambara — des langues parlées par plus de 40 millions de personnes mais quasi absentes des datasets d'entraînement IA existants.
-            </p>
-            <p className="text-sand-600 dark:text-sand-400 leading-relaxed text-sm sm:text-base mt-3">
-              Baat-IA vous donne les outils pour combler ce manque. Phrase par phrase.
-            </p>
-          </div>
-
-          {/* Grille langues */}
-          <div className="flex-1 grid grid-cols-2 gap-4 w-full max-w-[32rem]">
-            {LANGUAGES.map((lang, i) => (
-              <div
-                key={lang.code}
-                className="relative overflow-hidden rounded-2xl p-5 border border-sand-200/60 dark:border-sand-800 bg-white dark:bg-sand-900 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary-500/8 transition-all duration-250 group animate-stagger-in"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                {/* Gradient coin */}
-                <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl ${lang.color} opacity-10 rounded-bl-[40px] pointer-events-none group-hover:opacity-15 transition-opacity`} />
-
-                <div className={`inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br ${lang.color} mb-3 shadow-sm`}>
-                  <span className="text-white text-xs font-black uppercase">{lang.code.slice(0, 2)}</span>
-                </div>
-                <p
-                  className="text-lg font-black text-sand-900 dark:text-sand-100 leading-none mb-1"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
-                  {lang.name}
-                </p>
-                <p className="text-xs text-sand-500 dark:text-sand-400 mb-3">{lang.region}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-sand-400">Locuteurs</span>
-                  <span className="text-sm font-black text-sand-800 dark:text-sand-200 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-                    {lang.speakers}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================
-          FEATURES — comment ça marche
-      ========================================= */}
-      <section className="py-20 px-5 bg-sand-100/50 dark:bg-sand-900/30">
-        <div className="max-w-[72rem] mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[11px] font-bold text-primary-500 uppercase tracking-widest block mb-3">Fonctionnalités</span>
-            <h2
-              className="text-sand-900 dark:text-sand-100"
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-                lineHeight: 0.95,
-              }}
-            >
-              Tout ce qu'il faut pour
-              <br />
-              un dataset de qualité
-            </h2>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {FEATURES.map((feature, i) => (
-              <div
-                key={feature.title}
-                className={`rounded-2xl p-6 border border-sand-200/60 dark:border-sand-800 ${feature.bg} animate-stagger-in hover:-translate-y-1 transition-transform duration-250`}
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className={`w-10 h-10 rounded-xl bg-white dark:bg-sand-900 flex items-center justify-center mb-4 shadow-sm border border-sand-200/60 dark:border-sand-800`}>
-                  <feature.icon className={`w-5 h-5 ${feature.color}`} />
-                </div>
-                <h3
-                  className="text-base font-bold text-sand-900 dark:text-sand-100 mb-2"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-sand-600 dark:text-sand-400 leading-relaxed">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================
-          WORKFLOW — 3 étapes
-      ========================================= */}
-      <section className="py-20 px-5 max-w-[72rem] mx-auto">
-        <div className="text-center mb-14">
-          <span className="text-[11px] font-bold text-primary-500 uppercase tracking-widest block mb-3">Comment ça marche</span>
-          <h2
-            className="text-sand-900 dark:text-sand-100"
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.03em',
-              lineHeight: 0.95,
-            }}
-          >
-            3 étapes vers votre dataset
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 relative">
-          {/* Ligne de connexion (desktop) */}
-          <div className="hidden md:block absolute top-10 left-[calc(16.67%+1.5rem)] right-[calc(16.67%+1.5rem)] h-px bg-gradient-to-r from-primary-200 via-primary-400 to-primary-200 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900" />
-
-          {[
-            {
-              step: '01',
-              title: 'Créez votre projet',
-              desc: 'Uploadez vos phrases texte, définissez la langue cible et le type d\'usage (ASR ou TTS). En 3 minutes.',
-              icon: FolderPlus,
-            },
-            {
-              step: '02',
-              title: 'Invitez des locuteurs',
-              desc: 'Générez des liens de session. Vos locuteurs accèdent via mobile sans compte — ils lisent, enregistrent, c\'est tout.',
-              icon: Users,
-            },
-            {
-              step: '03',
-              title: 'Exportez votre dataset',
-              desc: 'Téléchargez un ZIP au format LJSpeech ou HuggingFace, prêt à être injecté dans votre pipeline d\'entraînement.',
-              icon: Download,
-            },
-          ].map((step, i) => (
-            <div
-              key={step.step}
-              className="relative bg-white dark:bg-sand-900 rounded-2xl p-6 border border-sand-200/60 dark:border-sand-800 shadow-md animate-stagger-in hover:-translate-y-1 hover:shadow-lg hover:shadow-primary-500/8 transition-all duration-250"
-              style={{ animationDelay: `${i * 120}ms` }}
-            >
-              {/* Numéro d'étape */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mb-4 text-white text-sm font-black shadow-md shadow-primary-500/30" style={{ fontFamily: 'var(--font-heading)' }}>
-                {step.step}
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-sand-100 dark:bg-sand-800 flex items-center justify-center mb-4 shadow-sm border border-sand-200/60 dark:border-sand-700">
-                <step.icon className="w-6 h-6 text-sand-700 dark:text-sand-300" />
-              </div>
-              <h3
-                className="text-lg font-bold text-sand-900 dark:text-sand-100 mb-2"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                {step.title}
-              </h3>
-              <p className="text-sm text-sand-600 dark:text-sand-400 leading-relaxed">
-                {step.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* =========================================
-          POUR QUI — 2 colonnes
-      ========================================= */}
-      <section className="py-20 px-5 bg-sand-100/50 dark:bg-sand-900/30">
-        <div className="max-w-[64rem] mx-auto grid md:grid-cols-2 gap-6">
-          {[
-            {
-              audience: 'Chercheurs & Académiques',
-              icon: Microscope,
-              items: [
-                'Collecte structurée de données annotées',
-                'Export compatible HuggingFace Datasets',
-                'Méta-données locuteurs : âge, genre, dialecte',
-                'API REST + webhooks pour vos pipelines',
-              ],
-              cta: 'Pour la recherche',
-              color: 'from-accent-500 to-accent-700',
-              iconColor: 'text-accent-500',
-              bgAccent: 'from-accent-500/8 to-transparent',
-            },
-            {
-              audience: 'Entreprises & Startups',
-              icon: Rocket,
-              items: [
-                'Déploiement rapide, sans infrastructure',
-                'Sessions locuteurs sécurisées et scalables',
-                'Formats ASR/TTS prêts à l\'emploi',
-                'Contrôle qualité automatisé par segment',
-              ],
-              cta: 'Pour les entreprises',
-              color: 'from-primary-500 to-primary-700',
-              iconColor: 'text-primary-500',
-              bgAccent: 'from-primary-500/8 to-transparent',
-            },
-          ].map((card) => (
-            <div
-              key={card.audience}
-              className="relative overflow-hidden rounded-2xl bg-white dark:bg-sand-900 border border-sand-200/60 dark:border-sand-800 p-7 shadow-md"
-            >
-              <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl ${card.bgAccent} rounded-bl-[80px] pointer-events-none`} />
-              <div className="w-12 h-12 rounded-xl bg-sand-50 dark:bg-sand-950/50 flex items-center justify-center mb-5 shadow-sm border border-sand-200/60 dark:border-sand-800">
-                <card.icon className={`w-6 h-6 ${card.iconColor}`} />
-              </div>
-              <h3
-                className="text-xl font-black text-sand-900 dark:text-sand-100 mb-4"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                {card.audience}
-              </h3>
-              <ul className="space-y-2.5 mb-6">
-                {card.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-sand-700 dark:text-sand-300">
-                    <CheckCircle className="w-4 h-4 text-secondary-500 shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to="/register"
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r ${card.color} text-white text-sm font-bold shadow-md hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] transition-all duration-200`}
-              >
-                {card.cta}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* =========================================
-          PRICING — Tarifs
-      ========================================= */}
-      <section className="py-24 px-5 bg-sand-50 dark:bg-sand-950 relative overflow-hidden">
-        <div className="max-w-[76rem] mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <span className="text-[11px] font-bold text-primary-500 uppercase tracking-widest block mb-3">Tarifs</span>
-            <h2
-              className="text-sand-900 dark:text-sand-100 mb-4"
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-                lineHeight: 0.95,
-              }}
-            >
-              Créez vos datasets vocaux
-              <br />
-              <span className="text-primary-500">au juste prix</span>
-            </h2>
-            <p className="text-sand-600 dark:text-sand-400 text-base sm:text-lg max-w-[36rem] mx-auto">
-              Du chercheur universitaire au grand compte, un plan adapté à chaque besoin et chaque budget.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-start">
-            {PRICING.map((plan) => {
-              const isDark = plan.theme === 'dark'
-              const isPro = plan.theme === 'primary'
-
-              return (
-                <div
-                  key={plan.name}
-                  className={`relative rounded-3xl p-6 sm:p-8 transition-all duration-300 hover:-translate-y-1 ${
-                    isPro
-                      ? 'bg-white dark:bg-sand-900 border-2 border-primary-500 shadow-2xl shadow-primary-500/15 z-10'
-                      : isDark
-                        ? 'bg-sand-950 dark:bg-black border border-sand-800 shadow-xl'
-                        : 'bg-white dark:bg-sand-900 border border-sand-200/60 dark:border-sand-800 shadow-lg shadow-sand-900/5'
-                  }`}
-                >
-                  {plan.badge && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold uppercase tracking-widest shadow-md shadow-primary-500/30">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        {plan.badge}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Header */}
-                  <div className="mb-6">
-                    <p className={`text-[11px] font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-sand-400' : 'text-sand-500'}`}>
-                      {plan.target}
-                    </p>
-                    <h3
-                      className={`text-2xl sm:text-3xl font-black mb-4 ${
-                        isPro ? 'text-primary-600 dark:text-primary-500' : isDark ? 'text-white' : 'text-sand-900 dark:text-sand-100'
-                      }`}
-                      style={{ fontFamily: 'var(--font-heading)' }}
-                    >
-                      {plan.name}
-                    </h3>
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className={`text-4xl sm:text-5xl font-black tracking-tight tabular-nums ${isDark ? 'text-white' : 'text-sand-900 dark:text-sand-100'}`}
-                        style={{ fontFamily: 'var(--font-heading)' }}
-                      >
-                        {plan.price}
-                      </span>
-                      {plan.currency && (
-                        <span className={`text-xl font-bold ${isDark ? 'text-sand-300' : 'text-sand-600 dark:text-sand-400'}`}>
-                          {plan.currency}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-sm font-medium ${isDark ? 'text-sand-400' : 'text-sand-500'}`}>
-                        {plan.period}
-                      </span>
-                      {plan.euro && (
-                        <>
-                          <span className={`w-1 h-1 rounded-full ${isDark ? 'bg-sand-700' : 'bg-sand-300'}`} />
-                          <span className={`text-sm font-medium ${isDark ? 'text-sand-500' : 'text-sand-400'}`}>
-                            {plan.euro}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <Link
-                    to={plan.ctaLink || '/register'}
-                    className={`flex items-center justify-center w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200 mb-8 ${
-                      isPro
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:scale-[1.02]'
-                        : isDark
-                          ? 'bg-white text-sand-950 hover:bg-sand-100'
-                          : 'bg-sand-100 dark:bg-sand-800 text-sand-800 dark:text-sand-200 hover:bg-sand-200 dark:hover:bg-sand-700'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-
-                  {/* Features */}
-                  <div className="mb-8">
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <Check className={`w-5 h-5 shrink-0 mt-0.5 ${
-                            isPro ? 'text-primary-500' : isDark ? 'text-sand-500' : 'text-secondary-500'
-                          }`} />
-                          <span className={`text-sm leading-relaxed ${isDark ? 'text-sand-300' : 'text-sand-700 dark:text-sand-300'}`}>
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Divider */}
-                  <div className={`h-px w-full mb-6 ${isDark ? 'bg-sand-800' : 'bg-sand-100 dark:bg-sand-800'}`} />
-
-                  {/* Conditions */}
-                  <div className="mb-6">
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-sand-500' : 'text-sand-400'}`}>
-                      Conditions
-                    </p>
-                    <ul className="space-y-2.5">
-                      {plan.conditions.map((cond, idx) => (
-                        <li key={idx} className="flex items-start gap-2.5">
-                          <Info className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? 'text-sand-600' : 'text-sand-400'}`} />
-                          <span className={`text-xs leading-relaxed ${isDark ? 'text-sand-400' : 'text-sand-500 dark:text-sand-400'}`}>
-                            {cond}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Ideal For */}
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-sand-900/50 border border-sand-800' : 'bg-sand-50 dark:bg-sand-950/50 border border-sand-100 dark:border-sand-800'}`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Target className={`w-4 h-4 ${isPro ? 'text-primary-500' : isDark ? 'text-sand-400' : 'text-sand-500'}`} />
-                      <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-sand-300' : 'text-sand-700 dark:text-sand-300'}`}>
-                        Idéal pour
-                      </span>
-                    </div>
-                    <p className={`text-sm italic leading-relaxed ${isDark ? 'text-sand-400' : 'text-sand-600 dark:text-sand-400'}`}>
-                      "{plan.idealFor}"
-                    </p>
-                  </div>
-
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================
-          CTA FINAL — impact maximal
-      ========================================= */}
-      <section className="relative overflow-hidden py-24 px-5">
-        {/* Fond sombre dramatique */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sand-900 via-sand-950 to-black" />
-        <div className="absolute inset-0 wax-pattern opacity-[0.05] pointer-events-none" />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.15) 0%, transparent 60%)' }}
-        />
-
-        <div className="relative max-w-[48rem] mx-auto text-center">
-          {/* Micro décoratif */}
-          <div className="relative inline-flex items-center justify-center w-20 h-20 mb-8">
-            <div className="absolute inset-0 rounded-full bg-primary-500/20 animate-ping" />
-            <div className="absolute inset-[-8px] rounded-full bg-primary-500/10 animate-pulse" />
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/50 z-10">
-              <Mic className="w-9 h-9 text-white" />
-            </div>
-          </div>
-
-          <h2
-            className="text-white mb-5"
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              lineHeight: 0.95,
-            }}
-          >
-            Commencez à construire
-            <br />
-            <span className="text-primary-400">la voix de demain</span>
-          </h2>
-
-          <p className="text-sand-400 text-base sm:text-lg mb-10 max-w-[28rem] mx-auto leading-relaxed">
-            Rejoignez les équipes qui construisent l'IA vocale pour les langues africaines. Gratuit pour démarrer.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold text-base shadow-2xl shadow-primary-500/40 hover:scale-[1.02] hover:shadow-primary-500/50 active:scale-[0.98] transition-all duration-200"
-            >
-              <Mic className="w-5 h-5" />
-              Créer un compte gratuit
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 text-sand-400 hover:text-white font-semibold text-sm transition-colors group"
-            >
-              Déjà un compte ?
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-            </Link>
-          </div>
-
-          {/* Réassurance */}
-          <div className="flex items-center justify-center gap-6 mt-10 flex-wrap">
-            {['Aucune CB requise', 'Données sécurisées', 'Support francophone'].map((item) => (
-              <span key={item} className="flex items-center gap-1.5 text-xs text-sand-500 font-medium">
-                <CheckCircle className="w-3.5 h-3.5 text-secondary-500" />
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================
-          FOOTER minimal
-      ========================================= */}
-      <footer className="border-t border-sand-200/50 dark:border-sand-800/50 py-8 px-5">
-        <div className="max-w-[72rem] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-              <Mic className="w-3 h-3 text-white" />
-            </div>
-            <span className="text-sm font-bold text-sand-700 dark:text-sand-300" style={{ fontFamily: 'var(--font-heading)' }}>
-              Baat-IA
-            </span>
-          </div>
-          <p className="text-xs text-sand-400 text-center">
-            © 2025 Baat-IA · Datasets vocaux pour les langues africaines
-          </p>
-          <div className="flex items-center gap-4 text-xs text-sand-500">
-            <Link to="/login" className="hover:text-sand-700 dark:hover:text-sand-300 transition-colors">Connexion</Link>
-            <Link to="/register" className="hover:text-sand-700 dark:hover:text-sand-300 transition-colors">Inscription</Link>
-          </div>
-        </div>
-      </footer>
+    <div
+      className="min-h-screen text-[#f7f8f8]"
+      style={{ background: '#08090a', ...sans }}
+    >
+      <Nav />
+      <Hero />
+      <StatsRow />
+      <LanguagesSection />
+      <PipelineSection />
+      <ApiSection />
+      <QuoteSection />
+      <CtaSection />
+      <Footer />
     </div>
   )
 }
+
+/* ---------- Nav ---------- */
+function Nav() {
+  const links = ['Produit', 'Datasets', 'Langues', 'Tarifs', 'Docs']
+  return (
+    <header
+      className="sticky top-0 z-20 flex items-center gap-7 px-4 sm:px-8 py-3.5 border-b border-[rgba(255,255,255,0.05)] backdrop-blur-md"
+      style={{ background: 'rgba(8,9,10,0.8)' }}
+    >
+      <div className="flex items-center gap-2">
+        <Logo size={22} />
+      </div>
+      <span
+        className="inline-flex items-center px-2 h-[20px] rounded-full text-[11px] text-[#f7f8f8] border border-[rgba(255,255,255,0.2)]"
+        style={{ ...sans, fontWeight: 510 }}
+      >
+        Beta
+      </span>
+      <nav className="hidden md:flex gap-5 ml-2">
+        {links.map((l) => (
+          <a
+            key={l}
+            className="text-[13px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors cursor-pointer"
+            style={{ ...sans, fontWeight: 510 }}
+          >
+            {l}
+          </a>
+        ))}
+      </nav>
+      <div className="ml-auto flex gap-2">
+        <Link
+          to="/login"
+          className="inline-flex items-center h-[32px] px-3 text-[13px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+          style={{ ...sans, fontWeight: 510 }}
+        >
+          Se connecter
+        </Link>
+        <Link
+          to="/register"
+          className="inline-flex items-center h-[32px] px-3 text-[13px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
+          style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+        >
+          Demander l'accès
+        </Link>
+      </div>
+    </header>
+  )
+}
+
+/* ---------- Hero ---------- */
+function Hero() {
+  return (
+    <section className="px-6 pt-20 pb-10 max-w-[1100px] mx-auto text-center">
+      <h1
+        className="mx-auto text-[40px] sm:text-[56px] lg:text-[64px] leading-[1.02] text-[#f7f8f8]"
+        style={{ ...sans, fontWeight: 510, letterSpacing: '-1.408px', maxWidth: 860 }}
+      >
+        Les voix de l'Afrique,<br />prêtes pour l'IA.
+      </h1>
+      <p
+        className="mx-auto mt-6 text-[16px] sm:text-[18px] leading-[1.6] text-[#8a8f98]"
+        style={{ ...sans, letterSpacing: '-0.165px', maxWidth: 620 }}
+      >
+        Des datasets vocaux annotés en 34 langues africaines. Pour entraîner des modèles ASR, TTS et NLU qui parlent comme vos utilisateurs.
+      </p>
+      <div className="flex justify-center gap-2.5 mt-7 flex-wrap">
+        <Link
+          to="/register"
+          className="inline-flex items-center h-[36px] px-4 text-[14px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
+          style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+        >
+          Demander l'accès
+        </Link>
+        <a
+          className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
+          style={{ ...sans, fontWeight: 510 }}
+        >
+          Explorer le catalogue
+          <ArrowRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
+
+      {/* Showcase dataset preview */}
+      <div
+        className="mt-[52px] p-3.5 rounded-[14px] relative border border-[rgba(255,255,255,0.08)]"
+        style={{
+          background: 'rgba(255,255,255,0.02)',
+          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.2)',
+        }}
+      >
+        <div className="rounded-[10px] overflow-hidden" style={{ background: '#0f1011' }}>
+          {/* Window chrome */}
+          <div className="px-3.5 py-2.5 border-b border-[rgba(255,255,255,0.05)] flex items-center gap-2.5">
+            <div className="flex gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            </div>
+            <div className="flex-1 flex justify-center">
+              <div
+                className="text-[11px] text-[#62666d] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] rounded-md px-2.5 py-0.5"
+                style={mono}
+              >
+                baat-ai.com/datasets/wolof-conversational
+              </div>
+            </div>
+            <span
+              className="inline-flex items-center px-2 h-[18px] rounded-[2px] text-[10px] text-[#f7f8f8] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.05)]"
+              style={{ ...sans, fontWeight: 510 }}
+            >
+              v2.4
+            </span>
+          </div>
+
+          {/* Content */}
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] min-h-[340px]">
+            {/* Side list */}
+            <div className="border-r border-[rgba(255,255,255,0.05)] p-2.5 hidden md:block">
+              <div
+                className="px-2 py-1.5 text-[10px] text-[#62666d] uppercase tracking-[0.04em]"
+                style={{ ...sans, fontWeight: 510 }}
+              >
+                Datasets
+              </div>
+              {[
+                { n: 'Wolof · Conversational', h: '12 400', on: true },
+                { n: 'Swahili · Broadcast', h: '8 200' },
+                { n: 'Hausa · Read speech', h: '6 100' },
+                { n: 'Amharic · Call center', h: '4 300' },
+                { n: 'Yoruba · Conversational', h: '5 600' },
+                { n: 'Lingala · Radio', h: '2 100' },
+              ].map((d, i) => (
+                <div
+                  key={i}
+                  className="px-2 py-1.5 rounded-sm mb-0.5 flex items-center justify-between"
+                  style={{ background: d.on ? 'rgba(255,255,255,0.04)' : 'transparent' }}
+                >
+                  <span
+                    className="text-[12px] text-left"
+                    style={{ ...sans, color: d.on ? '#f7f8f8' : '#d0d6e0', fontWeight: d.on ? 510 : 400 }}
+                  >
+                    {d.n}
+                  </span>
+                  <span className="text-[10px] text-[#62666d]" style={mono}>
+                    {d.h}h
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Main */}
+            <div className="p-4 sm:p-[18px] text-left">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div
+                  className="text-[18px] text-[#f7f8f8]"
+                  style={{ ...sans, fontWeight: 590, letterSpacing: '-0.24px' }}
+                >
+                  Wolof — Conversational
+                </div>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
+                  style={{ ...sans, fontWeight: 510 }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#10b981' }} />
+                  Prêt
+                </span>
+              </div>
+              <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+                12 400 heures · 8 214 locuteurs · échantillonnage 16 kHz
+              </div>
+
+              {/* Waveform panel */}
+              <div
+                className="mt-[18px] p-3.5 rounded-[8px] border border-[rgba(255,255,255,0.05)]"
+                style={{ background: 'rgba(255,255,255,0.02)' }}
+              >
+                <Waveform height={52} bars={72} />
+                <div className="flex justify-between mt-2 text-[10px] text-[#62666d]" style={mono}>
+                  <span>00:00:00</span>
+                  <span>00:00:12.480</span>
+                </div>
+              </div>
+
+              {/* Transcript rows */}
+              <div className="mt-3.5 flex flex-col gap-1.5">
+                {[
+                  { t: '00:01.2', s: 'Ndax nga fi nekk ci ngoon si ?', tr: 'Tu es là cet après-midi ?' },
+                  { t: '00:03.6', s: 'Waaw, damay liggéey ci biro bi.', tr: 'Oui, je travaille au bureau.' },
+                  { t: '00:06.8', s: 'Kon ñu dajaloo fukki waxtu.', tr: "Alors on se retrouve à 10h." },
+                ].map((r, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[64px_1fr] md:grid-cols-[64px_1fr_1fr] gap-3 px-2 py-1.5 rounded-sm"
+                    style={{
+                      background: i === 0 ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      borderLeft: i === 0 ? '2px solid #f7f8f8' : '2px solid transparent',
+                    }}
+                  >
+                    <span className="text-[11px] text-[#62666d]" style={mono}>
+                      {r.t}
+                    </span>
+                    <span className="text-[12px] text-[#f7f8f8]" style={sans}>
+                      {r.s}
+                    </span>
+                    <span className="text-[12px] text-[#8a8f98] italic hidden md:block" style={sans}>
+                      {r.tr}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Stats row ---------- */
+function StatsRow() {
+  const stats = [
+    { n: '34', l: 'langues africaines' },
+    { n: '82 400h', l: "d'audio annoté" },
+    { n: '41 000', l: 'locuteurs uniques' },
+    { n: '99.1%', l: 'accord inter-annotateurs' },
+  ]
+  return (
+    <section className="px-6 pt-10 pb-20 max-w-[1100px] mx-auto">
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.05)]"
+        style={{ background: 'rgba(255,255,255,0.02)' }}
+      >
+        {stats.map((s, i) => (
+          <div
+            key={i}
+            className="p-7 text-left"
+            style={{
+              borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : '0',
+              borderBottom:
+                i < 2 ? '1px solid rgba(255,255,255,0.05)' : '0',
+            }}
+          >
+            <div
+              className="text-[32px] md:text-[36px] text-[#f7f8f8] tabular-nums"
+              style={{ ...sans, fontWeight: 510, letterSpacing: '-0.9px' }}
+            >
+              {s.n}
+            </div>
+            <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+              {s.l}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Section title helper ---------- */
+function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: React.ReactNode; subtitle?: string }) {
+  return (
+    <div className="text-center max-w-[700px] mx-auto mb-12">
+      {kicker && (
+        <div
+          className="inline-block text-[12px] uppercase"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            letterSpacing: '0.08em',
+            background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          {kicker}
+        </div>
+      )}
+      <div
+        className="text-[32px] md:text-[40px] text-[#f7f8f8]"
+        style={{ ...sans, fontWeight: 510, lineHeight: 1.05, letterSpacing: '-0.9px', marginTop: kicker ? 12 : 0 }}
+      >
+        {title}
+      </div>
+      {subtitle && (
+        <div className="text-[15px] md:text-[17px] text-[#8a8f98] mt-3.5" style={{ ...sans, lineHeight: 1.55 }}>
+          {subtitle}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ---------- Languages ---------- */
+function LanguagesSection() {
+  const langs: [string, string, string][] = [
+    ['Wolof', 'sn·sénégal', '12 400h'],
+    ['Swahili', 'ke·kenya', '8 200h'],
+    ['Hausa', 'ng·nigeria', '6 100h'],
+    ['Yoruba', 'ng·nigeria', '5 600h'],
+    ['Amharic', 'et·éthiopie', '4 300h'],
+    ['Igbo', 'ng·nigeria', '3 900h'],
+    ['Zulu', 'za·afrique du sud', '3 400h'],
+    ['Lingala', 'cd·rdc', '2 100h'],
+    ['Bambara', 'ml·mali', '1 800h'],
+    ['Fula', "sn·afrique de l'ouest", '1 600h'],
+    ['Oromo', 'et·éthiopie', '1 400h'],
+    ['Shona', 'zw·zimbabwe', '1 200h'],
+  ]
+  return (
+    <section className="px-6 py-20 max-w-[1100px] mx-auto">
+      <SectionTitle
+        kicker="Couverture"
+        title="34 langues. Une par une, pas en bloc."
+        subtitle="Chaque langue a ses locuteurs natifs, ses annotateurs, ses validateurs. Pas de transcription croisée, pas de traduction automatique."
+      />
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.05)]"
+        style={{ background: 'rgba(255,255,255,0.05)' }}
+      >
+        {langs.map((l, i) => (
+          <LangCell key={i} lang={l} />
+        ))}
+      </div>
+      <div className="text-center mt-6">
+        <a
+          className="inline-flex items-center gap-1.5 h-[32px] px-3 text-[13px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
+          style={{ ...sans, fontWeight: 510 }}
+        >
+          Voir les 22 autres langues
+          <ArrowRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </section>
+  )
+}
+
+function LangCell({ lang }: { lang: [string, string, string] }) {
+  const ref = useRef<HTMLDivElement>(null)
+  return (
+    <div
+      ref={ref}
+      className="p-5 flex flex-col gap-1 transition-colors"
+      style={{ background: '#08090a' }}
+      onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = '#0f1011')}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = '#08090a')}
+    >
+      <div
+        className="text-[17px] text-[#f7f8f8]"
+        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
+      >
+        {lang[0]}
+      </div>
+      <div className="text-[11px] text-[#62666d] uppercase" style={mono}>
+        {lang[1]}
+      </div>
+      <div className="text-[13px] text-[#8a8f98] mt-1.5" style={sans}>
+        {lang[2]}
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Pipeline ---------- */
+function PipelineSection() {
+  return (
+    <section className="px-6 py-20 max-w-[1100px] mx-auto">
+      <SectionTitle
+        kicker="Pipeline"
+        title="Pas d'IA qui annote l'IA."
+        subtitle="Chaque heure audio passe par trois humains avant de quitter nos serveurs."
+      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <PipelineCard
+          icon={<Mic className="w-5 h-5" strokeWidth={1.75} />}
+          title="Collecte terrain"
+          body="Enregistrements in-situ avec des locuteurs natifs. Contextes variés : rue, domicile, centre d'appel, radio."
+          demo={<Waveform height={40} bars={48} />}
+        />
+        <PipelineCard
+          icon={<FileText className="w-5 h-5" strokeWidth={1.75} />}
+          title="Annotation humaine"
+          body="Transcription orthographique, phonétique quand pertinent, tags d'émotion et de chevauchement."
+          demo={
+            <div className="text-[11px] leading-[1.7] text-[#d0d6e0]" style={mono}>
+              <div>
+                <span className="text-[#62666d]">00:01.2</span>{' '}
+                <span className="text-[#f7f8f8]">[SPK_01]</span> ndax nga fi nekk
+              </div>
+              <div>
+                <span className="text-[#62666d]">00:02.8</span>{' '}
+                <span className="text-[#8a8f98]">[SPK_02]</span> waaw, damay liggéey
+              </div>
+              <div>
+                <span className="text-[#62666d]">00:04.1</span>{' '}
+                <span className="text-[#62666d]">[SILENCE]</span>
+              </div>
+            </div>
+          }
+        />
+        <PipelineCard
+          icon={<ShieldCheck className="w-5 h-5" strokeWidth={1.75} />}
+          title="Validation croisée"
+          body="Double annotation, arbitrage sur désaccord, score de confiance par segment. 99.1% d'accord inter-annotateurs."
+          demo={
+            <div className="flex flex-col gap-1.5">
+              {[
+                { l: 'Annotateur A', v: 99 },
+                { l: 'Annotateur B', v: 97 },
+                { l: 'Arbitre', v: 100 },
+              ].map((r, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="text-[11px] text-[#8a8f98] w-[88px]" style={sans}>
+                    {r.l}
+                  </span>
+                  <div
+                    className="flex-1 h-1 rounded-sm overflow-hidden"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
+                  >
+                    <div
+                      className="h-full"
+                      style={{ width: `${r.v}%`, background: '#10b981' }}
+                    />
+                  </div>
+                  <span
+                    className="text-[11px] text-[#d0d6e0] w-8 text-right tabular-nums"
+                    style={mono}
+                  >
+                    {r.v}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          }
+        />
+      </div>
+    </section>
+  )
+}
+
+function PipelineCard({
+  icon, title, body, demo,
+}: { icon: React.ReactNode; title: string; body: string; demo: React.ReactNode }) {
+  return (
+    <div
+      className="p-6 flex flex-col min-h-[280px] rounded-[12px] border border-[rgba(255,255,255,0.08)]"
+      style={{ background: 'rgba(255,255,255,0.02)' }}
+    >
+      <div
+        className="inline-flex"
+        style={{
+          background: 'linear-gradient(135deg, #f7f8f8 0%, #8a8f98 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          color: '#f7f8f8',
+        }}
+      >
+        {icon}
+      </div>
+      <div
+        className="text-[18px] text-[#f7f8f8] mt-4"
+        style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
+      >
+        {title}
+      </div>
+      <div className="text-[14px] text-[#8a8f98] mt-1.5" style={{ ...sans, lineHeight: 1.55 }}>
+        {body}
+      </div>
+      <div className="mt-auto pt-6 border-t border-[rgba(255,255,255,0.05)]">
+        <div className="mt-4">{demo}</div>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- API ---------- */
+function ApiSection() {
+  return (
+    <section className="px-6 py-20 max-w-[1100px] mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-10 md:gap-12 items-center">
+        <div>
+          <div
+            className="inline-block text-[12px] uppercase"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              letterSpacing: '0.08em',
+              background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Accès
+          </div>
+          <div
+            className="text-[32px] md:text-[40px] text-[#f7f8f8] mt-3"
+            style={{ ...sans, fontWeight: 510, lineHeight: 1.05, letterSpacing: '-0.9px' }}
+          >
+            Streamez, ne téléchargez pas.
+          </div>
+          <div className="text-[15px] md:text-[16px] text-[#8a8f98] mt-3.5" style={{ ...sans, lineHeight: 1.6 }}>
+            Une API HTTP simple. Filtrez par langue, durée, locuteur, contexte. Le streaming démarre en 40 ms.
+          </div>
+          <div className="flex gap-5 mt-6 flex-wrap">
+            {[
+              { n: 'REST', d: 'JSON + audio/wav' },
+              { n: 'Streaming', d: 'HTTP chunked' },
+              { n: 'Python', d: 'pip install baat' },
+            ].map((x, i) => (
+              <div key={i}>
+                <div className="text-[14px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 590 }}>
+                  {x.n}
+                </div>
+                <div className="text-[12px] text-[#62666d] mt-0.5" style={sans}>
+                  {x.d}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Code block */}
+        <div
+          className="p-5 rounded-[10px] border border-[rgba(255,255,255,0.08)]"
+          style={{ background: '#0a0a0b', ...mono, fontSize: 13, lineHeight: 1.7, color: '#d0d6e0' }}
+        >
+          <div className="flex gap-2 mb-3 items-center">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            <span className="ml-auto text-[11px] text-[#62666d]" style={mono}>
+              stream.py
+            </span>
+          </div>
+          <div>
+            <span className="text-[#f7f8f8]">from</span> baat{' '}
+            <span className="text-[#f7f8f8]">import</span> Dataset
+          </div>
+          <div>&nbsp;</div>
+          <div>
+            ds = Dataset(<span className="text-[#d0d6e0]">"wolof-conversational"</span>)
+          </div>
+          <div>&nbsp;</div>
+          <div className="text-[#62666d]"># 12 400h, filtré par durée</div>
+          <div>
+            <span className="text-[#f7f8f8]">for</span> sample{' '}
+            <span className="text-[#f7f8f8]">in</span> ds.stream(min_seconds=
+            <span className="text-[#d0d6e0]">3</span>):
+          </div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;audio = sample.waveform</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;&nbsp;= sample.transcript</div>
+          <div>
+            &nbsp;&nbsp;&nbsp;&nbsp;lang&nbsp;&nbsp;= sample.language
+            <span className="text-[#62666d]">&nbsp;&nbsp;# "wol"</span>
+          </div>
+          <div>&nbsp;</div>
+          <div className="text-[#62666d]"># &gt;&gt;&gt; 40ms au premier sample</div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Quote ---------- */
+function QuoteSection() {
+  return (
+    <section className="px-6 py-20 max-w-[900px] mx-auto text-center">
+      <div
+        className="text-[22px] md:text-[28px] text-[#f7f8f8]"
+        style={{ ...sans, lineHeight: 1.35, letterSpacing: '-0.4px' }}
+      >
+        «&nbsp;On a entraîné notre ASR wolof sur{' '}
+        <span
+          style={{
+            background: 'linear-gradient(90deg, #f7f8f8 0%, #8a8f98 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          2 400h de Baat
+        </span>
+        . Le WER est passé de 38% à 11% en une semaine.&nbsp;»
+      </div>
+      <div className="flex items-center justify-center gap-3 mt-7">
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[#fff] text-[13px]"
+          style={{ background: '#3e3e44', ...sans, fontWeight: 590 }}
+        >
+          AD
+        </div>
+        <div className="text-left">
+          <div className="text-[14px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 590 }}>
+            Aminata Diop
+          </div>
+          <div className="text-[12px] text-[#8a8f98]" style={sans}>
+            Lead ML, Orange Digital Ventures
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- CTA ---------- */
+function CtaSection() {
+  return (
+    <section className="px-6 py-20 max-w-[1100px] mx-auto">
+      <div
+        className="p-10 md:p-16 rounded-[14px] text-center border border-[rgba(255,255,255,0.15)]"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+        }}
+      >
+        <div
+          className="text-[36px] md:text-[48px] text-[#f7f8f8]"
+          style={{ ...sans, fontWeight: 510, lineHeight: 1.0, letterSpacing: '-1.056px' }}
+        >
+          Entraînez sur ce que vos<br />utilisateurs parlent vraiment.
+        </div>
+        <div className="flex justify-center gap-2.5 mt-8 flex-wrap">
+          <Link
+            to="/register"
+            className="inline-flex items-center h-[36px] px-4 text-[14px] bg-gradient-to-br from-white to-[#d0d6e0] border border-white/20 rounded-md hover:from-white hover:to-[#f7f8f8] transition-colors"
+            style={{ ...sans, fontWeight: 510, color: '#08090a' }}
+          >
+            Demander l'accès
+          </Link>
+          <a
+            className="inline-flex items-center h-[36px] px-4 text-[14px] text-[#e2e4e7] bg-[rgba(255,255,255,0.02)] border border-[rgb(36,40,44)] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
+            style={{ ...sans, fontWeight: 510 }}
+          >
+            Parler à l'équipe
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Footer ---------- */
+function Footer() {
+  const cols: Record<string, string[]> = {
+    Produit: ['Datasets', 'Langues', 'API', 'Tarifs'],
+    Entreprise: ['À propos', 'Équipe', 'Blog', 'Contact'],
+    Ressources: ['Docs', 'Guides', 'Benchmarks', 'Statut'],
+    Légal: ['Confidentialité', 'CGU', 'Sécurité', 'Licences'],
+  }
+  return (
+    <footer className="px-8 pt-[60px] pb-8 max-w-[1200px] mx-auto mt-[60px] border-t border-[rgba(255,255,255,0.05)]">
+      <div className="grid grid-cols-2 md:grid-cols-[2fr_repeat(4,1fr)] gap-8">
+        <div>
+          <Logo size={22} />
+          <div className="text-[13px] text-[#62666d] mt-4 max-w-[260px]" style={{ ...sans, lineHeight: 1.55 }}>
+            Les voix de l'Afrique, prêtes pour l'IA. Conçu à Dakar, annoté partout.
+          </div>
+        </div>
+        {Object.entries(cols).map(([h, links]) => (
+          <div key={h}>
+            <div
+              className="text-[11px] text-[#62666d] uppercase tracking-[0.04em]"
+              style={{ ...sans, fontWeight: 510 }}
+            >
+              {h}
+            </div>
+            <div className="flex flex-col gap-2.5 mt-3.5">
+              {links.map((l) => (
+                <a
+                  key={l}
+                  className="text-[13px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors cursor-pointer"
+                  style={sans}
+                >
+                  {l}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div
+        className="mt-12 pt-5 border-t border-[rgba(255,255,255,0.05)] flex justify-between text-[12px] text-[#62666d]"
+        style={sans}
+      >
+        <span>© 2026 Baat-IA</span>
+        <span style={mono}>v2.4.1 · sn·dakar</span>
+      </div>
+    </footer>
+  )
+}
+

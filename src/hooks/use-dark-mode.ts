@@ -1,23 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
-
+/**
+ * Dark mode natif Linear-style : tout le produit est en dark, sans toggle.
+ * Ce hook reste exposé pour éviter de casser les imports existants.
+ * Les consommateurs peuvent ignorer `toggle` (no-op).
+ */
 export function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem('baat-theme')
-    if (stored) return stored === 'dark'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
-
-  useEffect(() => {
-    const root = document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
-    localStorage.setItem('baat-theme', isDark ? 'dark' : 'light')
-  }, [isDark])
-
-  const toggle = useCallback(() => setIsDark((prev) => !prev), [])
-
-  return { isDark, toggle }
+  return {
+    isDark: true,
+    toggle: () => { /* no-op, tout est dark */ },
+  }
 }

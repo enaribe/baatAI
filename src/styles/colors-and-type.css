@@ -1,0 +1,286 @@
+/* ============================================================
+   Baat Design System — Colors & Type
+   Linear-inspired dark-native system
+   ============================================================ */
+
+/* Inter Variable + Berkeley Mono fallback via Google Fonts
+   NOTE: Berkeley Mono is proprietary; we fall back to JetBrains Mono
+   (closest free equivalent). Flag to user to provide Berkeley Mono. */
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---------- Color tokens ---------- */
+
+  /* Backgrounds (dark-native stacking by luminance) */
+  --bg-marketing: #08090a;      /* deepest — page canvas */
+  --bg-marketing-pure: #010102; /* hero-only, near-pure */
+  --bg-panel: #0f1011;          /* sidebars, panels */
+  --bg-surface: #191a1b;        /* cards, dropdowns */
+  --bg-surface-2: #28282c;      /* hover, elevated */
+
+  /* Surface tints (use over darker bg for stacking) */
+  --tint-02: rgba(255, 255, 255, 0.02);
+  --tint-03: rgba(255, 255, 255, 0.03);
+  --tint-04: rgba(255, 255, 255, 0.04);
+  --tint-05: rgba(255, 255, 255, 0.05);
+  --tint-08: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --fg-1: #f7f8f8;  /* primary */
+  --fg-2: #d0d6e0;  /* secondary / body */
+  --fg-3: #8a8f98;  /* tertiary / muted */
+  --fg-4: #62666d;  /* quaternary / disabled */
+
+  /* Brand */
+  --brand-indigo: #5e6ad2;   /* primary CTA bg */
+  --brand-violet: #7170ff;   /* interactive accent */
+  --brand-violet-hi: #828fff;/* hover accent */
+  --brand-lavender: #7a7fad; /* security / muted */
+
+  /* Status */
+  --status-green: #27a644;
+  --status-emerald: #10b981;
+
+  /* Borders */
+  --border-1: #23252a;
+  --border-2: #34343a;
+  --border-3: #3e3e44;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-std: rgba(255, 255, 255, 0.08);
+  --line-tint: #141516;
+  --line-tertiary: #18191a;
+
+  /* Light neutrals (for rare light contexts) */
+  --light-bg: #f7f8f8;
+  --light-surface: #f3f4f5;
+  --light-surface-2: #f5f6f7;
+  --light-border: #d0d6e0;
+  --light-border-alt: #e6e6e6;
+  --white: #ffffff;
+
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.85);
+
+  /* ---------- Radii ---------- */
+  --r-micro: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-card: 8px;
+  --r-panel: 12px;
+  --r-lg: 22px;
+  --r-pill: 9999px;
+  --r-circle: 50%;
+
+  /* ---------- Shadows / Elevation ---------- */
+  --shadow-subtle: 0 1.2px 0 0 rgba(0, 0, 0, 0.03);
+  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-dialog:
+    0 8px 2px rgba(0, 0, 0, 0),
+    0 5px 2px rgba(0, 0, 0, 0.01),
+    0 3px 2px rgba(0, 0, 0, 0.04),
+    0 1px 1px rgba(0, 0, 0, 0.07),
+    0 0 1px rgba(0, 0, 0, 0.08);
+
+  /* ---------- Spacing ---------- */
+  --s-1: 1px;
+  --s-2: 4px;
+  --s-3: 7px;
+  --s-4: 8px;
+  --s-5: 11px;
+  --s-6: 12px;
+  --s-7: 16px;
+  --s-8: 19px;
+  --s-9: 20px;
+  --s-10: 22px;
+  --s-11: 24px;
+  --s-12: 28px;
+  --s-13: 32px;
+  --s-14: 35px;
+
+  /* ---------- Type ---------- */
+  --font-sans: 'Inter var', 'Inter', 'SF Pro Display', -apple-system, system-ui,
+               'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+               'Helvetica Neue', sans-serif;
+  --font-mono: 'Berkeley Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo,
+               monospace;
+
+  /* Weights — Linear's three-tier system */
+  --w-light: 300;
+  --w-regular: 400;
+  --w-medium: 510;   /* signature weight */
+  --w-semibold: 590; /* strong emphasis — never 700 */
+
+  /* OpenType features (Linear's identity) */
+  --ot-features: 'cv01', 'ss03';
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html, body {
+  background: var(--bg-marketing);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-feature-settings: var(--ot-features);
+  font-weight: var(--w-regular);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ============================================================
+   Semantic typography
+   Apply as classes: .t-display-xl, .t-h1, .t-body, etc.
+   ============================================================ */
+
+.t-display-xl {
+  font-size: 72px;
+  font-weight: var(--w-medium);
+  line-height: 1.00;
+  letter-spacing: -1.584px;
+  font-feature-settings: var(--ot-features);
+}
+.t-display-lg {
+  font-size: 64px;
+  font-weight: var(--w-medium);
+  line-height: 1.00;
+  letter-spacing: -1.408px;
+}
+.t-display {
+  font-size: 48px;
+  font-weight: var(--w-medium);
+  line-height: 1.00;
+  letter-spacing: -1.056px;
+}
+.t-h1 {
+  font-size: 32px;
+  font-weight: var(--w-regular);
+  line-height: 1.13;
+  letter-spacing: -0.704px;
+}
+.t-h2 {
+  font-size: 24px;
+  font-weight: var(--w-regular);
+  line-height: 1.33;
+  letter-spacing: -0.288px;
+}
+.t-h3 {
+  font-size: 20px;
+  font-weight: var(--w-semibold);
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+}
+.t-body-lg {
+  font-size: 18px;
+  font-weight: var(--w-regular);
+  line-height: 1.60;
+  letter-spacing: -0.165px;
+}
+.t-body-em {
+  font-size: 17px;
+  font-weight: var(--w-semibold);
+  line-height: 1.60;
+}
+.t-body {
+  font-size: 16px;
+  font-weight: var(--w-regular);
+  line-height: 1.50;
+}
+.t-body-med {
+  font-size: 16px;
+  font-weight: var(--w-medium);
+  line-height: 1.50;
+}
+.t-body-sb {
+  font-size: 16px;
+  font-weight: var(--w-semibold);
+  line-height: 1.50;
+}
+.t-sm {
+  font-size: 15px;
+  font-weight: var(--w-regular);
+  line-height: 1.60;
+  letter-spacing: -0.165px;
+}
+.t-sm-med {
+  font-size: 15px;
+  font-weight: var(--w-medium);
+  line-height: 1.60;
+  letter-spacing: -0.165px;
+}
+.t-sm-sb {
+  font-size: 15px;
+  font-weight: var(--w-semibold);
+  line-height: 1.60;
+  letter-spacing: -0.165px;
+}
+.t-sm-light {
+  font-size: 15px;
+  font-weight: var(--w-light);
+  line-height: 1.47;
+  letter-spacing: -0.165px;
+}
+.t-caption-lg {
+  font-size: 14px;
+  font-weight: var(--w-medium);
+  line-height: 1.50;
+  letter-spacing: -0.182px;
+}
+.t-caption {
+  font-size: 13px;
+  font-weight: var(--w-regular);
+  line-height: 1.50;
+  letter-spacing: -0.13px;
+}
+.t-label {
+  font-size: 12px;
+  font-weight: var(--w-regular);
+  line-height: 1.40;
+}
+.t-micro {
+  font-size: 11px;
+  font-weight: var(--w-medium);
+  line-height: 1.40;
+}
+.t-tiny {
+  font-size: 10px;
+  font-weight: var(--w-regular);
+  line-height: 1.50;
+  letter-spacing: -0.15px;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: var(--w-regular);
+  line-height: 1.50;
+}
+.t-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: var(--w-regular);
+  line-height: 1.50;
+}
+.t-mono-xs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: var(--w-regular);
+  line-height: 1.40;
+}
+
+/* ============================================================
+   Element defaults
+   ============================================================ */
+
+h1 { composes: t-display; } /* informal; use .t-* */
+p  { color: var(--fg-2); }
+a  { color: var(--brand-violet); text-decoration: none; }
+a:hover { color: var(--brand-violet-hi); }
+code, pre { font-family: var(--font-mono); font-size: 14px; }
+::selection { background: var(--brand-indigo); color: var(--fg-1); }

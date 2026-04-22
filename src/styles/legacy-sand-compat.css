@@ -1,0 +1,205 @@
+/* ============================================================
+   Couche de compatibilité Linear dark
+   ------------------------------------------------------------
+   Les anciennes pages utilisent encore les tokens `sand-*`
+   (palette sable chaude) et les préfixes `dark:*` pour le dark
+   mode. On redéfinit ici ces tokens vers les valeurs Linear
+   dark-native. Une fois toutes les pages refondues, ce fichier
+   pourra être supprimé.
+   ============================================================ */
+
+@theme {
+  /* Sand : mapping cohérent avec Tailwind — les tons clairs restent
+     clairs, les tons sombres restent sombres. Ainsi :
+       bg-sand-50 = surface très légère (rgba(255,255,255,0.02))
+       bg-sand-900 = fond très sombre (panel #0f1011)
+       text-sand-900 = texte sombre  → mais dark:text-sand-100 = clair
+     Ce mapping fonctionne correctement avec les variantes `dark:*`. */
+
+  /* Tons clairs (backgrounds light, bg-white alternatives) */
+  --color-sand-50: rgba(255, 255, 255, 0.02);
+  --color-sand-100: rgba(255, 255, 255, 0.04);
+  --color-sand-200: rgba(255, 255, 255, 0.08);
+  --color-sand-300: rgba(255, 255, 255, 0.12);
+
+  /* Tons moyens (borders, text muted) */
+  --color-sand-400: #62666d;
+  --color-sand-500: #8a8f98;
+  --color-sand-600: #d0d6e0;
+  --color-sand-700: #d0d6e0;
+
+  /* Tons sombres (bg panels dark, titres dark) */
+  --color-sand-800: #191a1b;       /* surface elevated */
+  --color-sand-900: #0f1011;       /* panel bg */
+  --color-sand-950: #08090a;       /* page bg */
+
+  /* Texte inversé pour les variantes dark:text-sand-100/200 */
+  /* On force dans les règles plus bas */
+
+  /* Primary palette : brand indigo Linear */
+  --color-primary-50: rgba(113, 112, 255, 0.08);
+  --color-primary-100: rgba(113, 112, 255, 0.12);
+  --color-primary-200: rgba(113, 112, 255, 0.2);
+  --color-primary-300: #828fff;
+  --color-primary-400: #7170ff;
+  --color-primary-500: #7170ff;
+  --color-primary-600: #5e6ad2;
+  --color-primary-700: #4e5bbf;
+  --color-primary-800: #3f4ba8;
+  --color-primary-900: #312e81;
+  --color-primary-950: #1e1b4b;
+
+  /* Secondary (ex-vert) → success subtil */
+  --color-secondary-50: rgba(16, 185, 129, 0.08);
+  --color-secondary-100: rgba(16, 185, 129, 0.12);
+  --color-secondary-200: rgba(16, 185, 129, 0.2);
+  --color-secondary-300: #34d399;
+  --color-secondary-400: #10b981;
+  --color-secondary-500: #10b981;
+  --color-secondary-600: #059669;
+  --color-secondary-700: #047857;
+  --color-secondary-800: #065f46;
+  --color-secondary-900: #064e3b;
+  --color-secondary-950: #022c22;
+
+  /* Accent aligné sur brand violet */
+  --color-accent-50: rgba(113, 112, 255, 0.08);
+  --color-accent-100: rgba(113, 112, 255, 0.12);
+  --color-accent-200: rgba(113, 112, 255, 0.2);
+  --color-accent-300: #828fff;
+  --color-accent-400: #7170ff;
+  --color-accent-500: #7170ff;
+  --color-accent-600: #5e6ad2;
+  --color-accent-700: #4e5bbf;
+  --color-accent-800: #3f4ba8;
+  --color-accent-900: #312e81;
+  --color-accent-950: #1e1b4b;
+}
+
+html {
+  color-scheme: dark;
+}
+
+/* ============================================================
+   Overrides Tailwind — forcer les fonds "blancs" vers des
+   surfaces dark et assurer la lisibilité du texte.
+   ============================================================ */
+
+/* Fonds blanc pur → surface dark tint */
+.bg-white {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Texte noir pur forcé → fg primary */
+.text-black {
+  color: #f7f8f8 !important;
+}
+
+/* -----------------------------------------------------------
+   Sand — en mode dark natif, on force les textes vers des
+   couleurs claires pour la lisibilité, peu importe le ton.
+   Les composants anciens utilisent `text-sand-900` pour les
+   titres et `text-sand-500/600` pour le body. On mappe tout
+   vers une échelle claire.
+   ----------------------------------------------------------- */
+.text-sand-900, .text-sand-800 { color: #f7f8f8 !important; }
+.text-sand-700 { color: #d0d6e0 !important; }
+.text-sand-600 { color: #d0d6e0 !important; }
+.text-sand-500 { color: #8a8f98 !important; }
+.text-sand-400 { color: #62666d !important; }
+.text-sand-300 { color: #3e3e44 !important; }
+
+/* Les variantes `dark:text-sand-*` (utilisées en combo avec .dark) :
+   on les force aussi, avec la même échelle claire. */
+.dark\:text-sand-100:is(.dark *),
+.dark\:text-sand-100 {
+  color: #f7f8f8 !important;
+}
+.dark\:text-sand-200:is(.dark *),
+.dark\:text-sand-200 {
+  color: #d0d6e0 !important;
+}
+.dark\:text-sand-300:is(.dark *),
+.dark\:text-sand-300 {
+  color: #d0d6e0 !important;
+}
+.dark\:text-sand-400:is(.dark *),
+.dark\:text-sand-400 {
+  color: #8a8f98 !important;
+}
+.dark\:text-sand-500:is(.dark *),
+.dark\:text-sand-500 {
+  color: #62666d !important;
+}
+
+/* Fonds sand-* : forcer vers des surfaces dark */
+.bg-sand-50 { background-color: rgba(255, 255, 255, 0.02) !important; }
+.bg-sand-100 { background-color: rgba(255, 255, 255, 0.04) !important; }
+.bg-sand-200 { background-color: rgba(255, 255, 255, 0.06) !important; }
+.dark\:bg-sand-900:is(.dark *),
+.dark\:bg-sand-900 {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+.dark\:bg-sand-800:is(.dark *),
+.dark\:bg-sand-800 {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+.dark\:bg-sand-800\/50:is(.dark *),
+.dark\:bg-sand-800\/50 {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+.dark\:bg-sand-950:is(.dark *),
+.dark\:bg-sand-950 {
+  background-color: #08090a !important;
+}
+
+/* Borders sand-* */
+.border-sand-100, .border-sand-200, .border-sand-300 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark\:border-sand-700:is(.dark *),
+.dark\:border-sand-700,
+.dark\:border-sand-800:is(.dark *),
+.dark\:border-sand-800 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Amber (rappels, warnings) */
+.bg-amber-50 { background-color: rgba(245, 158, 11, 0.05) !important; }
+.bg-amber-100 { background-color: rgba(245, 158, 11, 0.1) !important; }
+.bg-amber-500 { background-color: rgba(245, 158, 11, 0.9) !important; }
+.text-amber-600 { color: #fbbf24 !important; }
+.text-amber-700 { color: #fbbf24 !important; }
+.text-amber-800 { color: #fde68a !important; }
+.text-amber-900 { color: #fef3c7 !important; }
+.border-amber-200 { border-color: rgba(245, 158, 11, 0.2) !important; }
+.border-amber-300 { border-color: rgba(245, 158, 11, 0.3) !important; }
+
+/* Red (danger) */
+.bg-red-50 { background-color: rgba(239, 68, 68, 0.06) !important; }
+.bg-red-100 { background-color: rgba(239, 68, 68, 0.1) !important; }
+.bg-red-500 { background-color: #ef4444 !important; }
+.bg-red-600 { background-color: #dc2626 !important; }
+.text-red-500 { color: #fca5a5 !important; }
+.text-red-600 { color: #fca5a5 !important; }
+.text-red-700 { color: #fecaca !important; }
+.border-red-200 { border-color: rgba(239, 68, 68, 0.2) !important; }
+.border-red-300 { border-color: rgba(239, 68, 68, 0.3) !important; }
+
+/* Purple → aligné brand violet */
+.bg-purple-50 { background-color: rgba(113, 112, 255, 0.06) !important; }
+.bg-purple-100 { background-color: rgba(113, 112, 255, 0.12) !important; }
+.text-purple-600 { color: #828fff !important; }
+.text-purple-700 { color: #828fff !important; }
+
+/* Blue → aligné brand violet */
+.bg-blue-50 { background-color: rgba(113, 112, 255, 0.06) !important; }
+.bg-blue-100 { background-color: rgba(113, 112, 255, 0.12) !important; }
+.text-blue-600 { color: #828fff !important; }
+.text-blue-700 { color: #828fff !important; }
+
+/* Green (success alt) */
+.bg-green-50 { background-color: rgba(16, 185, 129, 0.06) !important; }
+.bg-green-100 { background-color: rgba(16, 185, 129, 0.1) !important; }
+.text-green-600 { color: #34d399 !important; }
+.text-green-700 { color: #6ee7b7 !important; }

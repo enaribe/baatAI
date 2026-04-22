@@ -10,22 +10,11 @@ const iconMap: Record<ToastVariant, typeof CheckCircle2> = {
   info: Info,
 }
 
-const variantClasses: Record<ToastVariant, string> = {
-  success:
-    'bg-secondary-50 dark:bg-secondary-900/30 border-secondary-200 dark:border-secondary-800 text-secondary-900 dark:text-secondary-100',
-  error:
-    'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100',
-  warning:
-    'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100',
-  info:
-    'bg-accent-50 dark:bg-accent-900/30 border-accent-200 dark:border-accent-800 text-accent-900 dark:text-accent-100',
-}
-
-const iconClasses: Record<ToastVariant, string> = {
-  success: 'text-secondary-500',
-  error: 'text-red-500',
-  warning: 'text-amber-500',
-  info: 'text-accent-500',
+const iconColorMap: Record<ToastVariant, string> = {
+  success: '#10b981',
+  error: '#ef4444',
+  warning: '#f59e0b',
+  info: '#7170ff',
 }
 
 export function ToastContainer() {
@@ -44,19 +33,24 @@ export function ToastContainer() {
         return (
           <div
             key={t.id}
-            className={[
-              'pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur-sm',
-              'animate-slide-in-right',
-              variantClasses[t.variant],
-            ].join(' ')}
-            style={{ animationDuration: '250ms' }}
+            className="pointer-events-auto flex items-start gap-3 rounded-[8px] px-4 py-3 animate-slide-in-right"
+            style={{
+              animationDuration: '250ms',
+              background: '#191a1b',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow:
+                '0 8px 2px rgba(0,0,0,0), 0 5px 2px rgba(0,0,0,0.01), 0 3px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.07), 0 0 1px rgba(0,0,0,0.08), 0 10px 40px -10px rgba(0,0,0,0.6)',
+            }}
           >
-            <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${iconClasses[t.variant]}`} />
+            <Icon
+              className="w-4 h-4 shrink-0 mt-0.5"
+              style={{ color: iconColorMap[t.variant] }}
+            />
             <div className="flex-1 min-w-0">
               {t.title && (
                 <p
-                  className="text-sm font-bold leading-tight mb-0.5"
-                  style={{ fontFamily: 'var(--font-heading)' }}
+                  className="text-[13px] text-[#f7f8f8] leading-tight mb-0.5"
+                  style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
                 >
                   {t.title}
                 </p>
@@ -65,10 +59,10 @@ export function ToastContainer() {
             </div>
             <button
               onClick={() => dismiss(t.id)}
-              className="shrink-0 p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              aria-label="Fermer la notification"
+              className="shrink-0 p-0.5 rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+              aria-label="Fermer"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )
@@ -78,5 +72,5 @@ export function ToastContainer() {
 }
 
 function ToastBody({ children }: { children: ReactNode }) {
-  return <p className="text-xs leading-relaxed opacity-90">{children}</p>
+  return <p className="text-[12px] leading-relaxed text-[#d0d6e0]">{children}</p>
 }

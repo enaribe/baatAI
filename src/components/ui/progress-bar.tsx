@@ -16,30 +16,33 @@ export function ProgressBar({
   size = 'md',
 }: ProgressBarProps) {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100))
-  const barH = size === 'sm' ? 'h-1.5' : 'h-2.5'
+  const barH = size === 'sm' ? 'h-1' : 'h-1.5'
 
   return (
     <div className={`w-full ${className}`}>
       {(label || showPercentage) && (
         <div className="flex items-center justify-between mb-2">
           {label && (
-            <span className="text-sm font-semibold text-sand-700 dark:text-sand-300">{label}</span>
+            <span
+              className="text-[13px] text-[#d0d6e0]"
+              style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+            >
+              {label}
+            </span>
           )}
           {showPercentage && (
-            <span className="text-sm font-bold tabular-nums text-primary-600 dark:text-primary-400">
+            <span
+              className="text-[12px] tabular-nums text-[#f7f8f8]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
               {Math.round(percentage)}%
             </span>
           )}
         </div>
       )}
-      <div className={`w-full ${barH} bg-sand-200 dark:bg-sand-800 rounded-full overflow-hidden`}>
+      <div className={`w-full ${barH} bg-[rgba(255,255,255,0.05)] rounded-full overflow-hidden`}>
         <div
-          className={[
-            'h-full rounded-full',
-            'bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600',
-            'transition-all duration-700 ease-out',
-            'shadow-sm shadow-primary-500/30',
-          ].join(' ')}
+          className="h-full rounded-full bg-gradient-to-r from-[#f7f8f8] to-[#d0d6e0] transition-all duration-500 ease-out"
           style={{ width: `${percentage}%` }}
           role="progressbar"
           aria-valuenow={value}

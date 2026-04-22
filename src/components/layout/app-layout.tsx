@@ -1,8 +1,8 @@
 import { type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderPlus, LogOut, Mic, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, FolderPlus, LogOut, User } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
-import { useDarkMode } from '../../hooks/use-dark-mode'
+import { Logo } from '../ui/logo'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -15,7 +15,6 @@ const navItems = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { signOut, user } = useAuth()
-  const { isDark, toggle } = useDarkMode()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -23,141 +22,122 @@ export function AppLayout({ children }: AppLayoutProps) {
     navigate('/login')
   }
 
-  const initials = (user?.user_metadata?.full_name as string | undefined)
-    ?.split(' ')
+  const fullName = (user?.user_metadata?.full_name as string | undefined) || user?.email?.split('@')[0] || ''
+  const initials = fullName
+    .split(' ')
     .slice(0, 2)
     .map((n: string) => n[0])
     .join('')
-    .toUpperCase() ?? '?'
+    .toUpperCase() || '?'
 
   return (
-    <div className="min-h-screen bg-sand-50 dark:bg-sand-950">
+    <div className="min-h-screen bg-[#08090a] text-[#f7f8f8]">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[240px] lg:flex-col bg-white dark:bg-sand-950 border-r border-sand-200/70 dark:border-sand-800/70">
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[240px] lg:flex-col bg-[#0f1011] border-r border-[rgba(255,255,255,0.05)]">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-6 border-b border-sand-100 dark:border-sand-800/50">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-md shadow-primary-500/30">
-            <Mic className="w-4.5 h-4.5 text-white" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-secondary-500 border-2 border-white dark:border-sand-950" />
-          </div>
-          <div>
-            <span
-              className="block text-lg font-extrabold text-sand-900 dark:text-sand-100 leading-none"
-              style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-            >
-              Baat-IA
-            </span>
-            <span className="text-[10px] font-medium text-sand-400 uppercase tracking-widest">Datasets vocaux</span>
-          </div>
+        <div className="flex items-center gap-2 px-5 py-5 border-b border-[rgba(255,255,255,0.05)]">
+          <Logo size={22} />
+          <span
+            className="ml-auto inline-flex items-center px-2 h-[18px] rounded-full text-[10px] text-[#d0d6e0] border border-[rgba(255,255,255,0.2)]"
+            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+          >
+            Beta
+          </span>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-1">
-          <p className="px-3 mb-3 text-[10px] font-bold text-sand-400 uppercase tracking-widest">Navigation</p>
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          <p
+            className="px-2.5 mb-2 text-[10px] text-[#62666d] uppercase tracking-[0.08em]"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            Navigation
+          </p>
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 [
-                  'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                  'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150',
                   isActive
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'text-sand-600 hover:bg-sand-100 hover:text-sand-900 dark:text-sand-400 dark:hover:bg-sand-800/70 dark:hover:text-sand-200',
+                    ? 'bg-[rgba(255,255,255,0.04)] text-[#f7f8f8]'
+                    : 'text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.03)] hover:text-[#f7f8f8]',
                 ].join(' ')
               }
+              style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary-500" />
-                  )}
-                  <Icon className="w-4.5 h-4.5 shrink-0" />
-                  {label}
-                </>
-              )}
+              <Icon className="w-4 h-4 shrink-0 opacity-80" strokeWidth={1.75} />
+              {label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Bottom — Utilisateur */}
-        <div className="px-3 py-4 border-t border-sand-100 dark:border-sand-800/50 space-y-1">
-          {/* User info — lien vers /account */}
+        {/* Bottom */}
+        <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.05)] space-y-0.5">
           <NavLink
             to="/account"
             className={({ isActive }) =>
               [
-                'flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl transition-colors',
+                'flex items-center gap-3 px-2.5 py-2 mb-1 rounded-md transition-colors',
                 isActive
-                  ? 'bg-primary-50 dark:bg-primary-900/20'
-                  : 'hover:bg-sand-100 dark:hover:bg-sand-800/70',
+                  ? 'bg-[rgba(255,255,255,0.04)]'
+                  : 'hover:bg-[rgba(255,255,255,0.03)]',
               ].join(' ')
             }
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
+            <div className="w-7 h-7 rounded-full bg-[#3e3e44] flex items-center justify-center text-[#f7f8f8] text-[10px] shrink-0"
+              style={{ fontWeight: 590 }}
+            >
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-sand-800 dark:text-sand-200 truncate">
-                {(user?.user_metadata?.full_name as string | undefined) || user?.email?.split('@')[0]}
+              <p
+                className="text-[12px] text-[#f7f8f8] truncate"
+                style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+              >
+                {fullName}
               </p>
-              <p className="text-[10px] text-sand-400 truncate">{user?.email}</p>
+              <p className="text-[11px] text-[#62666d] truncate" style={{ fontFamily: 'var(--font-mono)' }}>
+                {user?.email}
+              </p>
             </div>
           </NavLink>
 
           <button
-            onClick={toggle}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sand-600 hover:bg-sand-100 hover:text-sand-900 dark:text-sand-400 dark:hover:bg-sand-800/70 dark:hover:text-sand-200 transition-all duration-200 w-full"
-            aria-label="Basculer le thème"
-          >
-            {isDark ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-            {isDark ? 'Mode clair' : 'Mode sombre'}
-          </button>
-          <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sand-600 hover:bg-red-50 hover:text-red-600 dark:text-sand-400 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all duration-200 w-full"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] text-[#8a8f98] hover:bg-[rgba(255,255,255,0.03)] hover:text-[#f7f8f8] transition-colors w-full"
+            style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
           >
-            <LogOut className="w-4.5 h-4.5" />
+            <LogOut className="w-4 h-4 shrink-0 opacity-80" strokeWidth={1.75} />
             Se déconnecter
           </button>
         </div>
       </aside>
 
       {/* Mobile header */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-40 bg-white/90 dark:bg-sand-950/90 backdrop-blur-lg border-b border-sand-200/70 dark:border-sand-800/70">
+      <header className="lg:hidden fixed top-0 inset-x-0 z-40 bg-[rgba(8,9,10,0.9)] backdrop-blur-lg border-b border-[rgba(255,255,255,0.05)]">
         <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-sm shadow-primary-500/30">
-              <Mic className="w-4 h-4 text-white" />
-            </div>
-            <span
-              className="text-lg font-extrabold text-sand-900 dark:text-sand-100"
-              style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-            >
-              Baat-IA
-            </span>
-          </div>
-          <button
-            onClick={toggle}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-sand-100 dark:hover:bg-sand-800 transition-colors text-sand-600 dark:text-sand-400"
-            aria-label="Basculer le thème"
+          <Logo size={20} />
+          <NavLink
+            to="/account"
+            className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors text-[#d0d6e0]"
+            aria-label="Mon compte"
           >
-            {isDark ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-          </button>
+            <User className="w-4 h-4" strokeWidth={1.75} />
+          </NavLink>
         </div>
       </header>
 
       {/* Content */}
       <main className="lg:pl-[240px] min-w-0 overflow-x-hidden">
         <div className="pt-14 lg:pt-0 pb-20 lg:pb-0 w-full">
-          <div className="animate-fade-in-up">
-            {children}
-          </div>
+          <div className="animate-fade-in-up">{children}</div>
         </div>
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-sand-950/90 backdrop-blur-lg border-t border-sand-200/70 dark:border-sand-800/70">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[rgba(8,9,10,0.9)] backdrop-blur-lg border-t border-[rgba(255,255,255,0.05)]">
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -165,22 +145,22 @@ export function AppLayout({ children }: AppLayoutProps) {
               to={to}
               className={({ isActive }) =>
                 [
-                  'flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[11px] font-semibold transition-all duration-200',
-                  isActive
-                    ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                    : 'text-sand-500 dark:text-sand-500 hover:text-sand-700 dark:hover:text-sand-300',
+                  'flex flex-col items-center gap-1 px-4 py-1.5 rounded-md text-[10px] transition-colors',
+                  isActive ? 'text-[#f7f8f8]' : 'text-[#62666d] hover:text-[#d0d6e0]',
                 ].join(' ')
               }
+              style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
               {label}
             </NavLink>
           ))}
           <button
             onClick={handleSignOut}
-            className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[11px] font-semibold text-sand-500 dark:text-sand-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-md text-[10px] text-[#62666d] hover:text-[#f87171] transition-colors"
+            style={{ fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
             Quitter
           </button>
         </div>

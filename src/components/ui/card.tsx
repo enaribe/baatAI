@@ -3,23 +3,26 @@ import type { HTMLAttributes, ReactNode } from 'react'
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
   hover?: boolean
-  accent?: boolean
+  variant?: 'default' | 'panel' | 'featured'
 }
 
-export function Card({ children, hover = false, accent = false, className = '', ...rest }: CardProps) {
+const variantClasses: Record<NonNullable<CardProps['variant']>, string> = {
+  // Fond tint 0.02, border 0.08, radius 8px — la card par défaut
+  default: 'bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[8px]',
+  // Panel plus sombre et opaque
+  panel: 'bg-[#0f1011] border border-[rgba(255,255,255,0.05)] rounded-[12px]',
+  // Card featured : radius plus grand, fond légèrement plus lumineux
+  featured: 'bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-[12px]',
+}
+
+export function Card({ children, hover = false, variant = 'default', className = '', ...rest }: CardProps) {
   return (
     <div
       className={[
-        'rounded-2xl',
-        'bg-white dark:bg-sand-900',
-        'border border-sand-200/60 dark:border-sand-800',
-        'shadow-md',
-        accent ? 'border-l-4 border-l-primary-500' : '',
-        hover ? [
-          'transition-all duration-250 ease-out cursor-pointer',
-          'hover:-translate-y-1 hover:shadow-lg hover:shadow-primary-500/8',
-          'hover:border-sand-300 dark:hover:border-sand-700',
-        ].join(' ') : '',
+        variantClasses[variant],
+        hover
+          ? 'transition-colors duration-150 cursor-pointer hover:bg-[rgba(255,255,255,0.04)]'
+          : '',
         className,
       ].join(' ')}
       {...rest}
@@ -36,7 +39,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ children, className = '' }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-4 border-b border-sand-100 dark:border-sand-800/70 ${className}`}>
+    <div className={`px-5 py-4 border-b border-[rgba(255,255,255,0.05)] ${className}`}>
       {children}
     </div>
   )
@@ -48,9 +51,5 @@ interface CardContentProps {
 }
 
 export function CardContent({ children, className = '' }: CardContentProps) {
-  return (
-    <div className={`px-6 py-4 ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`px-5 py-4 ${className}`}>{children}</div>
 }

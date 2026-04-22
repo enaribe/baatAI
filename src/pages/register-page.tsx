@@ -1,18 +1,22 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import type { FormEvent, ReactNode } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/use-auth'
 import {
-  Loader2, Mic, AlertCircle, User, Mail, Lock, Building2,
-  FolderOpen, ChevronRight, ArrowLeft,
+  Loader2, AlertCircle, User, Mail, Lock, Building2,
+  Database, Mic, ArrowRight,
 } from 'lucide-react'
+import { PublicLayout } from '../components/layout/public-layout'
+import { Field } from '../components/ui/field'
+import { Button } from '../components/ui/button'
 
-type Step = 'choose' | 'client-form'
+type Role = 'client' | 'speaker' | null
 
 export function RegisterPage() {
   const { signUp, user, loading: authLoading, role } = useAuth()
-  const [step, setStep] = useState<Step>('choose')
+  const navigate = useNavigate()
 
+  const [selectedRole, setSelectedRole] = useState<Role>(null)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,8 +26,8 @@ export function RegisterPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sand-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-screen flex items-center justify-center bg-[#08090a]">
+        <Loader2 className="w-6 h-6 animate-spin text-[#d0d6e0]" />
       </div>
     )
   }
@@ -34,244 +38,325 @@ export function RegisterPage() {
     return <Navigate to="/dashboard" replace />
   }
 
+  const canSubmit =
+    fullName.trim().length >= 2 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+    password.length >= 6
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
-      return
-    }
+    if (!canSubmit) return
     setLoading(true)
-    const { error: signUpError } = await signUp(email, password, fullName, 'client', organization || undefined)
+    const { error: signUpError } = await signUp(
+      email.trim(), password, fullName.trim(), 'client', organization || undefined,
+    )
     if (signUpError) {
       setError(signUpError.message)
       setLoading(false)
-      return
     }
-    setLoading(false)
   }
-
-  // ── Étape 1 : choix du rôle ──────────────────────────────────────────────
-
-  if (step === 'choose') {
-    return (
-      <div className="w-full">
-        <div className="text-center mb-8">
-          <div className="relative inline-flex items-center justify-center mb-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
-              <Mic className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute inset-0 rounded-2xl bg-primary-500/20 blur-md scale-110 pointer-events-none" />
-          </div>
-          <h1
-            className="text-3xl font-extrabold text-sand-900 leading-none"
-            style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.03em' }}
-          >
-            Rejoindre Baat-IA
-          </h1>
-          <p className="text-sand-500 mt-2 text-sm">Choisissez votre profil pour commencer</p>
-        </div>
-
-        <div className="space-y-3">
-          {/* Carte client */}
-          <button
-            onClick={() => setStep('client-form')}
-            className="w-full group bg-white rounded-2xl border-2 border-sand-200 hover:border-primary-400 p-5 text-left transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/10 hover:-translate-y-0.5"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center group-hover:bg-primary-500 transition-colors duration-200">
-                  <FolderOpen className="w-6 h-6 text-primary-600 group-hover:text-white transition-colors duration-200" />
-                </div>
-                <div>
-                  <p
-                    className="font-extrabold text-sand-900 text-base leading-none mb-1"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
-                    Je crée des datasets
-                  </p>
-                  <p className="text-sm text-sand-500 leading-snug">
-                    Entreprise, chercheur, labo — je collecte des voix pour mes projets IA
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-sand-300 group-hover:text-primary-500 shrink-0 transition-colors duration-200" />
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-3 ml-16">
-              {['Projets vocaux', 'Recrutement locuteurs', 'Export dataset', 'Contrôle qualité'].map(tag => (
-                <span key={tag} className="text-[11px] font-semibold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </button>
-
-          {/* Carte locuteur */}
-          <Link
-            to="/speaker/register"
-            className="w-full group bg-white rounded-2xl border-2 border-sand-200 hover:border-secondary-400 p-5 text-left transition-all duration-200 hover:shadow-lg hover:shadow-secondary-500/10 hover:-translate-y-0.5 block"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center group-hover:bg-secondary-500 transition-colors duration-200">
-                  <Mic className="w-6 h-6 text-secondary-600 group-hover:text-white transition-colors duration-200" />
-                </div>
-                <div>
-                  <p
-                    className="font-extrabold text-sand-900 text-base leading-none mb-1"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
-                    J'enregistre ma voix
-                  </p>
-                  <p className="text-sm text-sand-500 leading-snug">
-                    Locuteur — je participe à des projets et je gagne de l'argent
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-sand-300 group-hover:text-secondary-500 shrink-0 transition-colors duration-200" />
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-3 ml-16">
-              {['Projets rémunérés', 'Wave / Orange Money', 'Depuis son téléphone', 'Wolof, Pulaar…'].map(tag => (
-                <span key={tag} className="text-[11px] font-semibold text-secondary-700 bg-secondary-50 px-2.5 py-0.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </Link>
-        </div>
-
-        <p className="text-center mt-6 text-sand-500 text-sm">
-          Déjà un compte ?{' '}
-          <Link to="/login" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300">
-            Se connecter
-          </Link>
-        </p>
-      </div>
-    )
-  }
-
-  // ── Étape 2 : formulaire client ──────────────────────────────────────────
 
   return (
-    <div className="w-full">
-      <div className="text-center mb-7">
-        <div className="relative inline-flex items-center justify-center mb-4">
-          <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center">
-            <FolderOpen className="w-6 h-6 text-primary-600" />
-          </div>
-        </div>
-        <h1
-          className="text-2xl font-extrabold text-sand-900 leading-none"
-          style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.03em' }}
-        >
-          Compte client
-        </h1>
-        <p className="text-sand-500 mt-1.5 text-sm">Créez vos projets de datasets vocaux</p>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-xl shadow-sand-900/8 border border-sand-200/60 p-7">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="fullName" className="block text-sm font-semibold text-sand-700 mb-1.5">Nom complet</label>
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="fullName"
-                type="text"
-                required
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="Amadou Diallo"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-sand-700 mb-1.5">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="votre@email.com"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-sand-700 mb-1.5">Mot de passe</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="Min. 6 caractères"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="organization" className="block text-sm font-semibold text-sand-700 mb-1.5">
-              Organisation <span className="text-sand-400 font-normal text-xs">(optionnel)</span>
-            </label>
-            <div className="relative">
-              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-400 pointer-events-none" />
-              <input
-                id="organization"
-                type="text"
-                value={organization}
-                onChange={e => setOrganization(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent focus:bg-white"
-                placeholder="Université, labo, entreprise..."
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg shadow-primary-500/25 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-1"
+    <PublicLayout
+      brandTitle={<>Les voix de<br />l'Afrique, prêtes<br />pour l'IA.</>}
+      brandSubtitle="Rejoignez Baat-IA pour construire ou alimenter des datasets vocaux en 34 langues africaines."
+    >
+      {/* En-tête top bar */}
+      <div className="flex justify-between items-center">
+        <span className="text-[11px] text-[#62666d]" style={{ fontFamily: 'var(--font-mono)' }}>
+          /register
+        </span>
+        <span className="text-[12px] text-[#62666d]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}>
+          Déjà un compte ?{' '}
+          <Link
+            to="/login"
+            className="text-[#f7f8f8] underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
+            style={{ textUnderlineOffset: 3 }}
           >
-            {loading ? (
-              <span className="inline-flex items-center gap-2 justify-center">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Création...
-              </span>
-            ) : 'Créer mon compte client'}
-          </button>
-        </form>
+            Se connecter
+          </Link>
+        </span>
       </div>
 
-      <button
-        onClick={() => setStep('choose')}
-        className="flex items-center gap-1.5 mx-auto mt-5 text-sand-500 text-sm hover:text-sand-700 transition-colors"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Changer de type de compte
-      </button>
+      {/* Contenu */}
+      <div className="flex-1 flex flex-col justify-center max-w-[580px] w-full mx-auto mt-8">
+        <h1
+          className="text-[28px] sm:text-[32px] text-[#f7f8f8] m-0"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            fontWeight: 510,
+            lineHeight: 1.1,
+            letterSpacing: '-0.7px',
+          }}
+        >
+          Rejoindre Baat-IA
+        </h1>
+        <p
+          className="text-[15px] text-[#8a8f98] mt-2.5"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            lineHeight: 1.55,
+          }}
+        >
+          Choisissez votre profil pour commencer.
+        </p>
 
-      <p className="text-center mt-3 text-sand-500 text-sm">
-        Déjà un compte ?{' '}
-        <Link to="/login" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors underline underline-offset-2 decoration-primary-300">
-          Se connecter
-        </Link>
-      </p>
-    </div>
+        {/* Cartes profil */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+          <ProfileCard
+            icon={<Database className="w-[18px] h-[18px]" strokeWidth={1.75} />}
+            title="Je crée des datasets"
+            subtitle="Entreprise, chercheur, labo — je collecte des voix pour mes projets IA."
+            chips={['Projets vocaux', 'Recrutement locuteurs', 'Export dataset', 'Contrôle qualité']}
+            selected={selectedRole === 'client'}
+            onClick={() => setSelectedRole('client')}
+          />
+          <ProfileCard
+            icon={<Mic className="w-[18px] h-[18px]" strokeWidth={1.75} />}
+            title="J'enregistre ma voix"
+            subtitle="Locuteur — je participe à des projets et je gagne de l'argent."
+            chips={['Projets rémunérés', 'Wave / Orange Money', 'Depuis son téléphone', 'Wolof, Pulaar…']}
+            selected={selectedRole === 'speaker'}
+            onClick={() => setSelectedRole('speaker')}
+          />
+        </div>
+
+        {/* Formulaire client inline */}
+        {selectedRole === 'client' && (
+          <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3.5 animate-fade-in">
+            <div
+              className="text-[13px] text-[#f7f8f8]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontFeatureSettings: "'cv01','ss03'",
+                fontWeight: 590,
+              }}
+            >
+              Créer votre compte client
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <Field
+              label="Nom complet"
+              icon={<User className="w-3.5 h-3.5" strokeWidth={1.75} />}
+              placeholder="Aminata Diop"
+              required
+              value={fullName}
+              onChange={setFullName}
+            />
+            <Field
+              label="Email"
+              type="email"
+              icon={<Mail className="w-3.5 h-3.5" strokeWidth={1.75} />}
+              placeholder="aminata@orange.sn"
+              required
+              value={email}
+              onChange={setEmail}
+            />
+            <Field
+              label="Mot de passe"
+              type="password"
+              icon={<Lock className="w-3.5 h-3.5" strokeWidth={1.75} />}
+              placeholder="6 caractères minimum"
+              required
+              value={password}
+              onChange={setPassword}
+              hint={
+                password.length > 0 && password.length < 6
+                  ? `${password.length}/6`
+                  : '6 caractères minimum.'
+              }
+            />
+            <Field
+              label="Organisation"
+              icon={<Building2 className="w-3.5 h-3.5" strokeWidth={1.75} />}
+              placeholder="Optionnel"
+              value={organization}
+              onChange={setOrganization}
+            />
+
+            <div className="mt-2.5">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={loading}
+                disabled={!canSubmit}
+                iconRight={!loading ? <ArrowRight className="w-4 h-4" strokeWidth={1.75} /> : undefined}
+                className="w-full justify-center"
+              >
+                Créer mon compte client
+              </Button>
+            </div>
+            <div
+              className="text-[11px] text-[#62666d] text-center"
+              style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+            >
+              Vous arriverez sur votre espace client.
+            </div>
+          </form>
+        )}
+
+        {/* Redirect speaker */}
+        {selectedRole === 'speaker' && (
+          <div
+            className="mt-7 flex items-center gap-4 p-5 rounded-[10px] border border-[rgba(255,255,255,0.08)]"
+            style={{ background: 'rgba(255,255,255,0.02)' }}
+          >
+            <div
+              className="w-9 h-9 flex items-center justify-center rounded-md shrink-0 text-[#f7f8f8]"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <Mic className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div
+                className="text-[14px] text-[#f7f8f8]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontFeatureSettings: "'cv01','ss03'",
+                  fontWeight: 590,
+                }}
+              >
+                Inscription locuteur en 5 étapes
+              </div>
+              <div
+                className="text-[12px] text-[#8a8f98] mt-0.5"
+                style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+              >
+                Compte, identité, langues, présentation, récap.
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              size="md"
+              iconRight={<ArrowRight className="w-3.5 h-3.5" strokeWidth={1.75} />}
+              onClick={() => navigate('/speaker/register')}
+            >
+              Continuer
+            </Button>
+          </div>
+        )}
+
+        {!selectedRole && (
+          <div
+            className="mt-6 text-[12px] text-[#62666d] text-center"
+            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+          >
+            Sélectionnez un profil pour continuer.
+          </div>
+        )}
+      </div>
+    </PublicLayout>
+  )
+}
+
+/* ---------- ProfileCard ---------- */
+interface ProfileCardProps {
+  icon: ReactNode
+  title: string
+  subtitle: string
+  chips: string[]
+  selected: boolean
+  onClick: () => void
+}
+
+function ProfileCard({ icon, title, subtitle, chips, selected, onClick }: ProfileCardProps) {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="relative flex flex-col gap-3 p-5 rounded-[12px] text-left cursor-pointer min-h-[200px]"
+      style={{
+        background: selected
+          ? 'rgba(255,255,255,0.05)'
+          : hover
+            ? 'rgba(255,255,255,0.035)'
+            : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${selected ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: selected ? '0 0 0 3px rgba(255,255,255,0.05)' : 'none',
+        transition: 'all 140ms cubic-bezier(0.22,1,0.36,1)',
+      }}
+    >
+      <div
+        className="w-9 h-9 flex items-center justify-center rounded-lg text-[#f7f8f8]"
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+      >
+        {icon}
+      </div>
+      <div>
+        <div
+          className="text-[17px] text-[#f7f8f8]"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            fontWeight: 590,
+            letterSpacing: '-0.2px',
+          }}
+        >
+          {title}
+        </div>
+        <div
+          className="text-[13px] text-[#8a8f98] mt-1.5"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            lineHeight: 1.5,
+          }}
+        >
+          {subtitle}
+        </div>
+      </div>
+      <div className="flex gap-1.5 flex-wrap mt-auto">
+        {chips.map((c) => (
+          <span
+            key={c}
+            className="text-[11px] text-[#d0d6e0] px-2.5 py-[3px] rounded-full"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontFeatureSettings: "'cv01','ss03'",
+              fontWeight: 510,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+      {/* Radio */}
+      <div
+        className="absolute top-4 right-4 w-[18px] h-[18px] rounded-full flex items-center justify-center"
+        style={{
+          border: `1.5px solid ${selected ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
+        }}
+      >
+        {selected && (
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ background: '#f7f8f8' }}
+          />
+        )}
+      </div>
+    </button>
   )
 }

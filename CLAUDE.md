@@ -102,85 +102,49 @@ Le serveur Python est géré par le data scientist. Il reçoit les webhooks et U
 
 ---
 
-# Design System — Identité Visuelle Baat-IA
+# Design System — Baat-IA (Linear-inspired dark-native)
 
-Tu es aussi un designer UI/UX senior. Chaque élément visuel que tu produis doit être intentionnel, jamais un template Tailwind par défaut. Le design reflète une fintech africaine moderne (pense Wave, Flutterwave), pas une startup Silicon Valley.
+**Source de vérité** : le fichier `design.md` à la racine du repo décrit tout le système (palette, typographie, composants, principes). Les tokens sont définis dans `src/styles/design-tokens.css`. À chaque création ou modification d'écran, se référer à `design.md` — ne jamais dévier sans raison.
 
-## Palette de couleurs
+## Principes non-négociables
 
-Inspirée de l'Afrique de l'Ouest — pas de bleu corporate.
+- **Dark-mode natif** : tout le produit est en dark. Fond par défaut `#08090a`, pas d'alternative claire. Le toggle de dark mode est supprimé.
+- **Typographie** : Inter Variable partout, avec `font-feature-settings: 'cv01', 'ss03'` activées. Weight 510 par défaut, 590 pour l'emphase forte, 400 pour la lecture. Jamais de 700.
+- **Palette** : quasi-achromatique (blanc/gris sur fond near-black). Un seul accent chromatique : indigo-violet `#5e6ad2` (CTA primaire) et `#7170ff` (interactif). Réservé aux CTA et éléments actifs — jamais décoratif.
+- **Bordures** : toujours semi-transparentes blanches (`rgba(255,255,255,0.05)` à `0.08`). Jamais de solides sombres sur fond sombre.
+- **Surfaces** : stacking par luminance (tints `0.02 → 0.04 → 0.05`) — jamais de fond solide de couleur différente.
+- **Texte** : `#f7f8f8` en primaire (pas `#ffffff` pur), `#d0d6e0` body, `#8a8f98` muted, `#62666d` disabled.
+- **Mono** : JetBrains Mono pour les étiquettes techniques, metadata, codes.
 
-- **Primaire** : orange/ambre chaud (soleil sahélien, énergie, confiance). Utilisé pour les CTA, liens, éléments actifs.
-- **Secondaire** : vert profond (baobab, croissance). Utilisé pour les états de succès, validations.
-- **Accent** : indigo/violet profond (technologie, innovation). Utilisé pour les badges, accents visuels.
-- **Neutres** : gris chauds tirant vers le sable, pas des gris bleutés froids.
-- **Sémantiques** : succès=vert, erreur=rouge terre cuite, warning=ambre, info=indigo.
-- **Dark mode** : fonds sombres CHAUDS (ex: #1C1917, pas du #000 ni du gris bleuté). Texte blanc cassé (#F5F0E8), pas du #FFF pur. Les cards ont un fond légèrement plus clair que le background avec un border subtil.
+## Composants clés (voir design.md §4)
 
-Chaque couleur a une échelle de 50 à 950 définie dans design-tokens.css et étendue dans tailwind.config.ts.
+- **Button** : `primary` (gradient blanc→gris, rare), `ghost` (défaut), `subtle`, `pill`, `toolbar`. Radius 6px. Jamais de fond coloré saturé.
+- **Card** : tint `0.02`, border `0.08`, radius `8px` (ou `12px` pour featured).
+- **Input** : fond tint `0.02`, border `0.08`, focus ring multi-layer.
+- **Badge** : `neutral` (pill, border `#23252a`), `status` (avec dot), `subtle` (rect 2px radius).
+- **Elevation** : communiquée par la luminance du fond, pas par des ombres sombres (qui sont invisibles sur fond sombre).
 
-## Typographie
+## Signature visuelle
 
-- **Titres** : "Plus Jakarta Sans", weight 700-800, line-height serré (0.95-1.05)
-  - H1 : clamp(2rem, 5vw, 3.5rem)
-  - H2 : clamp(1.5rem, 3vw, 2.25rem)
-  - H3 : clamp(1.125rem, 2vw, 1.5rem)
-- **Body** : "Inter", 16px, weight 400, line-height 1.65
-- **Chiffres/stats** : "Inter" avec font-variant-numeric tabular-nums
-- **Page locuteur** : la phrase à lire en clamp(20px, 5vw, 32px), weight 600
+- **Waveform animée** (voir `Sections.jsx` landing pour le pattern) : barres verticales en gradient blanc→gris, animation sinusoïdale. C'est la signature de marque.
+- **Dataset preview** : panneau window chrome `#0f1011` avec 3 dots macOS et URL monospace dans un input pill — pour les démos produit.
 
-## Composants UI — Règles de style
+## Règles globales
 
-**Button** : 3 variantes (primary avec gradient subtil, secondary, ghost), 3 tailles (sm/md/lg). Hover = scale(1.02) + shadow grandissante + transition 200ms ease-out. Active = scale(0.98). Disabled = opacity 0.5. Loading state avec spinner intégré. Les boutons ont du caractère — pas des rectangles plats ennuyeux.
-
-**Card** : border-radius 16px, shadow subtile, border 1px opacity 0.08. Hover = translateY(-2px) + shadow augmentée. Fond légèrement différent du background (pas du blanc pur sur blanc pur).
-
-**Input** : focus ring en couleur accent (pas le ring bleu par défaut navigateur). Label au-dessus. État erreur avec message rouge et icône. Transition smooth sur le focus.
-
-**Badge** : pill shape, texte petit uppercase. Couleurs distinctes par statut : ASR=indigo, TTS=orange, validé=vert, rejeté=rouge, pending=gris.
-
-**ProgressBar** : gradient dans la barre, animation de remplissage fluide.
-
-**AudioPlayer** : mini lecteur inline compact (play/pause, barre de progression, durée), intégrable dans un tableau.
-
-**Tableaux** : jamais des `<table>` HTML bruts. Stylés avec header sticky, rows alternées subtiles, hover highlight sur les rows. Pagination stylée.
-
-## Éléments signature
-
-- **Pattern wax** : un motif SVG ondulé inspiré des textiles ouest-africains. Utilisé en fond TRÈS léger (opacity 0.03-0.05) sur certaines sections, ou comme border décoratif. Jamais envahissant.
-- **Icône micro animée** : pulse quand on enregistre. C'est l'icône centrale de la marque.
-- **Transition de page** : fade-in-up 200ms sur le contenu au changement de route.
-- **Count-up** : les gros chiffres du dashboard s'animent de 0 à leur valeur au chargement.
-
-## Animations
-
-Toutes les animations utilisent uniquement transform et opacity (GPU-friendly).
-Toutes respectent `@media (prefers-reduced-motion: reduce)`.
-
-- `pulse-record` : pulsation rouge pour le bouton d'enregistrement actif
-- `fade-in-up` : translateY(20px) + opacity 0→1, durée 400ms, ease-out
-- `slide-in-right` : pour les modales et drawers
-- `progress-fill` : remplissage de barre de progression
-- `shimmer` : skeleton loading pour les états pending
-- `scale-in` : scale(0.95→1) + opacity, pour les modales et confirmations
+- Pas de pattern wax ni de motifs africains ornementaux
+- Pas de gradient orange/vert ni de couleurs chaudes
+- Pas d'emoji dans les écrans applicatifs (sauf signalé)
+- Les composants doivent se conformer strictement au `design.md` — en cas de doute, ne pas improviser, demander ou référer au fichier
 
 ## Layouts
 
-**AppLayout** (pages authentifiées) :
-- Desktop ≥1024px : sidebar fixe 240px à gauche + contenu principal. Sidebar = logo + nav verticale avec icônes + profil utilisateur en bas. Item actif = fond coloré + indicateur vertical gauche 3px couleur primaire.
-- Mobile <1024px : header fixe en haut (logo + dark mode toggle) + bottom navigation (icônes, item actif coloré). Contenu scroll entre les deux.
+**AppLayout / SpeakerLayout** (authentifié) :
+- Desktop ≥1024px : sidebar fixe 240px sur fond `#0f1011` (panel) + contenu sur fond `#08090a` (marketing). Item actif = fond tint `0.04` + texte `#f7f8f8`. Pas d'indicateur vertical coloré.
+- Mobile <1024px : header fixe en haut (logo + badge Beta éventuel) + bottom nav (icônes, item actif lumineux). Contenu scroll entre les deux.
 
-**PublicLayout** (login, register) : contenu centré verticalement, card max 420px, fond avec pattern wax en filigrane léger.
+**PublicLayout** (login, register) : contenu centré, card `tint-02` avec border `0.08` radius `12px`, max 420px.
 
-**RecordPage** : AUCUN layout. Fullscreen. Flex column. height: 100dvh. Pas de scroll. Zone haute 20% (compteur progression), zone centrale 50% (LA PHRASE en gros), zone basse 30% (bouton micro + contrôles).
-
-## Dark mode
-
-- Toggle soleil/lune dans la navigation
-- Respecte prefers-color-scheme comme défaut
-- Stocké en localStorage
-- Fonds sombres CHAUDS, texte blanc cassé, cards avec border subtil
-- Pas de dark mode sur la page /record/:token — fond clair uniquement pour lisibilité maximale
+**RecordPage** : fullscreen, flex column, `100dvh`. Zone haute (20%) compteur de progression en mono, zone centrale (50%) LA PHRASE en Inter 510 `#f7f8f8`, zone basse (30%) bouton micro + waveform. Fond `#08090a` comme le reste — plus d'exception "fond clair".
 
 ## Responsive
 

@@ -1,102 +1,235 @@
 /* ===========================
-   Baat-IA Design Tokens v2
-   Fintech africaine moderne
+   Baat-IA Design Tokens v3
+   Linear-inspired dark-mode-native
+   Voir design.md à la racine
    =========================== */
 
 @theme {
-  /* --- Primaire : Orange/Ambre (soleil sahélien) --- */
-  --color-primary-50: #FFF8F0;
-  --color-primary-100: #FFEDD5;
-  --color-primary-200: #FED7AA;
-  --color-primary-300: #FDBA74;
-  --color-primary-400: #FB923C;
-  --color-primary-500: #F97316;
-  --color-primary-600: #EA580C;
-  --color-primary-700: #C2410C;
-  --color-primary-800: #9A3412;
-  --color-primary-900: #7C2D12;
-  --color-primary-950: #431407;
+  /* ---------- Fonds (stacking par luminance) ---------- */
+  --color-bg: #08090a;            /* marketing, page canvas par défaut */
+  --color-bg-deep: #010102;       /* hero only */
+  --color-bg-panel: #0f1011;      /* sidebar, panels */
+  --color-bg-surface: #191a1b;    /* cards, dropdowns */
+  --color-bg-surface-2: #28282c;  /* hover, elevated */
 
-  /* --- Secondaire : Vert profond (baobab) --- */
-  --color-secondary-50: #F0FDF4;
-  --color-secondary-100: #DCFCE7;
-  --color-secondary-200: #BBF7D0;
-  --color-secondary-300: #86EFAC;
-  --color-secondary-400: #4ADE80;
-  --color-secondary-500: #22C55E;
-  --color-secondary-600: #16A34A;
-  --color-secondary-700: #15803D;
-  --color-secondary-800: #166534;
-  --color-secondary-900: #14532D;
-  --color-secondary-950: #052E16;
+  /* ---------- Tints (superposés sur fond sombre) ---------- */
+  --color-tint-02: rgba(255, 255, 255, 0.02);
+  --color-tint-03: rgba(255, 255, 255, 0.03);
+  --color-tint-04: rgba(255, 255, 255, 0.04);
+  --color-tint-05: rgba(255, 255, 255, 0.05);
+  --color-tint-08: rgba(255, 255, 255, 0.08);
 
-  /* --- Accent : Indigo/Violet profond (technologie) --- */
-  --color-accent-50: #EEF2FF;
-  --color-accent-100: #E0E7FF;
-  --color-accent-200: #C7D2FE;
-  --color-accent-300: #A5B4FC;
-  --color-accent-400: #818CF8;
-  --color-accent-500: #6366F1;
-  --color-accent-600: #4F46E5;
-  --color-accent-700: #4338CA;
-  --color-accent-800: #3730A3;
-  --color-accent-900: #312E81;
-  --color-accent-950: #1E1B4B;
+  /* ---------- Texte ---------- */
+  --color-fg: #f7f8f8;   /* primary (pas pur blanc) */
+  --color-fg-2: #d0d6e0; /* secondary / body */
+  --color-fg-3: #8a8f98; /* tertiary / muted */
+  --color-fg-4: #62666d; /* quaternary / disabled */
 
-  /* --- Neutres : Gris chauds sable --- */
-  --color-sand-50: #FAFAF8;
-  --color-sand-100: #F5F0E8;
-  --color-sand-200: #E8E0D4;
-  --color-sand-300: #D5CAB8;
-  --color-sand-400: #B8A990;
-  --color-sand-500: #9C8D74;
-  --color-sand-600: #7D7060;
-  --color-sand-700: #5F544A;
-  --color-sand-800: #443C34;
-  --color-sand-900: #2C2620;
-  --color-sand-950: #1C1917;
+  /* ---------- Brand ---------- */
+  --color-brand: #5e6ad2;          /* primary CTA (rare) */
+  --color-brand-accent: #7170ff;   /* interactive accent */
+  --color-brand-hi: #828fff;       /* hover accent */
+  --color-brand-lavender: #7a7fad; /* security / muted */
 
-  /* --- Sémantiques --- */
-  --color-success: #16A34A;
-  --color-error: #C0392B;
-  --color-warning: #D97706;
-  --color-info: #4F46E5;
+  /* ---------- Sémantique ---------- */
+  --color-success: #27a644;
+  --color-emerald: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
 
-  /* --- Spacing --- */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
+  /* Shortcuts Tailwind : primary = brand pour compat */
+  --color-primary-500: #5e6ad2;
+  --color-primary-400: #7170ff;
+  --color-primary-300: #828fff;
+  --color-primary-600: #4e5bbf;
+  --color-primary-700: #3f4ba8;
 
-  /* --- Border Radius --- */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  /* ---------- Bordures ---------- */
+  --color-border: #23252a;
+  --color-border-2: #34343a;
+  --color-border-3: #3e3e44;
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-border-std: rgba(255, 255, 255, 0.08);
+  --color-line-tint: #141516;
+  --color-line-tertiary: #18191a;
 
-  /* --- Shadows chaudes --- */
-  --shadow-sm: 0 1px 3px 0 rgb(249 115 22 / 0.04), 0 1px 2px -1px rgb(28 25 23 / 0.04);
-  --shadow-md: 0 4px 12px -2px rgb(249 115 22 / 0.08), 0 2px 6px -2px rgb(28 25 23 / 0.06);
-  --shadow-lg: 0 12px 24px -4px rgb(249 115 22 / 0.10), 0 4px 8px -4px rgb(28 25 23 / 0.08);
-  --shadow-xl: 0 24px 40px -6px rgb(249 115 22 / 0.12), 0 8px 16px -6px rgb(28 25 23 / 0.10);
-  --shadow-warm: 0 8px 32px -4px rgb(249 115 22 / 0.18);
-  --shadow-glow: 0 0 0 3px rgb(249 115 22 / 0.20);
-  --shadow-record: 0 0 0 0 rgb(239 68 68 / 0.5);
+  /* ---------- Radii ---------- */
+  --radius-micro: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-card: 8px;
+  --radius-panel: 12px;
+  --radius-lg: 22px;
+  --radius-pill: 9999px;
 
-  /* --- Typography --- */
-  --font-heading: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* ---------- Shadows / Elevation ---------- */
+  --shadow-subtle: 0 1.2px 0 0 rgba(0, 0, 0, 0.03);
+  --shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  --shadow-inset: inset 0 0 12px 0 rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-dialog:
+    0 8px 2px rgba(0, 0, 0, 0),
+    0 5px 2px rgba(0, 0, 0, 0.01),
+    0 3px 2px rgba(0, 0, 0, 0.04),
+    0 1px 1px rgba(0, 0, 0, 0.07),
+    0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-hero: 0 40px 80px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2);
 
-  /* --- Gradients --- */
-  --gradient-primary: linear-gradient(135deg, #FB923C 0%, #EA580C 100%);
-  --gradient-primary-soft: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
-  --gradient-hero: linear-gradient(135deg, #FFF8F0 0%, #FFEDD5 50%, #FFF8F0 100%);
-  --gradient-dark-hero: linear-gradient(135deg, #2C2620 0%, #1C1917 100%);
-  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
-  --gradient-card-dark: linear-gradient(145deg, rgba(68,60,52,0.6) 0%, rgba(44,38,32,0.8) 100%);
+  /* ---------- Typography ---------- */
+  --font-heading: 'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Berkeley Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ============================================================
+   Base — tout est dark par défaut
+   ============================================================ */
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  font-feature-settings: 'cv01', 'ss03';
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-brand);
+  color: var(--color-fg);
+}
+
+/* Scrollbar dark */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-2);
+  border-radius: 999px;
+  border: 2px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-3);
+}
+
+/* ============================================================
+   Typo helpers (Linear scale)
+   ============================================================ */
+
+.t-display-xl {
+  font-size: 72px;
+  font-weight: 510;
+  line-height: 1;
+  letter-spacing: -1.584px;
+}
+.t-display-lg {
+  font-size: 64px;
+  font-weight: 510;
+  line-height: 1.02;
+  letter-spacing: -1.408px;
+}
+.t-display {
+  font-size: 48px;
+  font-weight: 510;
+  line-height: 1;
+  letter-spacing: -1.056px;
+}
+.t-h1 {
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.13;
+  letter-spacing: -0.704px;
+}
+.t-h2 {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: -0.288px;
+}
+.t-h3 {
+  font-size: 20px;
+  font-weight: 590;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+}
+.t-body-lg {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.165px;
+}
+.t-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.t-body-med {
+  font-size: 16px;
+  font-weight: 510;
+  line-height: 1.5;
+}
+.t-sm {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.165px;
+}
+.t-sm-med {
+  font-size: 15px;
+  font-weight: 510;
+  line-height: 1.6;
+  letter-spacing: -0.165px;
+}
+.t-caption-lg {
+  font-size: 14px;
+  font-weight: 510;
+  line-height: 1.5;
+  letter-spacing: -0.182px;
+}
+.t-caption {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.13px;
+}
+.t-label {
+  font-size: 12px;
+  font-weight: 510;
+  line-height: 1.4;
+}
+.t-micro {
+  font-size: 11px;
+  font-weight: 510;
+  line-height: 1.4;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.t-mono-xs {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
 }

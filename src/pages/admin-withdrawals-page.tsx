@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Loader2, Check, X, Wallet, AlertCircle, Clock, Phone } from 'lucide-react'
+import {
+  Loader2, Check, X, Wallet, AlertCircle, ChevronDown,
+} from 'lucide-react'
 import type { Withdrawal, Profile, WithdrawalStatus } from '../types/database'
+
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
 
 interface WithdrawalWithProfile extends Withdrawal {
   speaker: Pick<Profile, 'full_name'> | null
@@ -11,15 +16,7 @@ const methodLabels: Record<string, string> = {
   wave: 'Wave',
   orange_money: 'Orange Money',
   free_money: 'Free Money',
-  bank: 'Virement bancaire',
-}
-
-const statusConfig: Record<WithdrawalStatus, { label: string; className: string }> = {
-  pending: { label: 'En attente', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  approved: { label: 'Approuvé', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  paid: { label: 'Payé', className: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-900/30 dark:text-secondary-300' },
-  rejected: { label: 'Rejeté', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-  failed: { label: 'Échoué', className: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
+  bank: 'Virement',
 }
 
 export function AdminWithdrawalsPage() {
@@ -30,6 +27,9 @@ export function AdminWithdrawalsPage() {
   const [filter, setFilter] = useState<WithdrawalStatus>('pending')
   const [rejectReason, setRejectReason] = useState<Record<string, string>>({})
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null)
+  const [counts, setCounts] = useState<Record<WithdrawalStatus, number>>({
+    pending: 0, approved: 0, paid: 0, rejected: 0, failed: 0,
+  })
 
   const load = async () => {
     setLoading(true)
@@ -44,17 +44,35 @@ export function AdminWithdrawalsPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
+  const loadCounts = async () => {
+    const statuses: WithdrawalStatus[] = ['pending', 'approved', 'paid', 'rejected']
+    const results = await Promise.all(
+      statuses.map(async (s) => {
+        const { count } = await (supabase
+          .from('withdrawals')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', s) as unknown as Promise<{ count: number | null }>)
+        return [s, count ?? 0] as const
+      }),
+    )
+    setCounts((c) => ({ ...c, ...Object.fromEntries(results) }))
+  }
+
+  useEffect(() => { load(); loadCounts() }, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const approve = async (id: string) => {
     setProcessing(id)
     type DbResult = Promise<{ error: { message: string } | null }>
     const { error: err } = await (supabase
       .from('withdrawals')
-      .update({ status: 'approved', processed_by: (await supabase.auth.getUser()).data.user?.id ?? null, processed_at: new Date().toISOString() } as unknown as never)
+      .update({
+        status: 'approved',
+        processed_by: (await supabase.auth.getUser()).data.user?.id ?? null,
+        processed_at: new Date().toISOString(),
+      } as unknown as never)
       .eq('id', id) as unknown as DbResult)
     if (err) { setError(err.message); setProcessing(null); return }
-    await load()
+    await load(); await loadCounts()
     setProcessing(null)
   }
 
@@ -66,7 +84,7 @@ export function AdminWithdrawalsPage() {
       .update({ status: 'paid', processed_at: new Date().toISOString() } as unknown as never)
       .eq('id', id) as unknown as DbResult)
     if (err) { setError(err.message); setProcessing(null); return }
-    await load()
+    await load(); await loadCounts()
     setProcessing(null)
   }
 
@@ -84,11 +102,11 @@ export function AdminWithdrawalsPage() {
       .eq('id', id) as unknown as DbResult)
     if (err) { setError(err.message); setProcessing(null); return }
     setShowRejectInput(null)
-    await load()
+    await load(); await loadCounts()
     setProcessing(null)
   }
 
-  const filterTabs: { key: WithdrawalStatus; label: string }[] = [
+  const tabs: { key: WithdrawalStatus; label: string }[] = [
     { key: 'pending', label: 'En attente' },
     { key: 'approved', label: 'Approuvés' },
     { key: 'paid', label: 'Payés' },
@@ -96,163 +114,296 @@ export function AdminWithdrawalsPage() {
   ]
 
   return (
-    <div className="max-w-[56rem] mx-auto px-4 py-8">
-      <h1
-        className="text-2xl font-extrabold text-sand-900 dark:text-sand-100 mb-6"
-        style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-      >
-        Gestion des retraits
-      </h1>
+    <div className="min-h-screen">
+      {/* Top bar */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
+        <Wallet className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          Retraits
+        </span>
+
+        <div className="flex items-center gap-1 ml-4 overflow-x-auto">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setFilter(t.key)}
+              className="inline-flex items-center gap-1.5 px-2.5 h-[26px] text-[12px] rounded-md transition-colors whitespace-nowrap"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: filter === t.key ? '#f7f8f8' : '#8a8f98',
+                background: filter === t.key ? 'rgba(255,255,255,0.05)' : 'transparent',
+                border: `1px solid ${filter === t.key ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
+              }}
+            >
+              {t.label}
+              <span className="text-[10px] text-[#62666d] tabular-nums" style={mono}>
+                {counts[t.key]}
+              </span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* Stats row */}
+      <div className="px-5 lg:px-8 py-5 flex items-center gap-6 flex-wrap">
+        <Stat label="en attente" value={String(counts.pending)} color="#fbbf24" />
+        <StatSep />
+        <Stat label="approuvés" value={String(counts.approved)} color="#7170ff" />
+        <StatSep />
+        <Stat label="payés" value={String(counts.paid)} color="#10b981" />
+        <StatSep />
+        <Stat label="rejetés" value={String(counts.rejected)} color="#8a8f98" />
+      </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
+        <div
+          className="mx-5 lg:mx-8 mb-3 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.06)]"
+          style={sans}
+        >
+          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Filtres */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {filterTabs.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={[
-              'px-4 py-2 rounded-xl text-sm font-semibold transition-all',
-              filter === key
-                ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
-                : 'bg-white dark:bg-sand-900 border border-sand-200 dark:border-sand-700 text-sand-600 dark:text-sand-400 hover:border-sand-300',
-            ].join(' ')}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Section header */}
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
+        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          {tabs.find((t) => t.key === filter)?.label}
+        </span>
+        <span className="text-[11px] text-[#62666d]" style={mono}>
+          {withdrawals.length}
+        </span>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
         </div>
       ) : withdrawals.length === 0 ? (
-        <div className="text-center py-16">
-          <Wallet className="w-10 h-10 text-sand-300 mx-auto mb-3" />
-          <p className="text-sand-500 font-semibold">Aucun retrait dans cette catégorie</p>
-        </div>
+        <EmptyState />
       ) : (
-        <div className="space-y-3">
-          {withdrawals.map(w => {
-            const cfg = statusConfig[w.status]
-            return (
-              <div
-                key={w.id}
-                className="bg-white dark:bg-sand-900 rounded-2xl border border-sand-200/70 dark:border-sand-800/70 p-5"
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-bold text-sand-900 dark:text-sand-100">
-                        {w.speaker?.full_name ?? 'Locuteur'}
-                      </p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.className}`}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                    <p className="text-xs text-sand-500">
-                      {new Date(w.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-extrabold text-sand-900 dark:text-sand-100 tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-                      {new Intl.NumberFormat('fr-SN').format(w.amount_fcfa)}&nbsp;FCFA
-                    </p>
-                    <p className="text-xs text-sand-500">{methodLabels[w.method] ?? w.method}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-sand-600 dark:text-sand-400 mb-3">
-                  <Phone className="w-3.5 h-3.5 shrink-0" />
-                  <span className="font-mono">{w.destination}</span>
-                </div>
-
-                {w.rejection_reason && (
-                  <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg mb-3">
-                    Motif : {w.rejection_reason}
-                  </p>
-                )}
-                {w.transaction_reference && (
-                  <p className="text-xs text-sand-400 mb-3">Réf. : {w.transaction_reference}</p>
-                )}
-
-                {/* Input motif rejet */}
-                {showRejectInput === w.id && (
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      value={rejectReason[w.id] ?? ''}
-                      onChange={e => setRejectReason(r => ({ ...r, [w.id]: e.target.value }))}
-                      placeholder="Motif du rejet (optionnel)"
-                      className="w-full px-3 py-2 rounded-xl border border-sand-200 dark:border-sand-700 bg-sand-50 dark:bg-sand-800 text-sand-900 dark:text-sand-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-                    />
-                  </div>
-                )}
-
-                {/* Actions */}
-                {filter === 'pending' && (
-                  <div className="flex gap-2">
-                    {showRejectInput === w.id ? (
-                      <>
-                        <button
-                          onClick={() => setShowRejectInput(null)}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-sand-200 dark:border-sand-700 text-sand-600 dark:text-sand-400 text-xs font-semibold hover:bg-sand-50 transition-all"
-                        >
-                          Annuler
-                        </button>
-                        <button
-                          onClick={() => reject(w.id)}
-                          disabled={processing === w.id}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all disabled:opacity-40"
-                        >
-                          {processing === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
-                          Confirmer le rejet
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setShowRejectInput(w.id)}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          Rejeter
-                        </button>
-                        <button
-                          onClick={() => approve(w.id)}
-                          disabled={processing === w.id}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary-500 hover:bg-secondary-600 text-white text-xs font-semibold transition-all disabled:opacity-40"
-                        >
-                          {processing === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                          Approuver
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {filter === 'approved' && (
-                  <button
-                    onClick={() => markPaid(w.id)}
-                    disabled={processing === w.id}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-secondary-500 hover:bg-secondary-600 text-white text-xs font-semibold transition-all disabled:opacity-40"
-                  >
-                    {processing === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-                    Marquer comme payé
-                  </button>
-                )}
-              </div>
-            )
-          })}
+        <div>
+          {withdrawals.map((w) => (
+            <Row
+              key={w.id}
+              w={w}
+              isRejecting={showRejectInput === w.id}
+              rejectReason={rejectReason[w.id] ?? ''}
+              onChangeRejectReason={(v) => setRejectReason((r) => ({ ...r, [w.id]: v }))}
+              processing={processing === w.id}
+              onApprove={() => approve(w.id)}
+              onMarkPaid={() => markPaid(w.id)}
+              onReject={() => reject(w.id)}
+              onStartReject={() => setShowRejectInput(w.id)}
+              onCancelReject={() => setShowRejectInput(null)}
+            />
+          ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ---------- Row ---------- */
+
+function Row({
+  w, isRejecting, rejectReason, onChangeRejectReason, processing,
+  onApprove, onMarkPaid, onReject, onStartReject, onCancelReject,
+}: {
+  w: WithdrawalWithProfile
+  isRejecting: boolean
+  rejectReason: string
+  onChangeRejectReason: (v: string) => void
+  processing: boolean
+  onApprove: () => void
+  onMarkPaid: () => void
+  onReject: () => void
+  onStartReject: () => void
+  onCancelReject: () => void
+}) {
+  const initials = (w.speaker?.full_name ?? '?')
+    .split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
+  const code = `WD-${w.id.slice(0, 4).toUpperCase()}`
+
+  return (
+    <div className="border-b border-[rgba(255,255,255,0.04)]">
+      <div className="flex items-center gap-3 h-[52px] px-5 lg:px-8 hover:bg-[rgba(255,255,255,0.025)] transition-colors">
+        <span className="text-[11px] text-[#62666d] w-[80px] shrink-0" style={mono}>
+          {code}
+        </span>
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center text-[#f7f8f8] text-[10px] shrink-0"
+          style={{ background: '#3e3e44', ...sans, fontWeight: 590 }}
+        >
+          {initials}
+        </div>
+        <span
+          className="flex-1 min-w-0 truncate text-[13px] text-[#f7f8f8]"
+          style={{ ...sans, fontWeight: 510 }}
+        >
+          {w.speaker?.full_name ?? 'Locuteur'}
+        </span>
+        <span className="text-[11px] text-[#8a8f98] hidden md:inline" style={sans}>
+          {methodLabels[w.method] ?? w.method}
+        </span>
+        <span className="text-[11px] text-[#62666d] truncate max-w-[120px] hidden md:inline" style={mono}>
+          {w.destination}
+        </span>
+        <span
+          className="text-[13px] text-[#f7f8f8] tabular-nums"
+          style={{ ...mono, fontWeight: 510 }}
+        >
+          {new Intl.NumberFormat('fr-SN').format(w.amount_fcfa)} FCFA
+        </span>
+        <span className="text-[11px] text-[#62666d] w-[56px] text-right hidden sm:inline" style={mono}>
+          {new Date(w.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+        </span>
+
+        {w.status === 'pending' && !isRejecting && (
+          <div className="flex items-center gap-1.5 ml-2">
+            <button
+              onClick={onStartReject}
+              className="inline-flex items-center gap-1 h-[26px] px-2 text-[11px] rounded-md transition-colors"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#fca5a5',
+                background: 'rgba(239,68,68,0.06)',
+                border: '1px solid rgba(239,68,68,0.18)',
+              }}
+            >
+              <X className="w-3 h-3" strokeWidth={1.75} />
+              Rejeter
+            </button>
+            <button
+              onClick={onApprove}
+              disabled={processing}
+              className="inline-flex items-center gap-1 h-[26px] px-2 text-[11px] rounded-md transition-colors disabled:opacity-40"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#f7f8f8',
+                background: '#5e6ad2',
+              }}
+            >
+              {processing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2} />}
+              Approuver
+            </button>
+          </div>
+        )}
+        {w.status === 'approved' && (
+          <button
+            onClick={onMarkPaid}
+            disabled={processing}
+            className="inline-flex items-center gap-1 h-[26px] px-2 text-[11px] rounded-md transition-colors disabled:opacity-40 ml-2"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              color: '#10b981',
+              background: 'rgba(16,185,129,0.06)',
+              border: '1px solid rgba(16,185,129,0.22)',
+            }}
+          >
+            {processing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2} />}
+            Marquer payé
+          </button>
+        )}
+      </div>
+
+      {/* Motif rejet inline */}
+      {w.status === 'pending' && isRejecting && (
+        <div
+          className="px-5 lg:px-8 py-3 border-t border-[rgba(255,255,255,0.05)]"
+          style={{ background: 'rgba(239,68,68,0.03)' }}
+        >
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={rejectReason}
+              onChange={(e) => onChangeRejectReason(e.target.value)}
+              placeholder="Motif du rejet (optionnel)"
+              className="flex-1 h-[30px] px-3 text-[12px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(239,68,68,0.4)]"
+              style={sans}
+            />
+            <button
+              onClick={onCancelReject}
+              className="h-[30px] px-2.5 text-[11px] text-[#8a8f98] hover:text-[#f7f8f8] rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+              style={{ ...sans, fontWeight: 510 }}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={onReject}
+              disabled={processing}
+              className="inline-flex items-center gap-1 h-[30px] px-2.5 text-[11px] rounded-md transition-colors disabled:opacity-40"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#f7f8f8',
+                background: '#ef4444',
+              }}
+            >
+              {processing ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
+              Confirmer le rejet
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Motif rejet persistent */}
+      {w.status === 'rejected' && w.rejection_reason && (
+        <p className="px-5 lg:px-8 py-2 text-[11px] text-[#8a8f98] italic" style={sans}>
+          Motif : {w.rejection_reason}
+        </p>
+      )}
+      {w.status === 'paid' && w.transaction_reference && (
+        <p className="px-5 lg:px-8 py-2 text-[11px] text-[#62666d]" style={mono}>
+          Réf. {w.transaction_reference}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ---------- Helpers ---------- */
+
+function Stat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <span
+        className="text-[15px] tabular-nums"
+        style={{ ...sans, fontWeight: 590, color }}
+      >
+        {value}
+      </span>
+      <span className="text-[12px] text-[#62666d]" style={sans}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function StatSep() {
+  return <span className="w-px h-3 bg-[rgba(255,255,255,0.08)]" />
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+      <div
+        className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <Wallet className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+      </div>
+      <p className="text-[14px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+        Aucun retrait dans cette catégorie
+      </p>
     </div>
   )
 }

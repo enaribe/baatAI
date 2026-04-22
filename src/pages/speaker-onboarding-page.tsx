@@ -1,13 +1,24 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
-import { ChevronRight, ChevronLeft, Check, Loader2, AlertCircle } from 'lucide-react'
+import {
+  Loader2, AlertCircle, MapPin, Calendar, Phone,
+  ArrowRight, ArrowLeft, Check,
+} from 'lucide-react'
 import { useAuth } from '../hooks/use-auth'
 import { useSpeakerGuard } from '../hooks/use-speaker-guard'
 import { supabase } from '../lib/supabase'
 import { LANGUAGES } from '../lib/languages'
+import { PublicLayout } from '../components/layout/public-layout'
+import { Field } from '../components/ui/field'
+import { Button } from '../components/ui/button'
+import { Stepper } from '../components/ui/stepper'
 import type { Gender } from '../types/database'
 
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
+
 type Step = 1 | 2 | 3 | 4
+const LABELS = ['Identité', 'Langues', 'Bio', 'Récap']
 
 interface FormData {
   gender: Gender | ''
@@ -20,14 +31,16 @@ interface FormData {
 }
 
 const INITIAL: FormData = {
-  gender: '',
-  date_of_birth: '',
-  city: '',
-  phone: '',
-  languages: [],
-  dialects: {},
-  bio: '',
+  gender: '', date_of_birth: '', city: '', phone: '',
+  languages: [], dialects: {}, bio: '',
 }
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: 'male', label: 'Homme' },
+  { value: 'female', label: 'Femme' },
+  { value: 'other', label: 'Autre' },
+  { value: 'prefer_not_to_say', label: 'Non précisé' },
+]
 
 export function SpeakerOnboardingPage() {
   const { user } = useAuth()
@@ -40,40 +53,52 @@ export function SpeakerOnboardingPage() {
 
   if (guard.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sand-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-screen flex items-center justify-center bg-[#08090a]">
+        <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
       </div>
     )
   }
 
-  if (guard.hasProfile) {
-    return <Navigate to="/speaker/dashboard" replace />
-  }
+  if (guard.hasProfile) return <Navigate to="/speaker/dashboard" replace />
+
+  const update = <K extends keyof FormData>(k: K, v: FormData[K]) =>
+    setForm((f) => ({ ...f, [k]: v }))
 
   const toggleLanguage = (code: string) => {
-    setForm(f => {
+    setForm((f) => {
       const has = f.languages.includes(code)
-      const languages = has ? f.languages.filter(l => l !== code) : [...f.languages, code]
-      const dialects = has ? { ...f.dialects } : { ...f.dialects, [code]: [] }
+      const languages = has ? f.languages.filter((l) => l !== code) : [...f.languages, code]
+      const dialects = { ...f.dialects }
       if (has) delete dialects[code]
+      else dialects[code] = []
       return { ...f, languages, dialects }
     })
   }
 
-  const toggleDialect = (lang: string, dialect: string) => {
-    setForm(f => {
+  const toggleDialect = (lang: string, d: string) => {
+    setForm((f) => {
       const current = f.dialects[lang] ?? []
-      const updated = current.includes(dialect)
-        ? current.filter(d => d !== dialect)
-        : [...current, dialect]
-      return { ...f, dialects: { ...f.dialects, [lang]: updated } }
+      return {
+        ...f,
+        dialects: {
+          ...f.dialects,
+          [lang]: current.includes(d) ? current.filter((x) => x !== d) : [...current, d],
+        },
+      }
     })
+  }
+
+  const canNext: Record<Step, boolean> = {
+    1: !!form.gender && !!form.city,
+    2: form.languages.length >= 1,
+    3: form.bio.length <= 400,
+    4: true,
   }
 
   const submit = async () => {
     if (!user) return
-    setLoading(true)
     setError('')
+    setLoading(true)
 
     const { error: err } = await (supabase
       .from('speaker_profiles')
@@ -90,288 +115,320 @@ export function SpeakerOnboardingPage() {
         is_available: true,
       } as unknown as never) as unknown as Promise<{ error: { message: string } | null }>)
 
-    if (err) {
-      setError(err.message)
-      setLoading(false)
-      return
-    }
+    if (err) { setError(err.message); setLoading(false); return }
     navigate('/speaker/dashboard')
   }
 
-  const canNext = () => {
-    if (step === 1) return form.gender !== '' && form.city.trim() !== ''
-    if (step === 2) return form.languages.length > 0
-    return true
-  }
-
-  const stepLabels = ['Identité', 'Langues', 'Présentation', 'Finaliser']
-
   return (
-    <div className="min-h-screen bg-sand-50 relative overflow-hidden">
-      {/* Warm glow blob */}
-      <div
-        className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)' }}
-        aria-hidden="true"
-      />
-      <div
-        className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }}
-        aria-hidden="true"
-      />
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
-        {/* Titre */}
-        <div className="text-center mb-10">
-          <h1
-            className="text-3xl font-extrabold text-sand-900 md:text-4xl"
-            style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-          >
-            Créer votre profil locuteur
-          </h1>
-          <p className="text-sand-500 text-base mt-2">Étape {step} sur 4</p>
+    <PublicLayout
+      brandTitle={<>Finalisez<br />votre profil<br />locuteur.</>}
+      brandSubtitle="Quelques infos pour que les clients puissent vous proposer les bons projets."
+    >
+      {/* Top bar */}
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <div className="flex items-center gap-3.5">
+          {step > 1 ? (
+            <button
+              type="button"
+              onClick={() => setStep((s) => (s - 1) as Step)}
+              className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+              style={sans}
+            >
+              <ArrowLeft className="w-[13px] h-[13px]" strokeWidth={1.75} />
+              Retour
+            </button>
+          ) : <span />}
+          <span className="text-[11px] text-[#62666d]" style={mono}>
+            /speaker/onboarding
+          </span>
         </div>
+        <Stepper
+          current={step}
+          total={4}
+          labels={LABELS}
+          onJump={(n) => n < step && setStep(n as Step)}
+        />
+      </div>
 
-        {/* Stepper */}
-        <div className="flex items-center gap-0 mb-10">
-          {stepLabels.map((label, i) => {
-            const n = (i + 1) as Step
-            const done = n < step
-            const active = n === step
-            return (
-              <div key={label} className="flex-1 flex flex-col items-center gap-1">
-                <div className={[
-                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all',
-                  done ? 'bg-secondary-500 text-white' : active ? 'bg-primary-500 text-white' : 'bg-sand-200 text-sand-400',
-                ].join(' ')}>
-                  {done ? <Check className="w-4 h-4" /> : n}
-                </div>
-                <span className={`text-[10px] font-semibold ${active ? 'text-primary-600' : 'text-sand-400'}`}>{label}</span>
-                {i < stepLabels.length - 1 && (
-                  <div className="absolute" />
-                )}
-              </div>
-            )
-          })}
-        </div>
+      {/* Contenu */}
+      <div className="flex-1 flex flex-col justify-center max-w-[520px] w-full mx-auto mt-8">
+        {error && (
+          <div className="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
 
-        {/* Card */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-sand-900/5 border border-sand-200/60 p-8 sm:p-10">
-          {error && (
-            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
-            </div>
-          )}
-
-          {/* Étape 1 — Identité */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
-                Informations personnelles
-              </h2>
+        {step === 1 && (
+          <>
+            <StepTitle title="Votre identité" subtitle="Nous filtrons les projets selon le profil demandé." />
+            <div className="flex flex-col gap-4 mt-6">
               <div>
-                <label className="block text-sm font-semibold text-sand-700 mb-3">Genre <span className="text-red-500">*</span></label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {([['male', 'Homme'], ['female', 'Femme'], ['other', 'Autre'], ['prefer_not_to_say', 'Non précisé']] as const).map(([val, lbl]) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, gender: val }))}
-                      className={[
-                        'py-3 rounded-xl border text-sm font-semibold transition-all',
-                        form.gender === val
-                          ? 'bg-primary-50 border-primary-400 text-primary-700 shadow-sm'
-                          : 'border-sand-200 text-sand-600 hover:border-sand-300 hover:bg-sand-50/50',
-                      ].join(' ')}
-                    >
-                      {lbl}
-                    </button>
-                  ))}
+                <div
+                  className="text-[12px] text-[#d0d6e0] mb-2"
+                  style={{ ...sans, fontWeight: 510 }}
+                >
+                  Genre <span className="text-[#62666d]">*</span>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {GENDER_OPTIONS.map((g) => {
+                    const on = form.gender === g.value
+                    return (
+                      <button
+                        key={g.value}
+                        type="button"
+                        onClick={() => update('gender', g.value)}
+                        className="px-3.5 h-[34px] rounded-md text-[13px]"
+                        style={{
+                          ...sans,
+                          fontWeight: 510,
+                          color: on ? '#f7f8f8' : '#d0d6e0',
+                          background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${on ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                        }}
+                      >
+                        {g.label}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label htmlFor="dob" className="block text-sm font-semibold text-sand-700 mb-1.5">Date de naissance</label>
-                  <input
-                    id="dob"
-                    type="date"
-                    value={form.date_of_birth}
-                    onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="city" className="block text-sm font-semibold text-sand-700 mb-1.5">Ville <span className="text-red-500">*</span></label>
-                  <input
-                    id="city"
-                    type="text"
-                    value={form.city}
-                    onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
-                    placeholder="Dakar, Thiès, Bamako…"
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-sand-700 mb-1.5">Téléphone (pour les paiements)</label>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition-colors"
-                  placeholder="+221 77 000 00 00"
-                />
-              </div>
+              <Field
+                label="Date de naissance"
+                type="date"
+                icon={<Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                value={form.date_of_birth}
+                onChange={(v) => update('date_of_birth', v)}
+                hint="Optionnel."
+              />
+              <Field
+                label="Ville"
+                icon={<MapPin className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="Dakar"
+                required
+                value={form.city}
+                onChange={(v) => update('city', v)}
+              />
+              <Field
+                label="Téléphone"
+                icon={<Phone className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                placeholder="+221 77 000 00 00"
+                hint="Optionnel. Pour les paiements Wave / Orange Money."
+                value={form.phone}
+                onChange={(v) => update('phone', v)}
+              />
             </div>
-          )}
+          </>
+        )}
 
-          {/* Étape 2 — Langues */}
-          {step === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
-                Langues parlées <span className="text-red-500">*</span>
-              </h2>
-              <p className="text-base text-sand-500">Sélectionnez toutes les langues que vous parlez couramment.</p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Object.entries(LANGUAGES).map(([code, lang]) => (
-                  <div key={code} className="flex flex-col gap-2">
+        {step === 2 && (
+          <>
+            <StepTitle
+              title="Langues parlées"
+              subtitle="Sélectionnez au moins une langue. Ajoutez les dialectes si vous les connaissez."
+            />
+            <div className="flex flex-col gap-2.5 mt-6">
+              {Object.entries(LANGUAGES).map(([code, lang]) => {
+                const active = form.languages.includes(code)
+                const selectedD = form.dialects[code] ?? []
+                return (
+                  <div
+                    key={code}
+                    className="rounded-lg p-3"
+                    style={{
+                      background: active ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => toggleLanguage(code)}
-                      className={[
-                        'w-full flex items-center justify-between px-4 py-3.5 rounded-xl border text-sm font-semibold transition-all',
-                        form.languages.includes(code)
-                          ? 'bg-primary-50 border-primary-400 text-primary-700 shadow-sm'
-                          : 'border-sand-200 text-sand-700 hover:border-sand-300 hover:bg-sand-50/50',
-                      ].join(' ')}
+                      className="w-full flex items-center gap-2.5"
                     >
-                      <span>{lang.label}</span>
-                      {form.languages.includes(code) && <Check className="w-5 h-5 text-primary-600" />}
+                      <span
+                        className="w-[18px] h-[18px] rounded-sm flex items-center justify-center shrink-0"
+                        style={{
+                          border: `1.5px solid ${active ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
+                          background: active ? '#f7f8f8' : 'transparent',
+                        }}
+                      >
+                        {active && <Check className="w-3 h-3" strokeWidth={3} style={{ color: '#08090a' }} />}
+                      </span>
+                      <span
+                        className="text-[14px] text-[#f7f8f8]"
+                        style={{ ...sans, fontWeight: 510 }}
+                      >
+                        {lang.label}
+                      </span>
+                      <span className="ml-auto text-[11px] text-[#62666d]" style={mono}>
+                        {active ? `${selectedD.length}/${lang.dialects.length}` : ''}
+                      </span>
                     </button>
 
-                    {form.languages.includes(code) && lang.dialects.length > 0 && (
-                      <div className="pl-2 flex flex-wrap gap-2">
-                        {lang.dialects.map(d => (
-                          <button
-                            key={d}
-                            type="button"
-                            onClick={() => toggleDialect(code, d)}
-                            className={[
-                              'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
-                              (form.dialects[code] ?? []).includes(d)
-                                ? 'bg-accent-100 border-accent-400 text-accent-700 shadow-sm'
-                                : 'border-sand-200 text-sand-500 hover:border-sand-300 hover:bg-sand-50/50',
-                            ].join(' ')}
-                          >
-                            {d}
-                          </button>
-                        ))}
+                    {active && lang.dialects.length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap mt-2.5 pl-7">
+                        {lang.dialects.map((d) => {
+                          const on = selectedD.includes(d)
+                          return (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => toggleDialect(code, d)}
+                              className="px-2.5 py-[3px] text-[12px] rounded-full"
+                              style={{
+                                ...sans,
+                                fontWeight: 510,
+                                color: on ? '#f7f8f8' : '#d0d6e0',
+                                background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                                border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                              }}
+                            >
+                              {d}
+                            </button>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
-                ))}
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <StepTitle
+              title="Présentation"
+              subtitle="Une courte bio aide les clients à vous choisir. Optionnel."
+            />
+            <div className="mt-6">
+              <div
+                className="rounded-md px-3 py-2.5"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <textarea
+                  value={form.bio}
+                  onChange={(e) => update('bio', e.target.value.slice(0, 400))}
+                  placeholder="Ex : Journaliste radio à Dakar, locuteur natif wolof, 12 ans d'expérience en voix-off."
+                  className="w-full bg-transparent border-0 outline-none text-[#f7f8f8] text-[14px] resize-y"
+                  style={{ ...sans, lineHeight: 1.5, minHeight: 120 }}
+                />
+              </div>
+              <div className="text-[11px] text-[#62666d] mt-1.5 text-right tabular-nums" style={mono}>
+                {form.bio.length}/400
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {/* Étape 3 — Présentation */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
-                Présentez-vous (optionnel)
-              </h2>
-              <p className="text-base text-sand-500">
-                Un texte court visible par les clients qui recherchent des locuteurs.
-              </p>
-              <textarea
-                value={form.bio}
-                onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                rows={6}
-                maxLength={400}
-                className="w-full px-4 py-4 rounded-xl border border-sand-200 bg-sand-50 text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white resize-none transition-colors"
-                placeholder="Ex : Locuteur Wolof natif de Dakar, je parle également le Pulaar. Voix claire et articulée…"
+        {step === 4 && (
+          <>
+            <StepTitle title="Récapitulatif" subtitle="Vérifiez avant de valider votre profil." />
+            <div
+              className="mt-6 p-5 rounded-[10px] flex flex-col gap-3"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <SummaryLine label="Genre" value={GENDER_OPTIONS.find((g) => g.value === form.gender)?.label ?? '—'} />
+              <SummaryLine label="Ville" value={form.city || '—'} />
+              {form.date_of_birth && <SummaryLine label="Né(e) le" value={form.date_of_birth} />}
+              {form.phone && <SummaryLine label="Téléphone" value={form.phone} mono />}
+              <SummaryLine
+                label="Langues"
+                value={form.languages.length === 0
+                  ? '—'
+                  : form.languages.map((c) => LANGUAGES[c]?.label ?? c).join(', ')}
               />
-              <p className="text-xs text-sand-400 text-right">{form.bio.length}/400</p>
+              <SummaryLine label="Bio" value={form.bio || 'Non renseignée'} multiline />
             </div>
+          </>
+        )}
+
+        {/* Footer */}
+        <div className="flex justify-between items-center mt-6 gap-3">
+          {step > 1 ? (
+            <Button
+              variant="ghost"
+              size="lg"
+              icon={<ArrowLeft className="w-4 h-4" strokeWidth={1.75} />}
+              onClick={() => setStep((s) => (s - 1) as Step)}
+            >
+              Retour
+            </Button>
+          ) : <span />}
+          {step < 4 ? (
+            <Button
+              variant="primary"
+              size="lg"
+              iconRight={<ArrowRight className="w-4 h-4" strokeWidth={1.75} />}
+              disabled={!canNext[step]}
+              onClick={() => setStep((s) => (s + 1) as Step)}
+            >
+              Continuer
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="lg"
+              iconRight={<Check className="w-4 h-4" strokeWidth={2.5} />}
+              loading={loading}
+              onClick={submit}
+            >
+              Créer mon profil
+            </Button>
           )}
-
-          {/* Étape 4 — Récap */}
-          {step === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-sand-800" style={{ fontFamily: 'var(--font-heading)' }}>
-                Résumé de votre profil
-              </h2>
-              <div className="space-y-4 text-base text-sand-700 bg-sand-50/50 p-6 rounded-2xl border border-sand-100">
-                <div className="flex justify-between pb-3 border-b border-sand-200/60">
-                  <span className="text-sand-500 font-medium">Genre</span>
-                  <span className="font-semibold text-sand-900">{form.gender || '—'}</span>
-                </div>
-                <div className="flex justify-between pb-3 border-b border-sand-200/60">
-                  <span className="text-sand-500 font-medium">Ville</span>
-                  <span className="font-semibold text-sand-900">{form.city || '—'}</span>
-                </div>
-                <div className="flex justify-between pb-3 border-b border-sand-200/60">
-                  <span className="text-sand-500 font-medium">Langues</span>
-                  <span className="font-semibold text-sand-900 text-right">{form.languages.map(c => LANGUAGES[c]?.label ?? c).join(', ') || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sand-500 font-medium">Téléphone</span>
-                  <span className="font-semibold text-sand-900">{form.phone || '—'}</span>
-                </div>
-              </div>
-
-              <div className="bg-secondary-50 border border-secondary-200 rounded-2xl p-5 text-sm text-secondary-800 flex items-start gap-4">
-                <div className="p-2 bg-secondary-100 rounded-full shrink-0">
-                  <Check className="w-5 h-5 text-secondary-600" />
-                </div>
-                <div>
-                  <p className="font-bold text-base mb-1">Vous y êtes presque !</p>
-                  <p className="text-secondary-700 leading-relaxed">
-                    Votre profil sera créé et vous pourrez commencer à enregistrer des projets dès maintenant.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex gap-4 mt-10">
-            {step > 1 && (
-              <button
-                type="button"
-                onClick={() => setStep(s => (s - 1) as Step)}
-                className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-sand-200 text-sand-700 text-base font-semibold hover:bg-sand-50 transition-all"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                Précédent
-              </button>
-            )}
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={() => setStep(s => (s + 1) as Step)}
-                disabled={!canNext()}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold text-base shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-primary-500/25"
-              >
-                Suivant
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={submit}
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold text-base shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-primary-500/25"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                Soumettre mon profil
-              </button>
-            )}
-          </div>
         </div>
       </div>
+    </PublicLayout>
+  )
+}
+
+/* ---------- Helpers ---------- */
+
+function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <>
+      <h1
+        className="text-[24px] sm:text-[28px] text-[#f7f8f8] m-0"
+        style={{ ...sans, fontWeight: 510, lineHeight: 1.1, letterSpacing: '-0.5px' }}
+      >
+        {title}
+      </h1>
+      <p className="text-[14px] text-[#8a8f98] mt-2" style={sans}>
+        {subtitle}
+      </p>
+    </>
+  )
+}
+
+function SummaryLine({
+  label, value, mono: isMono, multiline,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+  multiline?: boolean
+}) {
+  return (
+    <div className={`grid grid-cols-[100px_1fr] gap-3 ${multiline ? 'items-start' : 'items-center'}`}>
+      <span
+        className="text-[11px] text-[#62666d] uppercase"
+        style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-[13px] text-[#f7f8f8] ${multiline ? 'leading-relaxed' : 'truncate'}`}
+        style={isMono ? mono : { ...sans, fontWeight: 510 }}
+      >
+        {value}
+      </span>
     </div>
   )
 }

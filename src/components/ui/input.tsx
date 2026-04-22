@@ -6,39 +6,62 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   icon?: ReactNode
+  hint?: string
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  function Input({ label, error, icon, id, className = '', ...rest }, ref) {
-    const baseClasses = 'w-full px-4 py-3 rounded-xl border text-sand-900 placeholder-sand-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent dark:bg-sand-800 dark:text-sand-100 dark:placeholder-sand-500 dark:border-sand-700'
-    const stateClasses = error
-      ? 'border-error bg-red-50 dark:bg-red-950/20 dark:border-red-700'
-      : 'border-sand-300 bg-sand-50 dark:bg-sand-800'
-    const iconClass = icon ? 'pl-10' : ''
-
+  function Input({ label, error, icon, hint, id, className = '', ...rest }, ref) {
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={id} className="block text-sm font-medium text-sand-700 dark:text-sand-300 mb-1.5">
+          <label
+            htmlFor={id}
+            className="block text-[13px] text-[#d0d6e0] mb-1.5"
+            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", fontWeight: 510 }}
+          >
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sand-400 pointer-events-none">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#62666d] pointer-events-none inline-flex">
               {icon}
             </span>
           )}
           <input
             ref={ref}
             id={id}
-            className={`${baseClasses} ${stateClasses} ${iconClass} ${className}`}
+            className={[
+              'w-full h-[34px] text-[14px] leading-none text-[#f7f8f8]',
+              'placeholder:text-[#62666d]',
+              'rounded-md px-3',
+              icon ? 'pl-9' : '',
+              'bg-[rgba(255,255,255,0.02)]',
+              'border transition-colors',
+              error
+                ? 'border-[rgba(239,68,68,0.35)]'
+                : 'border-[rgba(255,255,255,0.08)]',
+              'focus:outline-none focus:border-[#7170ff] focus:bg-[rgba(255,255,255,0.04)]',
+              'focus:shadow-[0_0_0_3px_rgba(113,112,255,0.12)]',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              className,
+            ].join(' ')}
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontFeatureSettings: "'cv01','ss03'",
+              fontWeight: 400,
+            }}
             {...rest}
           />
         </div>
+        {hint && !error && (
+          <p className="mt-1.5 text-[12px] text-[#62666d]" style={{ fontFeatureSettings: "'cv01','ss03'" }}>
+            {hint}
+          </p>
+        )}
         {error && (
-          <p className="mt-1.5 flex items-center gap-1 text-sm text-error">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#f87171]">
+            <AlertCircle className="w-3 h-3 shrink-0" />
             {error}
           </p>
         )}

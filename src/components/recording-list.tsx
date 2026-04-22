@@ -1,11 +1,15 @@
 import { useMemo, useState, useEffect } from 'react'
-import { Mic, CheckCircle2, XCircle, Clock, AlertTriangle, Eye, Filter } from 'lucide-react'
-import { Badge } from './ui/badge'
+import {
+  Mic, XCircle, Clock, Eye, ChevronDown, CircleCheck,
+} from 'lucide-react'
 import { AudioPlayer } from './ui/audio-player'
 import { RecordingDetailModal } from './recording-detail-modal'
 import { supabase } from '../lib/supabase'
 import { translateRejectReasons, translateRecordingStatus } from '../lib/qc-translations'
 import type { Recording, Phrase, RecordingSession } from '../types/database'
+
+const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
+const mono = { fontFamily: 'var(--font-mono)' }
 
 interface RecordingListProps {
   recordings: Recording[]
@@ -14,20 +18,6 @@ interface RecordingListProps {
 }
 
 type QcFilter = 'all' | 'valid' | 'rejected' | 'processing' | 'failed'
-
-const statusIcons: Record<string, typeof Clock> = {
-  pending: Clock,
-  processing: Clock,
-  completed: CheckCircle2,
-  failed: XCircle,
-}
-
-const statusVariants: Record<string, 'pending' | 'processing' | 'valid' | 'rejected'> = {
-  pending: 'pending',
-  processing: 'processing',
-  completed: 'valid',
-  failed: 'rejected',
-}
 
 const filterLabels: Record<QcFilter, string> = {
   all: 'Tous',
@@ -41,21 +31,11 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
   const [filter, setFilter] = useState<QcFilter>('all')
   const [selected, setSelected] = useState<Recording | null>(null)
 
-  const phraseMap = useMemo(
-    () => new Map(phrases.map((p) => [p.id, p])),
-    [phrases],
-  )
-
-  const sessionMap = useMemo(
-    () => new Map(sessions.map((s) => [s.id, s])),
-    [sessions],
-  )
+  const phraseMap = useMemo(() => new Map(phrases.map((p) => [p.id, p])), [phrases])
+  const sessionMap = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions])
 
   const counts = useMemo(() => {
-    let valid = 0
-    let rejected = 0
-    let processing = 0
-    let failed = 0
+    let valid = 0; let rejected = 0; let processing = 0; let failed = 0
     for (const r of recordings) {
       if (r.processing_status === 'failed') failed++
       else if (r.processing_status === 'pending' || r.processing_status === 'processing') processing++
@@ -79,61 +59,43 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
   if (recordings.length === 0) {
     return (
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Mic className="w-5 h-5 text-primary-500" />
-          <h3
-            className="text-base font-bold text-sand-900 dark:text-sand-100"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Enregistrements (0)
-          </h3>
-        </div>
-        <p className="text-sm text-sand-400 dark:text-sand-500 py-4 text-center">
-          Aucun enregistrement pour le moment.
-        </p>
+        <SectionHeader total={0} />
+        <EmptyState />
       </div>
     )
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <Mic className="w-5 h-5 text-primary-500" />
-          <h3
-            className="text-base font-bold text-sand-900 dark:text-sand-100"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Enregistrements ({counts.all})
-          </h3>
-        </div>
+      {/* Section header + filters */}
+      <div className="flex items-center gap-2 h-[36px] mb-2 -mx-5 lg:-mx-8 px-5 lg:px-8 border-b border-[rgba(255,255,255,0.05)]">
+        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+          Enregistrements
+        </span>
+        <span className="text-[11px] text-[#62666d]" style={mono}>
+          {counts.all}
+        </span>
 
-        <div className="flex items-center gap-1 bg-sand-100 dark:bg-sand-800/60 rounded-lg p-0.5 overflow-x-auto">
-          <Filter className="w-3.5 h-3.5 text-sand-400 ml-2 shrink-0" />
+        <div className="ml-auto flex items-center gap-1 overflow-x-auto">
           {(Object.keys(filterLabels) as QcFilter[]).map((key) => {
-            const count = counts[key]
-            const active = filter === key
+            const on = filter === key
             return (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={[
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150 whitespace-nowrap',
-                  active
-                    ? 'bg-white dark:bg-sand-700 text-sand-900 dark:text-sand-100 shadow-sm'
-                    : 'text-sand-500 hover:text-sand-700 dark:hover:text-sand-300',
-                ].join(' ')}
+                className="inline-flex items-center gap-1.5 h-[24px] px-2 text-[11px] rounded-md transition-colors whitespace-nowrap"
+                style={{
+                  ...sans,
+                  fontWeight: 510,
+                  color: on ? '#f7f8f8' : '#8a8f98',
+                  background: on ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  border: `1px solid ${on ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
+                }}
               >
                 {filterLabels[key]}
-                <span
-                  className={[
-                    'tabular-nums text-[10px] px-1.5 rounded-full',
-                    active
-                      ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300'
-                      : 'bg-sand-200 text-sand-600 dark:bg-sand-800 dark:text-sand-400',
-                  ].join(' ')}
-                >
-                  {count}
+                <span className="text-[10px] text-[#62666d] tabular-nums" style={mono}>
+                  {counts[key]}
                 </span>
               </button>
             )
@@ -142,130 +104,129 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-sand-400 dark:text-sand-500 py-8 text-center">
-          Aucun enregistrement ne correspond à ce filtre.
-        </p>
+        <EmptyState text="Aucun enregistrement ne correspond à ce filtre." />
       ) : (
-        <div className="overflow-x-auto -mx-1">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-sand-200 dark:border-sand-800">
-                <th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide">
-                  Phrase
-                </th>
-                <th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide hidden md:table-cell">
-                  Locuteur
-                </th>
-                <th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide">
-                  Statut
-                </th>
-                <th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide hidden sm:table-cell">
-                  SNR
-                </th>
-                <th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide hidden lg:table-cell">
-                  Durée
-                </th>
-                <th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide hidden lg:table-cell">
-                  Audio
-                </th>
-                <th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wide">
-                  Détail
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((recording, index) => {
-                const phrase = phraseMap.get(recording.phrase_id)
-                const session = sessionMap.get(recording.session_id)
-                const StatusIcon = statusIcons[recording.processing_status] ?? Clock
-                const translatedReasons = translateRejectReasons(recording.rejection_reasons)
+        <div
+          className="rounded-[8px] overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
+          {/* Header row */}
+          <div
+            className="grid grid-cols-[minmax(180px,2fr)_120px_120px_80px_70px_130px_70px] gap-3 px-4 py-2.5 text-[10px] text-[#62666d] uppercase"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              letterSpacing: '0.04em',
+              background: 'rgba(255,255,255,0.01)',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
+            <span>Phrase</span>
+            <span className="hidden md:block">Locuteur</span>
+            <span>Statut</span>
+            <span className="hidden sm:block text-right">SNR</span>
+            <span className="hidden lg:block text-right">Durée</span>
+            <span className="hidden lg:block text-right">Audio</span>
+            <span className="text-right">Détail</span>
+          </div>
 
-                return (
-                  <tr
-                    key={recording.id}
-                    className={`border-b border-sand-100 dark:border-sand-800/50 transition-colors hover:bg-sand-50 dark:hover:bg-sand-800/30 ${
-                      index % 2 === 0 ? '' : 'bg-sand-50/50 dark:bg-sand-800/10'
-                    }`}
+          {filtered.map((recording, idx) => {
+            const phrase = phraseMap.get(recording.phrase_id)
+            const session = sessionMap.get(recording.session_id)
+            const reasons = translateRejectReasons(recording.rejection_reasons)
+
+            const last = idx === filtered.length - 1
+
+            return (
+              <div
+                key={recording.id}
+                className="grid grid-cols-[minmax(180px,2fr)_120px_120px_80px_70px_130px_70px] gap-3 px-4 py-3 items-center hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+                style={{
+                  borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                }}
+              >
+                {/* Phrase */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[11px] text-[#62666d] tabular-nums shrink-0" style={mono}>
+                    #{phrase?.position ?? '?'}
+                  </span>
+                  <span
+                    className="text-[13px] text-[#f7f8f8] truncate"
+                    style={sans}
                   >
-                    <td className="py-2.5 px-3 max-w-[200px]">
-                      <p className="truncate text-sand-800 dark:text-sand-200">
-                        {phrase?.content ?? '—'}
-                      </p>
-                      <p className="text-xs text-sand-400 tabular-nums">#{phrase?.position ?? '?'}</p>
-                    </td>
+                    {phrase?.content ?? '—'}
+                  </span>
+                </div>
 
-                    <td className="py-2.5 px-3 hidden md:table-cell text-sand-600 dark:text-sand-400">
-                      {session?.speaker_name || 'Anonyme'}
-                    </td>
+                {/* Speaker */}
+                <div className="hidden md:flex items-center gap-2 min-w-0">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] shrink-0"
+                    style={{
+                      background: '#3e3e44',
+                      color: '#f7f8f8',
+                      ...sans,
+                      fontWeight: 590,
+                    }}
+                  >
+                    {(session?.speaker_name?.[0] ?? 'A').toUpperCase()}
+                  </div>
+                  <span
+                    className="text-[12px] text-[#d0d6e0] truncate"
+                    style={sans}
+                  >
+                    {session?.speaker_name || 'Anonyme'}
+                  </span>
+                </div>
 
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant={statusVariants[recording.processing_status]}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {translateRecordingStatus(recording.processing_status)}
-                        </Badge>
-                        {recording.is_valid === true && (
-                          <CheckCircle2 className="w-4 h-4 text-secondary-500" aria-label="Validé" />
-                        )}
-                        {recording.is_valid === false && (
-                          <XCircle className="w-4 h-4 text-red-500" aria-label="Rejeté" />
-                        )}
-                      </div>
-                      {translatedReasons.length > 0 && (
-                        <div className="flex items-start gap-1 mt-1">
-                          <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
-                          <span className="text-xs text-amber-600 dark:text-amber-400 leading-snug">
-                            {translatedReasons.join(' · ')}
-                          </span>
-                        </div>
-                      )}
-                    </td>
+                {/* Statut */}
+                <StatusCell recording={recording} reasons={reasons} />
 
-                    <td className="py-2.5 px-3 text-right hidden sm:table-cell">
-                      {recording.snr_db != null ? (
-                        <span className="tabular-nums text-sand-700 dark:text-sand-300">
-                          {recording.snr_db.toFixed(1)} dB
-                        </span>
-                      ) : (
-                        <span className="text-sand-300 dark:text-sand-600">—</span>
-                      )}
-                    </td>
+                {/* SNR */}
+                <span
+                  className="hidden sm:block text-right text-[12px] tabular-nums"
+                  style={{ ...mono, color: recording.snr_db != null ? '#d0d6e0' : '#3e3e44' }}
+                >
+                  {recording.snr_db != null ? `${recording.snr_db.toFixed(1)} dB` : '—'}
+                </span>
 
-                    <td className="py-2.5 px-3 text-right hidden lg:table-cell">
-                      {recording.duration_seconds != null ? (
-                        <span className="tabular-nums text-sand-700 dark:text-sand-300">
-                          {recording.duration_seconds.toFixed(1)}s
-                        </span>
-                      ) : (
-                        <span className="text-sand-300 dark:text-sand-600">—</span>
-                      )}
-                    </td>
+                {/* Durée */}
+                <span
+                  className="hidden lg:block text-right text-[12px] tabular-nums"
+                  style={{ ...mono, color: recording.duration_seconds != null ? '#d0d6e0' : '#3e3e44' }}
+                >
+                  {recording.duration_seconds != null ? `${recording.duration_seconds.toFixed(1)}s` : '—'}
+                </span>
 
-                    <td className="py-2.5 px-3 hidden lg:table-cell">
-                      {recording.processed_storage_path ? (
-                        <SignedAudioPlayer storagePath={recording.processed_storage_path} bucket="audio-processed" />
-                      ) : recording.raw_storage_path ? (
-                        <SignedAudioPlayer storagePath={recording.raw_storage_path} bucket="audio-raw" />
-                      ) : (
-                        <span className="text-sand-300 dark:text-sand-600">—</span>
-                      )}
-                    </td>
+                {/* Audio */}
+                <div className="hidden lg:block">
+                  {recording.processed_storage_path ? (
+                    <SignedAudioPlayer storagePath={recording.processed_storage_path} bucket="audio-processed" />
+                  ) : recording.raw_storage_path ? (
+                    <SignedAudioPlayer storagePath={recording.raw_storage_path} bucket="audio-raw" />
+                  ) : (
+                    <span className="text-[12px] text-[#3e3e44]">—</span>
+                  )}
+                </div>
 
-                    <td className="py-2.5 px-3 text-right">
-                      <button
-                        onClick={() => setSelected(recording)}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-sand-600 hover:text-primary-600 dark:text-sand-300 dark:hover:text-primary-400 hover:bg-sand-100 dark:hover:bg-sand-800 transition-colors"
-                        aria-label="Voir le détail"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Détail</span>
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                {/* Détail */}
+                <div className="text-right">
+                  <button
+                    onClick={() => setSelected(recording)}
+                    className="inline-flex items-center gap-1 h-[24px] px-2 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                    style={{ ...sans, fontWeight: 510 }}
+                    aria-label="Voir le détail"
+                  >
+                    <Eye className="w-3 h-3" strokeWidth={1.75} />
+                    <span className="hidden sm:inline">Détail</span>
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -281,29 +242,100 @@ export function RecordingList({ recordings, phrases, sessions }: RecordingListPr
   )
 }
 
-interface SignedAudioPlayerProps {
-  storagePath: string
-  bucket: string
+/* ---------- StatusCell ---------- */
+
+function StatusCell({ recording, reasons }: { recording: Recording; reasons: string[] }) {
+  const statusMap: Record<string, { Icon: typeof Clock; color: string }> = {
+    pending: { Icon: Clock, color: '#8a8f98' },
+    processing: { Icon: Clock, color: '#8a8f98' },
+    completed: { Icon: CircleCheck, color: '#10b981' },
+    failed: { Icon: XCircle, color: '#fca5a5' },
+  }
+  const cfg = statusMap[recording.processing_status] ?? statusMap.pending!
+  const { Icon } = cfg
+
+  let effectiveColor = cfg.color
+  if (recording.processing_status === 'completed' && recording.is_valid === false) {
+    effectiveColor = '#fbbf24'
+  }
+
+  return (
+    <div className="flex flex-col gap-1 min-w-0">
+      <span
+        className="inline-flex items-center gap-1 text-[11px]"
+        style={{
+          ...sans,
+          fontWeight: 510,
+          color: effectiveColor,
+        }}
+      >
+        <Icon className="w-3 h-3" strokeWidth={2} />
+        {recording.is_valid === false ? 'Rejeté' : translateRecordingStatus(recording.processing_status)}
+      </span>
+      {reasons.length > 0 && (
+        <span
+          className="text-[10px] text-[#fbbf24] truncate"
+          style={sans}
+          title={reasons.join(' · ')}
+        >
+          {reasons[0]}{reasons.length > 1 ? ` +${reasons.length - 1}` : ''}
+        </span>
+      )}
+    </div>
+  )
 }
 
-function SignedAudioPlayer({ storagePath, bucket }: SignedAudioPlayerProps) {
+/* ---------- SignedAudioPlayer ---------- */
+
+function SignedAudioPlayer({ storagePath, bucket }: { storagePath: string; bucket: string }) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-
     supabase.storage
       .from(bucket)
       .createSignedUrl(storagePath, 3600)
       .then(({ data, error }) => {
-        if (!cancelled && !error && data?.signedUrl) {
-          setUrl(data.signedUrl)
-        }
+        if (!cancelled && !error && data?.signedUrl) setUrl(data.signedUrl)
       })
-
     return () => { cancelled = true }
   }, [storagePath, bucket])
 
-  if (!url) return <span className="text-sand-300 dark:text-sand-600">—</span>
+  if (!url) return <span className="text-[12px] text-[#3e3e44]">—</span>
   return <AudioPlayer src={url} className="justify-end" />
+}
+
+/* ---------- Helpers ---------- */
+
+function SectionHeader({ total }: { total: number }) {
+  return (
+    <div className="flex items-center gap-2 h-[36px] mb-2 -mx-5 lg:-mx-8 px-5 lg:px-8 border-b border-[rgba(255,255,255,0.05)]">
+      <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+      <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+        Enregistrements
+      </span>
+      <span className="text-[11px] text-[#62666d]" style={mono}>
+        {total}
+      </span>
+    </div>
+  )
+}
+
+function EmptyState({ text = 'Aucun enregistrement pour le moment.' }: { text?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div
+        className="w-10 h-10 rounded-md flex items-center justify-center mb-3"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <Mic className="w-4 h-4 text-[#8a8f98]" strokeWidth={1.5} />
+      </div>
+      <p className="text-[13px] text-[#8a8f98]" style={sans}>
+        {text}
+      </p>
+    </div>
+  )
 }

@@ -5,9 +5,9 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-xl bg-sand-200 dark:bg-sand-800 ${className}`}
+      className={`relative overflow-hidden rounded-md bg-[rgba(255,255,255,0.04)] ${className}`}
     >
-      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
     </div>
   )
 }
