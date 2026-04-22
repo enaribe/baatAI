@@ -118,6 +118,16 @@ function Nav() {
 function Hero() {
   return (
     <section className="px-6 pt-20 pb-10 max-w-[1100px] mx-auto text-center">
+      <div
+        className="inline-block text-[11px] uppercase mb-5"
+        style={{
+          ...mono,
+          letterSpacing: '0.12em',
+          color: 'var(--t-fg-4)',
+        }}
+      >
+        Beta privée · Dakar
+      </div>
       <h1
         className="mx-auto text-[40px] sm:text-[56px] lg:text-[64px] leading-[1.02]"
         style={{
@@ -135,11 +145,13 @@ function Hero() {
         style={{
           ...sans,
           letterSpacing: '-0.165px',
-          maxWidth: 620,
+          maxWidth: 640,
           color: 'var(--t-fg-3)',
         }}
       >
-        Des datasets vocaux annotés en 34 langues africaines. Pour entraîner des modèles ASR, TTS et NLU qui parlent comme vos utilisateurs.
+        Plateforme de collecte de datasets vocaux pour 4 langues africaines —
+        Wolof, Pulaar, Sereer, Bambara. Pour les équipes IA qui construisent
+        leurs propres modèles ASR et TTS.
       </p>
       <div className="flex justify-center gap-2.5 mt-7 flex-wrap">
         <Link
@@ -155,9 +167,10 @@ function Hero() {
           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
         >
-          Demander l'accès
+          Créer un projet
         </Link>
-        <a
+        <Link
+          to="/speaker/register"
           className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
           style={{
             ...sans,
@@ -169,9 +182,9 @@ function Hero() {
           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
-          Explorer le catalogue
+          Devenir locuteur rémunéré
           <ArrowRight className="w-3.5 h-3.5" />
-        </a>
+        </Link>
       </div>
 
       {/* Showcase dataset preview — reste dark-lock (moniteur stylisé) */}
@@ -185,6 +198,18 @@ function Hero() {
           color: '#f7f8f8',
         }}
       >
+        <div
+          className="absolute -top-2.5 right-4 inline-flex items-center px-2 h-[20px] rounded-[2px] text-[10px] uppercase z-10"
+          style={{
+            ...mono,
+            letterSpacing: '0.08em',
+            color: '#62666d',
+            background: '#0f1011',
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}
+        >
+          Aperçu produit
+        </div>
         <div className="rounded-[10px] overflow-hidden" style={{ background: '#0f1011' }}>
           {/* Window chrome */}
           <div className="px-3.5 py-2.5 border-b border-[rgba(255,255,255,0.05)] flex items-center gap-2.5">
@@ -198,7 +223,7 @@ function Hero() {
                 className="text-[11px] text-[#62666d] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] rounded-md px-2.5 py-0.5"
                 style={mono}
               >
-                baat-ai.com/datasets/wolof-conversational
+                baat-ai.com/dashboard/projects
               </div>
             </div>
             <span
@@ -217,15 +242,13 @@ function Hero() {
                 className="px-2 py-1.5 text-[10px] text-[#62666d] uppercase tracking-[0.04em]"
                 style={{ ...sans, fontWeight: 510 }}
               >
-                Datasets
+                Vos projets
               </div>
               {[
-                { n: 'Wolof · Conversational', h: '12 400', on: true },
-                { n: 'Swahili · Broadcast', h: '8 200' },
-                { n: 'Hausa · Read speech', h: '6 100' },
-                { n: 'Amharic · Call center', h: '4 300' },
-                { n: 'Yoruba · Conversational', h: '5 600' },
-                { n: 'Lingala · Radio', h: '2 100' },
+                { n: 'Centre d\'appel · Wolof', s: 'Actif', on: true },
+                { n: 'Lecture phrases · Pulaar', s: 'Actif' },
+                { n: 'Conversation · Sereer', s: 'Brouillon' },
+                { n: 'Salutations · Bambara', s: 'Brouillon' },
               ].map((d, i) => (
                 <div
                   key={i}
@@ -239,7 +262,7 @@ function Hero() {
                     {d.n}
                   </span>
                   <span className="text-[10px] text-[#62666d]" style={mono}>
-                    {d.h}h
+                    {d.s.toLowerCase()}
                   </span>
                 </div>
               ))}
@@ -252,18 +275,18 @@ function Hero() {
                   className="text-[18px] text-[#f7f8f8]"
                   style={{ ...sans, fontWeight: 590, letterSpacing: '-0.24px' }}
                 >
-                  Wolof — Conversational
+                  Centre d'appel — Wolof
                 </div>
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
                   style={{ ...sans, fontWeight: 510 }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#10b981' }} />
-                  Prêt
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#7170ff' }} />
+                  Collecte en cours
                 </span>
               </div>
               <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
-                12 400 heures · 8 214 locuteurs · échantillonnage 16 kHz
+                85 phrases · 12 locuteurs invités · WebM 48 kHz
               </div>
 
               {/* Waveform panel */}
@@ -313,45 +336,68 @@ function Hero() {
   )
 }
 
-/* ---------- Stats row ---------- */
+/* ---------- Comment ça marche ---------- */
 function StatsRow() {
-  const stats = [
-    { n: '34', l: 'langues africaines' },
-    { n: '82 400h', l: "d'audio annoté" },
-    { n: '41 000', l: 'locuteurs uniques' },
-    { n: '99.1%', l: 'accord inter-annotateurs' },
+  const steps = [
+    {
+      n: '01',
+      t: 'Vous uploadez vos phrases',
+      d: "Texte brut, CSV ou copier-coller. Le parser extrait phrase par phrase.",
+    },
+    {
+      n: '02',
+      t: 'Des locuteurs natifs enregistrent',
+      d: 'Depuis leur téléphone, payés via Wave ou Orange Money à la phrase validée.',
+    },
+    {
+      n: '03',
+      t: 'Vous récupérez le dataset',
+      d: 'Format LJSpeech, HuggingFace ou CSV+WAV. Validation SNR et segmentation incluses.',
+    },
   ]
   return (
     <section className="px-6 pt-10 pb-20 max-w-[1100px] mx-auto">
       <div
-        className="grid grid-cols-2 md:grid-cols-4 rounded-[12px] overflow-hidden"
+        className="grid grid-cols-1 md:grid-cols-3 rounded-[12px] overflow-hidden"
         style={{
           background: 'var(--t-surface)',
           border: '1px solid var(--t-border-subtle)',
         }}
       >
-        {stats.map((s, i) => (
+        {steps.map((s, i) => (
           <div
             key={i}
-            className="p-7 text-left"
+            className="p-7 text-left flex flex-col gap-2.5"
             style={{
-              borderRight: i < 3 ? '1px solid var(--t-border-subtle)' : '0',
-              borderBottom: i < 2 ? '1px solid var(--t-border-subtle)' : '0',
+              borderRight: i < 2 ? '1px solid var(--t-border-subtle)' : '0',
             }}
           >
             <div
-              className="text-[32px] md:text-[36px] tabular-nums"
+              className="text-[11px] uppercase"
               style={{
-                ...sans,
-                fontWeight: 510,
-                letterSpacing: '-0.9px',
-                color: 'var(--t-fg)',
+                ...mono,
+                letterSpacing: '0.08em',
+                color: 'var(--t-fg-4)',
               }}
             >
               {s.n}
             </div>
-            <div className="text-[13px] mt-1" style={{ ...sans, color: 'var(--t-fg-3)' }}>
-              {s.l}
+            <div
+              className="text-[17px]"
+              style={{
+                ...sans,
+                fontWeight: 590,
+                letterSpacing: '-0.2px',
+                color: 'var(--t-fg)',
+              }}
+            >
+              {s.t}
+            </div>
+            <div
+              className="text-[13px]"
+              style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)' }}
+            >
+              {s.d}
             </div>
           </div>
         ))}
@@ -408,25 +454,17 @@ function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: Rea
 /* ---------- Languages ---------- */
 function LanguagesSection() {
   const langs: [string, string, string][] = [
-    ['Wolof', 'sn·sénégal', '12 400h'],
-    ['Swahili', 'ke·kenya', '8 200h'],
-    ['Hausa', 'ng·nigeria', '6 100h'],
-    ['Yoruba', 'ng·nigeria', '5 600h'],
-    ['Amharic', 'et·éthiopie', '4 300h'],
-    ['Igbo', 'ng·nigeria', '3 900h'],
-    ['Zulu', 'za·afrique du sud', '3 400h'],
-    ['Lingala', 'cd·rdc', '2 100h'],
-    ['Bambara', 'ml·mali', '1 800h'],
-    ['Fula', "sn·afrique de l'ouest", '1 600h'],
-    ['Oromo', 'et·éthiopie', '1 400h'],
-    ['Shona', 'zw·zimbabwe', '1 200h'],
+    ['Wolof', 'sn·sénégal', '4 dialectes pris en charge'],
+    ['Pulaar', "sn · ml · gn · mr", '3 dialectes pris en charge'],
+    ['Sereer', 'sn·sénégal', '2 dialectes pris en charge'],
+    ['Bambara', 'ml·mali', '2 dialectes pris en charge'],
   ]
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
       <SectionTitle
         kicker="Couverture"
-        title="34 langues. Une par une, pas en bloc."
-        subtitle="Chaque langue a ses locuteurs natifs, ses annotateurs, ses validateurs. Pas de transcription croisée, pas de traduction automatique."
+        title="4 langues au lancement."
+        subtitle="Wolof, Pulaar, Sereer, Bambara — sélectionnées pour la demande des équipes NLP au Sénégal et au Mali. D'autres suivront selon vos besoins."
       />
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-[12px] overflow-hidden"
@@ -441,6 +479,7 @@ function LanguagesSection() {
       </div>
       <div className="text-center mt-6">
         <a
+          href="mailto:hello@baat-ai.com?subject=Demande%20de%20langue"
           className="inline-flex items-center gap-1.5 h-[32px] px-3 text-[13px] rounded-md transition-colors cursor-pointer"
           style={{
             ...sans,
@@ -452,7 +491,7 @@ function LanguagesSection() {
           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
-          Voir les 22 autres langues
+          Demander une langue
           <ArrowRight className="w-3.5 h-3.5" />
         </a>
       </div>
@@ -492,20 +531,20 @@ function PipelineSection() {
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
       <SectionTitle
         kicker="Pipeline"
-        title="Pas d'IA qui annote l'IA."
-        subtitle="Chaque heure audio passe par trois humains avant de quitter nos serveurs."
+        title="Contrôle qualité automatique."
+        subtitle="Chaque enregistrement passe par un contrôle SNR, détection de clipping et ratio silence. Les segments sous le seuil sont rejetés et renvoyés au locuteur pour ré-enregistrement."
       />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <PipelineCard
           icon={<Mic className="w-5 h-5" strokeWidth={1.75} />}
-          title="Collecte terrain"
-          body="Enregistrements in-situ avec des locuteurs natifs. Contextes variés : rue, domicile, centre d'appel, radio."
+          title="Capture mobile"
+          body="Le locuteur enregistre depuis son téléphone, phrase par phrase. Upload résumable TUS — résiste à la 3G et aux coupures."
           demo={<Waveform height={40} bars={48} />}
         />
         <PipelineCard
           icon={<FileText className="w-5 h-5" strokeWidth={1.75} />}
-          title="Annotation humaine"
-          body="Transcription orthographique, phonétique quand pertinent, tags d'émotion et de chevauchement."
+          title="Métriques techniques"
+          body="SNR, clipping, ratio silence, durée — calculés à l'arrivée sur chaque segment WebM. Profils ASR ou TTS selon le projet."
           demo={
             <div
               data-theme="dark"
@@ -513,16 +552,20 @@ function PipelineSection() {
               style={{ ...mono, background: '#0f1011', color: '#d0d6e0' }}
             >
               <div>
-                <span style={{ color: '#62666d' }}>00:01.2</span>{' '}
-                <span style={{ color: '#f7f8f8' }}>[SPK_01]</span> ndax nga fi nekk
+                <span style={{ color: '#62666d' }}>snr_db</span>{' '}
+                <span style={{ color: '#10b981' }}>32.4</span>
               </div>
               <div>
-                <span style={{ color: '#62666d' }}>00:02.8</span>{' '}
-                <span style={{ color: '#8a8f98' }}>[SPK_02]</span> waaw, damay liggéey
+                <span style={{ color: '#62666d' }}>clipping_pct</span>{' '}
+                <span style={{ color: '#10b981' }}>0.02</span>
               </div>
               <div>
-                <span style={{ color: '#62666d' }}>00:04.1</span>{' '}
-                <span style={{ color: '#62666d' }}>[SILENCE]</span>
+                <span style={{ color: '#62666d' }}>silence_ratio</span>{' '}
+                <span style={{ color: '#10b981' }}>0.18</span>
+              </div>
+              <div>
+                <span style={{ color: '#62666d' }}>status</span>{' '}
+                <span style={{ color: '#f7f8f8' }}>valid</span>
               </div>
             </div>
           }
@@ -530,35 +573,31 @@ function PipelineSection() {
         <PipelineCard
           icon={<ShieldCheck className="w-5 h-5" strokeWidth={1.75} />}
           title="Validation croisée"
-          body="Double annotation, arbitrage sur désaccord, score de confiance par segment. 99.1% d'accord inter-annotateurs."
+          body="Vous écoutez et validez vous-même les enregistrements depuis le dashboard. Les rejets reviennent au locuteur avec la raison du refus."
           demo={
             <div className="flex flex-col gap-1.5">
               {[
-                { l: 'Annotateur A', v: 99 },
-                { l: 'Annotateur B', v: 97 },
-                { l: 'Arbitre', v: 100 },
+                { l: 'Phrase 01', s: 'valid', c: '#10b981' },
+                { l: 'Phrase 02', s: 'valid', c: '#10b981' },
+                { l: 'Phrase 03', s: 'rejet · bruit', c: '#ef4444' },
+                { l: 'Phrase 04', s: 'en attente', c: '#62666d' },
               ].map((r, i) => (
                 <div key={i} className="flex items-center gap-2.5">
                   <span
-                    className="text-[11px] w-[88px]"
-                    style={{ ...sans, color: 'var(--t-fg-3)' }}
+                    className="text-[11px] w-[80px]"
+                    style={{ ...mono, color: 'var(--t-fg-3)' }}
                   >
                     {r.l}
                   </span>
-                  <div
-                    className="flex-1 h-1 rounded-sm overflow-hidden"
-                    style={{ background: 'var(--t-surface-active)' }}
-                  >
-                    <div
-                      className="h-full"
-                      style={{ width: `${r.v}%`, background: '#10b981' }}
-                    />
-                  </div>
                   <span
-                    className="text-[11px] w-8 text-right tabular-nums"
-                    style={{ ...mono, color: 'var(--t-fg-2)' }}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: r.c }}
+                  />
+                  <span
+                    className="text-[11px] flex-1"
+                    style={{ ...sans, color: 'var(--t-fg-2)' }}
                   >
-                    {r.v}%
+                    {r.s}
                   </span>
                 </div>
               ))}
@@ -614,7 +653,7 @@ function PipelineCard({
   )
 }
 
-/* ---------- API ---------- */
+/* ---------- Export ---------- */
 function ApiSection() {
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
@@ -632,7 +671,7 @@ function ApiSection() {
               backgroundClip: 'text',
             }}
           >
-            Accès
+            Export
           </div>
           <div
             className="text-[32px] md:text-[40px] mt-3"
@@ -644,19 +683,20 @@ function ApiSection() {
               color: 'var(--t-fg)',
             }}
           >
-            Streamez, ne téléchargez pas.
+            Vos données, votre format.
           </div>
           <div
             className="text-[15px] md:text-[16px] mt-3.5"
             style={{ ...sans, lineHeight: 1.6, color: 'var(--t-fg-3)' }}
           >
-            Une API HTTP simple. Filtrez par langue, durée, locuteur, contexte. Le streaming démarre en 40 ms.
+            Téléchargez un ZIP prêt pour l'entraînement. Trois formats au choix selon votre framework.
+            Métadonnées complètes : durée, locuteur, dialecte, métriques qualité.
           </div>
           <div className="flex gap-5 mt-6 flex-wrap">
             {[
-              { n: 'REST', d: 'JSON + audio/wav' },
-              { n: 'Streaming', d: 'HTTP chunked' },
-              { n: 'Python', d: 'pip install baat' },
+              { n: 'LJSpeech', d: 'wavs/ + metadata.csv' },
+              { n: 'HuggingFace', d: 'parquet + audio/' },
+              { n: 'CSV + WAV', d: 'plain · custom' },
             ].map((x, i) => (
               <div key={i}>
                 <div
@@ -676,10 +716,10 @@ function ApiSection() {
           </div>
         </div>
 
-        {/* Code block — reste dark-lock (snippet de code stylisé) */}
+        {/* File tree — reste dark-lock (moniteur stylisé) */}
         <div
           data-theme="dark"
-          className="dark-lock p-5 rounded-[10px]"
+          className="dark-lock p-5 rounded-[10px] relative"
           style={{
             background: '#0a0a0b',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -694,87 +734,113 @@ function ApiSection() {
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
             <span className="ml-auto text-[11px]" style={{ ...mono, color: '#62666d' }}>
-              stream.py
+              wolof-callcenter.zip
             </span>
           </div>
+          <div style={{ color: '#f7f8f8' }}>wolof-callcenter/</div>
           <div>
-            <span style={{ color: '#f7f8f8' }}>from</span> baat{' '}
-            <span style={{ color: '#f7f8f8' }}>import</span> Dataset
+            <span style={{ color: '#62666d' }}>├──</span>{' '}
+            <span style={{ color: '#828fff' }}>metadata.csv</span>
+          </div>
+          <div>
+            <span style={{ color: '#62666d' }}>├──</span>{' '}
+            <span style={{ color: '#f7f8f8' }}>wavs/</span>
+          </div>
+          <div>
+            <span style={{ color: '#62666d' }}>│&nbsp;&nbsp;&nbsp;├──</span>{' '}
+            spk_001_phrase_0001.wav
+          </div>
+          <div>
+            <span style={{ color: '#62666d' }}>│&nbsp;&nbsp;&nbsp;├──</span>{' '}
+            spk_001_phrase_0002.wav
+          </div>
+          <div>
+            <span style={{ color: '#62666d' }}>│&nbsp;&nbsp;&nbsp;└──</span>{' '}
+            <span style={{ color: '#62666d' }}>... (1 248 fichiers)</span>
+          </div>
+          <div>
+            <span style={{ color: '#62666d' }}>└──</span>{' '}
+            <span style={{ color: '#828fff' }}>quality_report.json</span>
           </div>
           <div>&nbsp;</div>
-          <div>
-            ds = Dataset(<span style={{ color: '#d0d6e0' }}>"wolof-conversational"</span>)
-          </div>
-          <div>&nbsp;</div>
-          <div style={{ color: '#62666d' }}># 12 400h, filtré par durée</div>
-          <div>
-            <span style={{ color: '#f7f8f8' }}>for</span> sample{' '}
-            <span style={{ color: '#f7f8f8' }}>in</span> ds.stream(min_seconds=
-            <span style={{ color: '#d0d6e0' }}>3</span>):
-          </div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;audio = sample.waveform</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;&nbsp;= sample.transcript</div>
-          <div>
-            &nbsp;&nbsp;&nbsp;&nbsp;lang&nbsp;&nbsp;= sample.language
-            <span style={{ color: '#62666d' }}>&nbsp;&nbsp;# "wol"</span>
-          </div>
-          <div>&nbsp;</div>
-          <div style={{ color: '#62666d' }}># &gt;&gt;&gt; 40ms au premier sample</div>
+          <div style={{ color: '#62666d' }}># 16 kHz · mono · WAV PCM</div>
+          <div style={{ color: '#62666d' }}># total: 4h 12min · 1 248 segments</div>
         </div>
       </div>
     </section>
   )
 }
 
-/* ---------- Quote ---------- */
+/* ---------- Statut ---------- */
 function QuoteSection() {
+  const items = [
+    {
+      k: 'Lancement',
+      v: 'Q2 2026',
+      d: 'Beta privée ouverte aux premières équipes pilotes.',
+    },
+    {
+      k: 'Localisation',
+      v: 'Dakar, Sénégal',
+      d: 'Équipe basée sur place, locuteurs recrutés au Sénégal et au Mali.',
+    },
+    {
+      k: 'Modèle économique',
+      v: 'Forfait par projet',
+      d: 'Tarification à la phrase validée. Locuteurs payés via Wave / Orange Money.',
+    },
+  ]
   return (
-    <section className="px-6 py-20 max-w-[900px] mx-auto text-center">
+    <section className="px-6 py-20 max-w-[1100px] mx-auto">
+      <SectionTitle
+        kicker="Statut"
+        title="Premiers projets en cours."
+        subtitle="Nous accompagnons une poignée d'équipes pilotes. Si vous construisez un modèle vocal pour une langue africaine, parlons-en."
+      />
       <div
-        className="text-[22px] md:text-[28px]"
+        className="grid grid-cols-1 md:grid-cols-3 rounded-[12px] overflow-hidden"
         style={{
-          ...sans,
-          lineHeight: 1.35,
-          letterSpacing: '-0.4px',
-          color: 'var(--t-fg)',
+          background: 'var(--t-surface)',
+          border: '1px solid var(--t-border-subtle)',
         }}
       >
-        «&nbsp;On a entraîné notre ASR wolof sur{' '}
-        <span
-          style={{
-            background: 'linear-gradient(90deg, var(--t-fg) 0%, var(--t-fg-3) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          2 400h de Baat
-        </span>
-        . Le WER est passé de 38% à 11% en une semaine.&nbsp;»
-      </div>
-      <div className="flex items-center justify-center gap-3 mt-7">
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[13px]"
-          style={{
-            background: 'var(--t-surface-active)',
-            color: 'var(--t-fg)',
-            ...sans,
-            fontWeight: 590,
-          }}
-        >
-          AD
-        </div>
-        <div className="text-left">
+        {items.map((it, i) => (
           <div
-            className="text-[14px]"
-            style={{ ...sans, fontWeight: 590, color: 'var(--t-fg)' }}
+            key={i}
+            className="p-7 flex flex-col gap-2"
+            style={{
+              borderRight: i < 2 ? '1px solid var(--t-border-subtle)' : '0',
+            }}
           >
-            Aminata Diop
+            <div
+              className="text-[10px] uppercase"
+              style={{
+                ...mono,
+                letterSpacing: '0.08em',
+                color: 'var(--t-fg-4)',
+              }}
+            >
+              {it.k}
+            </div>
+            <div
+              className="text-[20px]"
+              style={{
+                ...sans,
+                fontWeight: 590,
+                letterSpacing: '-0.24px',
+                color: 'var(--t-fg)',
+              }}
+            >
+              {it.v}
+            </div>
+            <div
+              className="text-[13px]"
+              style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)' }}
+            >
+              {it.d}
+            </div>
           </div>
-          <div className="text-[12px]" style={{ ...sans, color: 'var(--t-fg-3)' }}>
-            Lead ML, Orange Digital Ventures
-          </div>
-        </div>
+        ))}
       </div>
     </section>
   )
@@ -801,7 +867,7 @@ function CtaSection() {
             color: 'var(--t-fg)',
           }}
         >
-          Entraînez sur ce que vos<br />utilisateurs parlent vraiment.
+          Construisez vos modèles sur<br />les voix qui vous concernent.
         </div>
         <div className="flex justify-center gap-2.5 mt-8 flex-wrap">
           <Link
@@ -817,9 +883,10 @@ function CtaSection() {
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
           >
-            Demander l'accès
+            Créer un projet
           </Link>
           <a
+            href="mailto:hello@baat-ai.com"
             className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
             style={{
               ...sans,
