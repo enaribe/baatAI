@@ -64,15 +64,19 @@ export function RegisterPage() {
     >
       {/* En-tête top bar */}
       <div className="flex justify-between items-center">
-        <span className="text-[11px] text-[#62666d]" style={{ fontFamily: 'var(--font-mono)' }}>
+        <span className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-fg-4)' }}>
           /register
         </span>
-        <span className="text-[12px] text-[#62666d]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}>
+        <span className="text-[12px]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", color: 'var(--t-fg-4)' }}>
           Déjà un compte ?{' '}
           <Link
             to="/login"
-            className="text-[#f7f8f8] underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
-            style={{ textUnderlineOffset: 3 }}
+            className="underline"
+            style={{
+              color: 'var(--t-fg)',
+              textDecorationColor: 'var(--t-border-strong)',
+              textUnderlineOffset: 3,
+            }}
           >
             Se connecter
           </Link>
@@ -82,23 +86,25 @@ export function RegisterPage() {
       {/* Contenu */}
       <div className="flex-1 flex flex-col justify-center max-w-[580px] w-full mx-auto mt-8">
         <h1
-          className="text-[28px] sm:text-[32px] text-[#f7f8f8] m-0"
+          className="text-[28px] sm:text-[32px] m-0"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             fontWeight: 510,
             lineHeight: 1.1,
             letterSpacing: '-0.7px',
+            color: 'var(--t-fg)',
           }}
         >
           Rejoindre Daandé
         </h1>
         <p
-          className="text-[15px] text-[#8a8f98] mt-2.5"
+          className="text-[15px] mt-2.5"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             lineHeight: 1.55,
+            color: 'var(--t-fg-3)',
           }}
         >
           Choisissez votre profil pour commencer.
@@ -128,18 +134,26 @@ export function RegisterPage() {
         {selectedRole === 'client' && (
           <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3.5 animate-fade-in">
             <div
-              className="text-[13px] text-[#f7f8f8]"
+              className="text-[13px]"
               style={{
                 fontFamily: 'var(--font-body)',
                 fontFeatureSettings: "'cv01','ss03'",
                 fontWeight: 590,
+                color: 'var(--t-fg)',
               }}
             >
               Créer votre compte client
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]">
+              <div
+                className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px]"
+                style={{
+                  color: 'var(--t-danger-text)',
+                  border: '1px solid var(--t-danger-muted-border)',
+                  background: 'var(--t-danger-muted-bg)',
+                }}
+              >
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -198,8 +212,8 @@ export function RegisterPage() {
               </Button>
             </div>
             <div
-              className="text-[11px] text-[#62666d] text-center"
-              style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+              className="text-[11px] text-center"
+              style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", color: 'var(--t-fg-4)' }}
             >
               Vous arriverez sur votre espace client.
             </div>
@@ -209,32 +223,37 @@ export function RegisterPage() {
         {/* Redirect speaker */}
         {selectedRole === 'speaker' && (
           <div
-            className="mt-7 flex items-center gap-4 p-5 rounded-[10px] border border-[rgba(255,255,255,0.08)]"
-            style={{ background: 'rgba(255,255,255,0.02)' }}
+            className="mt-7 flex items-center gap-4 p-5 rounded-[10px]"
+            style={{
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
+            }}
           >
             <div
-              className="w-9 h-9 flex items-center justify-center rounded-md shrink-0 text-[#f7f8f8]"
+              className="w-9 h-9 flex items-center justify-center rounded-md shrink-0"
               style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--t-surface-active)',
+                border: '1px solid var(--t-border)',
+                color: 'var(--t-fg)',
               }}
             >
               <Mic className="w-4 h-4" strokeWidth={1.75} />
             </div>
             <div className="flex-1 min-w-0">
               <div
-                className="text-[14px] text-[#f7f8f8]"
+                className="text-[14px]"
                 style={{
                   fontFamily: 'var(--font-body)',
                   fontFeatureSettings: "'cv01','ss03'",
                   fontWeight: 590,
+                  color: 'var(--t-fg)',
                 }}
               >
                 Inscription locuteur en 5 étapes
               </div>
               <div
-                className="text-[12px] text-[#8a8f98] mt-0.5"
-                style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+                className="text-[12px] mt-0.5"
+                style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", color: 'var(--t-fg-3)' }}
               >
                 Compte, identité, langues, présentation, récap.
               </div>
@@ -252,8 +271,8 @@ export function RegisterPage() {
 
         {!selectedRole && (
           <div
-            className="mt-6 text-[12px] text-[#62666d] text-center"
-            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}
+            className="mt-6 text-[12px] text-center"
+            style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", color: 'var(--t-fg-4)' }}
           >
             Sélectionnez un profil pour continuer.
           </div>
@@ -284,43 +303,45 @@ function ProfileCard({ icon, title, subtitle, chips, selected, onClick }: Profil
       className="relative flex flex-col gap-3 p-5 rounded-[12px] text-left cursor-pointer min-h-[200px]"
       style={{
         background: selected
-          ? 'rgba(255,255,255,0.05)'
+          ? 'var(--t-surface-active)'
           : hover
-            ? 'rgba(255,255,255,0.035)'
-            : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${selected ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: selected ? '0 0 0 3px rgba(255,255,255,0.05)' : 'none',
+            ? 'var(--t-surface-hover)'
+            : 'var(--t-surface)',
+        border: `1px solid ${selected ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
+        boxShadow: selected ? '0 0 0 3px var(--t-surface-active)' : 'none',
         transition: 'all 140ms cubic-bezier(0.22,1,0.36,1)',
       }}
     >
       <div
-        className="w-9 h-9 flex items-center justify-center rounded-lg text-[#f7f8f8]"
+        className="w-9 h-9 flex items-center justify-center rounded-lg"
         style={{
-          background:
-            'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--t-surface-2)',
+          border: '1px solid var(--t-border)',
+          color: 'var(--t-fg)',
         }}
       >
         {icon}
       </div>
       <div>
         <div
-          className="text-[17px] text-[#f7f8f8]"
+          className="text-[17px]"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             fontWeight: 590,
             letterSpacing: '-0.2px',
+            color: 'var(--t-fg)',
           }}
         >
           {title}
         </div>
         <div
-          className="text-[13px] text-[#8a8f98] mt-1.5"
+          className="text-[13px] mt-1.5"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             lineHeight: 1.5,
+            color: 'var(--t-fg-3)',
           }}
         >
           {subtitle}
@@ -330,13 +351,14 @@ function ProfileCard({ icon, title, subtitle, chips, selected, onClick }: Profil
         {chips.map((c) => (
           <span
             key={c}
-            className="text-[11px] text-[#d0d6e0] px-2.5 py-[3px] rounded-full"
+            className="text-[11px] px-2.5 py-[3px] rounded-full"
             style={{
               fontFamily: 'var(--font-body)',
               fontFeatureSettings: "'cv01','ss03'",
               fontWeight: 510,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              color: 'var(--t-fg-2)',
+              background: 'var(--t-surface-2)',
+              border: '1px solid var(--t-border-subtle)',
             }}
           >
             {c}
@@ -347,13 +369,13 @@ function ProfileCard({ icon, title, subtitle, chips, selected, onClick }: Profil
       <div
         className="absolute top-4 right-4 w-[18px] h-[18px] rounded-full flex items-center justify-center"
         style={{
-          border: `1.5px solid ${selected ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
+          border: `1.5px solid ${selected ? 'var(--t-fg)' : 'var(--t-border-strong)'}`,
         }}
       >
         {selected && (
           <span
             className="w-2 h-2 rounded-full"
-            style={{ background: '#f7f8f8' }}
+            style={{ background: 'var(--t-fg)' }}
           />
         )}
       </div>

@@ -16,7 +16,7 @@ interface FieldProps {
 }
 
 /**
- * Field Daandé Auth — input dark avec icône gauche, label en mono-ish, hint.
+ * Field Daandé Auth — input adaptatif light/dark via tokens --t-*.
  * Reproduit la spec du mock (Auth.html).
  */
 export function Field({
@@ -38,27 +38,37 @@ export function Field({
     <label htmlFor={id} className="flex flex-col gap-1.5">
       {label && (
         <span
-          className="text-[12px] text-[#d0d6e0]"
+          className="text-[12px]"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             fontWeight: 510,
+            color: 'var(--t-fg-2)',
           }}
         >
           {label}
-          {required && <span className="text-[#62666d] ml-1">*</span>}
+          {required && (
+            <span className="ml-1" style={{ color: 'var(--t-fg-4)' }}>
+              *
+            </span>
+          )}
         </span>
       )}
       <div
         className="flex items-center gap-2 rounded-md px-3 py-[9px]"
         style={{
           background: 'var(--t-surface)',
-          border: `1px solid ${focus ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
-          boxShadow: focus ? '0 0 0 3px rgba(255,255,255,0.04)' : 'none',
-          transition: 'border-color 120ms, box-shadow 120ms',
+          border: `1px solid ${focus ? 'var(--t-accent)' : 'var(--t-border)'}`,
+          outline: focus ? '3px solid var(--t-accent-muted-bg)' : '3px solid transparent',
+          outlineOffset: '0px',
+          transition: 'border-color 120ms, outline-color 120ms',
         }}
       >
-        {icon && <span className="text-[#62666d] inline-flex shrink-0">{icon}</span>}
+        {icon && (
+          <span className="inline-flex shrink-0" style={{ color: 'var(--t-fg-3)' }}>
+            {icon}
+          </span>
+        )}
         <input
           id={id}
           type={type}
@@ -68,21 +78,27 @@ export function Field({
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
           autoFocus={autoFocus}
-          className="flex-1 bg-transparent border-0 outline-none text-[#f7f8f8] text-[14px]"
+          className="flex-1 bg-transparent outline-none text-[14px]"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
             lineHeight: 1.4,
+            color: 'var(--t-fg)',
+            border: 'none',
+            boxShadow: 'none',
+            appearance: 'none',
+            WebkitAppearance: 'none',
           }}
         />
         {rightSlot}
       </div>
       {hint && (
         <span
-          className="text-[11px] text-[#62666d]"
+          className="text-[11px]"
           style={{
             fontFamily: 'var(--font-body)',
             fontFeatureSettings: "'cv01','ss03'",
+            color: 'var(--t-fg-4)',
           }}
         >
           {hint}

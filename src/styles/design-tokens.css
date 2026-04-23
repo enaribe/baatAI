@@ -137,6 +137,12 @@ html[data-theme='dark'] {
   --t-solid-bg-hover: #ffffff;
   --t-solid-fg: #08090a;
 
+  /* Logo Daandé (bulle gradient + barres knockout + wordmark) */
+  --t-logo-bubble-from: #ffffff;
+  --t-logo-bubble-to: #8a8f98;
+  --t-logo-bars: #08090a;
+  --t-logo-text: #f7f8f8;
+
   /* Scheme natif (form controls, scrollbars) */
   color-scheme: dark;
 }
@@ -196,7 +202,22 @@ html[data-theme='light'] {
   --t-solid-bg-hover: #28282c;
   --t-solid-fg: #ffffff;
 
+  /* Logo Daandé : bulle sombre + barres claires + wordmark sombre en light */
+  --t-logo-bubble-from: #1a1b1e;
+  --t-logo-bubble-to: #3a3d43;
+  --t-logo-bars: #ffffff;
+  --t-logo-text: #1a1b1e;
+
   color-scheme: light;
+}
+
+/* Sous-arbres dark-locked (ex: BrandSide auth, panneaux moniteur) :
+   restaurer les couleurs claires du logo même quand html est en light. */
+[data-theme='dark'] {
+  --t-logo-bubble-from: #ffffff;
+  --t-logo-bubble-to: #8a8f98;
+  --t-logo-bars: #08090a;
+  --t-logo-text: #f7f8f8;
 }
 
 /* ============================================================
