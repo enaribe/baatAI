@@ -1,18 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts'
+import { checkRateLimit } from '../_shared/rate-limit.ts'
 
 const MAX_BATCH = 50
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
 
 interface InviteResult {
   speaker_id: string
@@ -22,7 +12,14 @@ interface InviteResult {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const corsHeaders = buildCorsHeaders(req)
+  if (req.method === 'OPTIONS') return handlePreflight(corsHeaders)
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
 
   try {
     const authHeader = req.headers.get('Authorization')
@@ -37,6 +34,11 @@ Deno.serve(async (req) => {
     })
     const { data: { user } } = await userClient.auth.getUser()
     if (!user) return json({ error: 'Non authentifié' }, 401)
+
+    // Rate limit : max 10 batchs (donc max 500 invitations) par heure et par client.
+    if (checkRateLimit(`invite-bulk:${user.id}`, { max: 10, windowSec: 3600 })) {
+      return json({ error: 'Trop d\'invitations en peu de temps. Réessaye dans une heure.' }, 429)
+    }
 
     const admin = createClient(supabaseUrl, serviceKey)
 

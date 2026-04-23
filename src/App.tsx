@@ -1,35 +1,46 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { AuthProvider } from './contexts/auth-context'
 import { ToastProvider } from './contexts/toast-context'
 import { ToastContainer } from './components/ui/toast'
 import { ProtectedRoute } from './components/protected-route'
 import { AppLayout } from './components/layout/app-layout'
 import { SpeakerLayout } from './components/layout/speaker-layout'
+
+// Pages chargées immédiatement (chemins critiques d'auth)
 import { LoginPage } from './pages/login-page'
 import { RegisterPage } from './pages/register-page'
-import { DashboardPage } from './pages/dashboard-page'
-import { NewProjectPage } from './pages/new-project-page'
-import { ProjectPage } from './pages/project-page'
-import { RecordPage } from './pages/record-page'
-import { LandingPage } from './pages/landing-page'
-import { SpeakersPage } from './pages/speakers-page'
-import { SpeakerDetailPage } from './pages/speaker-detail-page'
-// Locuteur — public
-import { SpeakerRegisterPage } from './pages/speaker-register-page'
-import { SpeakerOnboardingPage } from './pages/speaker-onboarding-page'
-// Locuteur — espace authentifié
-import { SpeakerDashboardPage } from './pages/speaker-dashboard-page'
-import { SpeakerProjectsPage } from './pages/speaker-projects-page'
-import { SpeakerInvitationsPage } from './pages/speaker-invitations-page'
-import { SpeakerInvitationDetailPage } from './pages/speaker-invitation-detail-page'
-import { SpeakerNotificationsPage } from './pages/speaker-notifications-page'
-import { AccountPage } from './pages/account-page'
-import { SpeakerWalletPage } from './pages/speaker-wallet-page'
-import { SpeakerValidatePage } from './pages/speaker-validate-page'
-import { SpeakerProfilePage } from './pages/speaker-profile-page'
-import { SpeakerRecordPage } from './pages/speaker-record-page'
-// Admin
-import { AdminWithdrawalsPage } from './pages/admin-withdrawals-page'
+
+// Pages lazy-loadées par route (réduit le bundle initial de ~856 kB → ~400 kB)
+const LandingPage = lazy(() => import('./pages/landing-page').then(m => ({ default: m.LandingPage })))
+const DashboardPage = lazy(() => import('./pages/dashboard-page').then(m => ({ default: m.DashboardPage })))
+const NewProjectPage = lazy(() => import('./pages/new-project-page').then(m => ({ default: m.NewProjectPage })))
+const ProjectPage = lazy(() => import('./pages/project-page').then(m => ({ default: m.ProjectPage })))
+const RecordPage = lazy(() => import('./pages/record-page').then(m => ({ default: m.RecordPage })))
+const SpeakersPage = lazy(() => import('./pages/speakers-page').then(m => ({ default: m.SpeakersPage })))
+const SpeakerDetailPage = lazy(() => import('./pages/speaker-detail-page').then(m => ({ default: m.SpeakerDetailPage })))
+const SpeakerRegisterPage = lazy(() => import('./pages/speaker-register-page').then(m => ({ default: m.SpeakerRegisterPage })))
+const SpeakerOnboardingPage = lazy(() => import('./pages/speaker-onboarding-page').then(m => ({ default: m.SpeakerOnboardingPage })))
+const SpeakerDashboardPage = lazy(() => import('./pages/speaker-dashboard-page').then(m => ({ default: m.SpeakerDashboardPage })))
+const SpeakerProjectsPage = lazy(() => import('./pages/speaker-projects-page').then(m => ({ default: m.SpeakerProjectsPage })))
+const SpeakerInvitationsPage = lazy(() => import('./pages/speaker-invitations-page').then(m => ({ default: m.SpeakerInvitationsPage })))
+const SpeakerInvitationDetailPage = lazy(() => import('./pages/speaker-invitation-detail-page').then(m => ({ default: m.SpeakerInvitationDetailPage })))
+const SpeakerNotificationsPage = lazy(() => import('./pages/speaker-notifications-page').then(m => ({ default: m.SpeakerNotificationsPage })))
+const AccountPage = lazy(() => import('./pages/account-page').then(m => ({ default: m.AccountPage })))
+const SpeakerWalletPage = lazy(() => import('./pages/speaker-wallet-page').then(m => ({ default: m.SpeakerWalletPage })))
+const SpeakerValidatePage = lazy(() => import('./pages/speaker-validate-page').then(m => ({ default: m.SpeakerValidatePage })))
+const SpeakerProfilePage = lazy(() => import('./pages/speaker-profile-page').then(m => ({ default: m.SpeakerProfilePage })))
+const SpeakerRecordPage = lazy(() => import('./pages/speaker-record-page').then(m => ({ default: m.SpeakerRecordPage })))
+const AdminWithdrawalsPage = lazy(() => import('./pages/admin-withdrawals-page').then(m => ({ default: m.AdminWithdrawalsPage })))
+
+function PageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--t-bg)' }}>
+      <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--t-fg-3)' }} />
+    </div>
+  )
+}
 
 export function App() {
   return (
@@ -37,6 +48,7 @@ export function App() {
       <AuthProvider>
         <ToastProvider>
           <ToastContainer />
+          <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* ── Public routes (chaque page gère son propre PublicLayout) ── */}
             <Route path="/login" element={<LoginPage />} />
@@ -195,6 +207,7 @@ export function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -1,15 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return handlePreflight(corsHeaders);
 
   if (req.method !== "POST") {
     return new Response(
@@ -76,6 +70,35 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Champs requis : file, project_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // 2b. Validation du fichier : type MIME + taille max
+    // Limites : 10 MB, et seulement les formats parsés par le serveur Python
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED_MIME = new Set([
+      "text/plain",
+      "text/csv",
+      "application/csv",
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/msword", // .doc (rarement utilisé mais accepté)
+    ]);
+    const ALLOWED_EXT = /\.(txt|csv|pdf|docx?|md)$/i;
+
+    if (file.size > MAX_FILE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: `Fichier trop volumineux (max ${MAX_FILE_SIZE / (1024 * 1024)} MB)` }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const mimeOk = ALLOWED_MIME.has(file.type) || file.type === "" || file.type === "application/octet-stream";
+    const extOk = ALLOWED_EXT.test(file.name);
+    if (!mimeOk || !extOk) {
+      return new Response(
+        JSON.stringify({ error: "Format non supporté. Formats acceptés : .txt, .csv, .pdf, .docx" }),
+        { status: 415, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 

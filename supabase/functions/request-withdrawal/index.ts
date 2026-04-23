@@ -1,16 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts'
+import { checkRateLimit } from '../_shared/rate-limit.ts'
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const corsHeaders = buildCorsHeaders(req)
+  if (req.method === 'OPTIONS') return handlePreflight(corsHeaders)
+
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -24,6 +21,11 @@ Deno.serve(async (req) => {
     })
     const { data: { user } } = await userClient.auth.getUser()
     if (!user) return json({ data: null, error: 'Unauthorized' }, 401)
+
+    // Rate limit : max 5 tentatives de retrait par heure par utilisateur
+    if (checkRateLimit(`withdraw:${user.id}`, { max: 5, windowSec: 3600 })) {
+      return json({ data: null, error: 'Trop de tentatives. Réessaye dans une heure.' }, 429)
+    }
 
     const admin = createClient(supabaseUrl, serviceKey)
 

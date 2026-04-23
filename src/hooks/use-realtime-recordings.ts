@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Recording } from '../types/database'
 
@@ -9,6 +9,13 @@ interface UseRealtimeRecordingsOptions {
 }
 
 export function useRealtimeRecordings({ projectId, onInsert, onUpdate }: UseRealtimeRecordingsOptions) {
+  // On stocke les callbacks dans un ref pour qu'ils ne déclenchent pas
+  // de re-subscribe à chaque render. Le subscribe ne dépend que de projectId.
+  const onInsertRef = useRef(onInsert)
+  const onUpdateRef = useRef(onUpdate)
+  useEffect(() => { onInsertRef.current = onInsert }, [onInsert])
+  useEffect(() => { onUpdateRef.current = onUpdate }, [onUpdate])
+
   useEffect(() => {
     if (!projectId) return
 
@@ -23,7 +30,7 @@ export function useRealtimeRecordings({ projectId, onInsert, onUpdate }: UseReal
           filter: `project_id=eq.${projectId}`,
         },
         (payload) => {
-          onInsert?.(payload.new as Recording)
+          onInsertRef.current?.(payload.new as Recording)
         },
       )
       .on(
@@ -35,7 +42,7 @@ export function useRealtimeRecordings({ projectId, onInsert, onUpdate }: UseReal
           filter: `project_id=eq.${projectId}`,
         },
         (payload) => {
-          onUpdate?.(payload.new as Recording)
+          onUpdateRef.current?.(payload.new as Recording)
         },
       )
       .subscribe()
@@ -43,5 +50,5 @@ export function useRealtimeRecordings({ projectId, onInsert, onUpdate }: UseReal
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [projectId, onInsert, onUpdate])
+  }, [projectId])
 }
