@@ -60,7 +60,7 @@ export function RegisterPage() {
   return (
     <PublicLayout
       brandTitle={<>Les voix de<br />l'Afrique, prêtes<br />pour l'IA.</>}
-      brandSubtitle="Rejoignez Baat-IA pour construire ou alimenter des datasets vocaux en 34 langues africaines."
+      brandSubtitle="Rejoignez Daandé pour construire ou alimenter des datasets vocaux en 34 langues africaines."
     >
       {/* En-tête top bar */}
       <div className="flex justify-between items-center">
@@ -91,7 +91,7 @@ export function RegisterPage() {
             letterSpacing: '-0.7px',
           }}
         >
-          Rejoindre Baat-IA
+          Rejoindre Daandé
         </h1>
         <p
           className="text-[15px] text-[#8a8f98] mt-2.5"

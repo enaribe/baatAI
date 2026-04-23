@@ -6,7 +6,7 @@ interface StepperProps {
 }
 
 /**
- * Stepper dark Baat — "étape 2/5" en mono + barres de progression + label actif.
+ * Stepper dark Daandé — "étape 2/5" en mono + barres de progression + label actif.
  * Reproduit la spec du mock (Auth.html).
  */
 export function Stepper({ current, total, labels, onJump }: StepperProps) {

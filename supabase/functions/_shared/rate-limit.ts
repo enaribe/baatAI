@@ -1,4 +1,4 @@
-// Rate limiter en mémoire pour les Edge Functions Baat-IA.
+// Rate limiter en mémoire pour les Edge Functions Daandé.
 //
 // Approche simple : Map<key, [timestamp[]]>, fenêtre glissante.
 // La mémoire est partagée par worker Deno (pas de Redis), ce qui est

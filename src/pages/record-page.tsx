@@ -346,7 +346,7 @@ export function RecordPage() {
 
         <div className="mt-8 flex items-center gap-2">
           <Logo size={18} />
-          <span className="text-[11px] text-[#62666d]" style={mono}>Powered by Baat-IA</span>
+          <span className="text-[11px] text-[#62666d]" style={mono}>Powered by Daandé</span>
         </div>
       </div>
     )

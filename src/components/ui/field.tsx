@@ -16,7 +16,7 @@ interface FieldProps {
 }
 
 /**
- * Field Baat Auth — input dark avec icône gauche, label en mono-ish, hint.
+ * Field Daandé Auth — input dark avec icône gauche, label en mono-ish, hint.
  * Reproduit la spec du mock (Auth.html).
  */
 export function Field({

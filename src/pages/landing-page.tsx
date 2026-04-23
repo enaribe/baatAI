@@ -8,7 +8,7 @@ import { Waveform } from '../components/ui/waveform'
 import { ThemeToggle } from '../components/ui/theme-toggle'
 
 /* ============================================================
-   Landing Baat-IA — reproduction fidèle du mock marketing
+   Landing Daandé — reproduction fidèle du mock marketing
    Adaptative light/dark via les tokens --t-*.
    Les panneaux "moniteur" (dataset preview, code, API) restent
    en dark-lock pour conserver leur esthétique.
@@ -281,7 +281,6 @@ function Hero() {
                   className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
                   style={{ ...sans, fontWeight: 510 }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#7170ff' }} />
                   Collecte en cours
                 </span>
               </div>
@@ -313,7 +312,6 @@ function Hero() {
                     className="grid grid-cols-[64px_1fr] md:grid-cols-[64px_1fr_1fr] gap-3 px-2 py-1.5 rounded-sm"
                     style={{
                       background: i === 0 ? 'rgba(255,255,255,0.05)' : 'transparent',
-                      borderLeft: i === 0 ? '2px solid #f7f8f8' : '2px solid transparent',
                     }}
                   >
                     <span className="text-[11px] text-[#62666d]" style={mono}>
@@ -961,7 +959,7 @@ function Footer() {
           color: 'var(--t-fg-4)',
         }}
       >
-        <span style={{ color: 'var(--t-fg-4)' }}>© 2026 Baat-IA</span>
+        <span style={{ color: 'var(--t-fg-4)' }}>© 2026 Daandé</span>
         <span style={{ ...mono, color: 'var(--t-fg-4)' }}>v2.4.1 · sn·dakar</span>
       </div>
     </footer>

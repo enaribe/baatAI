@@ -54,7 +54,7 @@ BEGIN
   END IF;
 
   v_payload := jsonb_build_object(
-    'username', 'Baat-IA Health',
+    'username', 'Daandé Health',
     'embeds', jsonb_build_array(
       jsonb_build_object(
         'title', title,
@@ -216,7 +216,7 @@ BEGIN
     FROM public.withdrawals WHERE status = 'pending';
 
   PERFORM public._send_discord_alert(
-    'ℹ️ Digest quotidien — Baat-IA',
+    'ℹ️ Digest quotidien — Daandé',
     format(
       '**Dernières 24h**' || E'\n' ||
       '• Recordings reçus : %s' || E'\n' ||

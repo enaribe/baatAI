@@ -1,4 +1,4 @@
-# Baat-IA — Contexte du projet
+# Daandé — Contexte du projet
 
 > Document de référence à fournir au Project Claude pour qu'il comprenne ce qui a été construit, dans quel ordre, et où on en est. Mis à jour : avril 2026.
 
@@ -6,7 +6,7 @@
 
 ## 1. Pitch & positionnement
 
-**Baat-IA** est une plateforme SaaS de **collecte de datasets vocaux** pour les langues africaines. Basée à Dakar (Sénégal).
+**Daandé** est une plateforme SaaS de **collecte de datasets vocaux** pour les langues africaines. Basée à Dakar (Sénégal).
 
 - **4 langues au lancement** : Wolof, Pulaar, Sereer, Bambara (avec dialectes pris en charge).
 - **Deux audiences** :
@@ -188,7 +188,7 @@ Services :
 
 ### Toggle thème
 - Composant `ThemeToggle` (`src/components/ui/theme-toggle.tsx`) — Sun/Moon icon
-- Hook `useDarkMode` — persiste en localStorage (`baat-theme`), fallback `prefers-color-scheme`
+- Hook `useDarkMode` — persiste en localStorage (clé `baat-theme` conservée pour rétro-compat utilisateurs), fallback `prefers-color-scheme`
 - Intégré dans : sidebar AppLayout (desktop+mobile), Nav landing, coin haut-droit PublicLayout
 
 ---

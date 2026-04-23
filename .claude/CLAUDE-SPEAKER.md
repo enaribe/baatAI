@@ -8,7 +8,7 @@
 
 ## Vue d'ensemble
 
-Baat-IA a deux "mondes" qui coexistent :
+Daandé a deux "mondes" qui coexistent :
 
 1. **Monde "token anonyme"** (historique) : le client envoie un lien WhatsApp → locuteur anonyme enregistre. Routes : `/record/:token`. Aucun compte. Compatibilité rétro **obligatoire** — on ne casse pas les liens existants.
 

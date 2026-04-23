@@ -1,4 +1,4 @@
-# Plan d'implémentation — Baat-IA v2 : Comptes Locuteurs
+# Plan d'implémentation — Daandé v2 : Comptes Locuteurs
 
 > Pivot produit : passer d'un système de **liens WhatsApp jetables** vers une **marketplace de voix** où les locuteurs ont un compte, un profil, un portefeuille, et choisissent leurs projets.
 
@@ -11,7 +11,7 @@
 **Après** : 3 acteurs avec des flux qui se croisent.
 - **Client** (Orange, startup IA, chercheur) : filtre des locuteurs par critères, les invite, suit la progression.
 - **Locuteur inscrit** : profil riche (langues, dialectes, âge, genre, ville), choisit ses projets comme un freelance, gagne de l'argent sur un portefeuille, retire via Wave/Orange Money.
-- **Admin Baat-IA** : valide les locuteurs, gère les projets publics (flywheel Lacuna/Mozilla), voit les stats globales.
+- **Admin Daandé** : valide les locuteurs, gère les projets publics (flywheel Lacuna/Mozilla), voit les stats globales.
 
 **Compatibilité rétro** : les tokens anonymes continuent de fonctionner — on n'invalide aucun lien existant.
 
@@ -474,12 +474,12 @@ Créer `src/pages/speaker-record-page.tsx` à partir de `record-page.tsx` :
 - `src/hooks/use-speaker-invitations.ts` — invitations en cours
 - `src/hooks/use-speaker-sessions.ts` — sessions en cours du locuteur
 
-### 3.7 Corpus public Baat-IA
+### 3.7 Corpus public Daandé
 
 Créer le premier projet public via script SQL :
 ```sql
 INSERT INTO public.projects (
-  owner_id,   -- un compte admin Baat-IA
+  owner_id,   -- un compte admin Daandé
   name,
   description,
   target_language,

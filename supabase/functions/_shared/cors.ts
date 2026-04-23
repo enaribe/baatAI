@@ -1,4 +1,4 @@
-// CORS helper partagé pour toutes les Edge Functions Baat-IA.
+// CORS helper partagé pour toutes les Edge Functions Daandé.
 //
 // Whitelist d'origines configurée via la variable d'env ALLOWED_ORIGINS
 // (séparée par virgules). Si non définie, on autorise uniquement le domaine

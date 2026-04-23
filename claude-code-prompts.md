@@ -1,4 +1,4 @@
-# Baat-IA — Prompts Claude Code
+# Daandé — Prompts Claude Code
 ## Guide étape par étape pour générer l'application complète
 
 ---
@@ -60,7 +60,7 @@ Initialise aussi le .gitignore, tsconfig strict, et un README basique.
 Crée un fichier CLAUDE.md à la racine du projet avec le contenu suivant.
 Ce fichier doit être concis (< 200 lignes) et structuré.
 
-# Baat-IA
+# Daandé
 
 Plateforme SaaS de création de datasets vocaux pour langues africaines (Wolof, Pulaar, Sereer, Bambara).
 React + Supabase + serveur Python externe pour le traitement audio.
@@ -131,7 +131,7 @@ Crée les fichiers de règles scoped dans .claude/rules/ :
    - Chaque composant accepte des props typées avec une interface
    - Utiliser les variants Tailwind pour les états (hover, focus, disabled)
    - Les composants UI de base dans /ui/ sont génériques et réutilisables
-   - Les composants métier hors /ui/ sont spécifiques à Baat-IA
+   - Les composants métier hors /ui/ sont spécifiques à Daandé
    - Pas de logique métier dans les composants UI
 
 2. .claude/rules/supabase.md — pour les fichiers dans supabase/ :
@@ -149,7 +149,7 @@ Crée les fichiers de règles scoped dans .claude/rules/ :
 ### Prompt 1.1 — Migration initiale
 
 ```
-Crée la migration Supabase pour le schéma complet de Baat-IA.
+Crée la migration Supabase pour le schéma complet de Daandé.
 Fichier : supabase/migrations/001_initial_schema.sql
 
 Lis @docs/architecture-dev.md pour le schéma complet des tables.

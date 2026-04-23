@@ -1,4 +1,4 @@
-# Checklist de tests — Baat-IA
+# Checklist de tests — Daandé
 
 > Plan de test exhaustif avant lancement beta. Tester dans l'ordre : les flows critiques (auth, paiement, enregistrement) en priorité.
 > Légende : ✅ OK · ❌ KO · ⚠️ Comportement à valider
@@ -7,10 +7,10 @@
 
 ## 0. Prérequis & environnement de test
 
-- [ ] Compte client de test créé (`client.test@baat-ia.com`)
-- [ ] Compte locuteur de test 1 (`speaker1.test@baat-ia.com`) — Wolof
-- [ ] Compte locuteur de test 2 (`speaker2.test@baat-ia.com`) — Pulaar
-- [ ] Compte admin (`admin@baat-ia.com`)
+- [ ] Compte client de test créé (`client.test@daande.com`)
+- [ ] Compte locuteur de test 1 (`speaker1.test@daande.com`) — Wolof
+- [ ] Compte locuteur de test 2 (`speaker2.test@daande.com`) — Pulaar
+- [ ] Compte admin (`admin@daande.com`)
 - [ ] Téléphone Android (Samsung A14 ou équivalent) avec Chrome → réseau 3G simulé
 - [ ] Téléphone iPhone (Safari) → vérifier compat micro
 - [ ] Desktop : Chrome + Firefox + Safari

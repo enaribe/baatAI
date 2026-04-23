@@ -1,4 +1,4 @@
-# Baat-IA
+# Daandé
 
 Plateforme SaaS de création de datasets vocaux pour langues africaines (Wolof, Pulaar, Sereer, Bambara). Les entreprises et chercheurs uploadent des phrases, des locuteurs les lisent phrase par phrase depuis leur téléphone, la plateforme vérifie la qualité et exporte des datasets prêts pour l'entraînement de modèles ASR/TTS.
 
@@ -102,7 +102,7 @@ Le serveur Python est géré par le data scientist. Il reçoit les webhooks et U
 
 ---
 
-# Design System — Baat-IA (Linear-inspired dark-native)
+# Design System — Daandé (Linear-inspired dark-native)
 
 **Source de vérité** : le fichier `design.md` à la racine du repo décrit tout le système (palette, typographie, composants, principes). Les tokens sont définis dans `src/styles/design-tokens.css`. À chaque création ou modification d'écran, se référer à `design.md` — ne jamais dévier sans raison.
 

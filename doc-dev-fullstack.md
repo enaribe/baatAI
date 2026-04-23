@@ -1,4 +1,4 @@
-# Baat-IA — Architecture Technique
+# Daandé — Architecture Technique
 ## Document Développeur Fullstack
 
 **Version** : 1.0 — MVP  
@@ -276,7 +276,7 @@ CREATE POLICY "Clients read exports" ON storage.objects
 1. Client clique "Générer un lien" dans le dashboard
 2. INSERT dans recording_sessions avec les métadonnées du locuteur
 3. Le token est auto-généré par la DB (gen_random_bytes)
-4. Tu construis l'URL : https://baat-ia.com/record/{token}
+4. Tu construis l'URL : https://daande.com/record/{token}
 5. Le client copie ce lien et l'envoie au locuteur (WhatsApp, SMS, etc.)
 ```
 

@@ -12,7 +12,7 @@ interface PublicLayoutProps {
 }
 
 /**
- * Layout Auth Baat — split screen 50/50 (desktop).
+ * Layout Auth Daandé — split screen 50/50 (desktop).
  * - Panneau gauche `BrandSide` : fond `#0a0b0c` + glow radial, logo,
  *   titre marketing 40px weight 510, sous-titre, MiniWaveform animée, stats, stamp mono.
  * - Panneau droit : contenu (formulaire)
@@ -76,7 +76,7 @@ function BrandSide({ title, sub }: { title?: ReactNode; sub?: string }) {
           }}
         >
           {sub ??
-            'Rejoignez Baat-IA pour construire ou alimenter des datasets vocaux annotés en 34 langues africaines.'}
+            'Rejoignez Daandé pour construire ou alimenter des datasets vocaux annotés en 34 langues africaines.'}
         </div>
 
         <MiniWaveform />
