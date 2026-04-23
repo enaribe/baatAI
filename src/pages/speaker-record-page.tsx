@@ -24,6 +24,8 @@ interface PhraseStatus {
   qcStatus: 'pending' | 'processing' | 'completed' | 'failed' | null
   isValid: boolean | null
   reasons: string[]
+  /** Timestamp de soumission, pour détecter les recordings stuck */
+  submittedAt?: number
 }
 
 interface SessionData {
@@ -249,7 +251,7 @@ export function SpeakerRecordPage() {
         ...prev,
         [currentPhrase.id]: {
           ...prev[currentPhrase.id], recorded: true, recordingId: recordingId ?? null,
-          qcStatus: 'pending', isValid: null, reasons: [],
+          qcStatus: 'pending', isValid: null, reasons: [], submittedAt: Date.now(),
         },
       }))
       if (recordingId) {
@@ -282,6 +284,61 @@ export function SpeakerRecordPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [view, isRecording, isUploading, currentIndex, handleStart, handleStop, goTo])
+
+  // Tick toutes les 5s pour réévaluer si un recording est "stuck" (> 30s en pending)
+  const [, setNow] = useState(Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  const handleRetryRecording = useCallback(async () => {
+    if (!currentPhrase) return
+    const status = phraseStatuses[currentPhrase.id]
+    if (!status?.recordingId) return
+    setUploadError('')
+    try {
+      const { data, error } = await (supabase.rpc as unknown as (
+        fn: string, args: Record<string, unknown>,
+      ) => Promise<{ data: { success?: boolean; error?: string } | null; error: { message: string } | null }>)(
+        'retry_recording', { p_recording_id: status.recordingId },
+      )
+      if (error) throw new Error(error.message)
+      if (data?.error) throw new Error(data.error)
+      setPhraseStatuses((prev) => ({
+        ...prev,
+        [currentPhrase.id]: { ...prev[currentPhrase.id]!, submittedAt: Date.now() },
+      }))
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Erreur lors du retry')
+    }
+  }, [currentPhrase, phraseStatuses])
+
+  const handleDeleteRecording = useCallback(async () => {
+    if (!currentPhrase) return
+    const status = phraseStatuses[currentPhrase.id]
+    if (!status?.recordingId) return
+    if (!confirm('Supprimer cet enregistrement ? Tu pourras le refaire ensuite.')) return
+    setUploadError('')
+    try {
+      const { data, error } = await (supabase.rpc as unknown as (
+        fn: string, args: Record<string, unknown>,
+      ) => Promise<{ data: { success?: boolean; error?: string } | null; error: { message: string } | null }>)(
+        'delete_recording', { p_recording_id: status.recordingId },
+      )
+      if (error) throw new Error(error.message)
+      if (data?.error) throw new Error(data.error)
+      setPhraseStatuses((prev) => ({
+        ...prev,
+        [currentPhrase.id]: {
+          recorded: false, recordingId: null, qcStatus: null, isValid: null, reasons: [],
+        },
+      }))
+      pendingChecks.current = pendingChecks.current.filter((c) => c.phraseId !== currentPhrase.id)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
+    }
+  }, [currentPhrase, phraseStatuses])
 
   const formatDuration = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
@@ -661,19 +718,57 @@ export function SpeakerRecordPage() {
               Validée
             </span>
           ) : isCurrentRecorded && currentStatus?.qcStatus === 'pending' ? (
-            <span
-              className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[11px]"
-              style={{
-                ...sans,
-                fontWeight: 510,
-                color: '#8a8f98',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <Clock className="w-3 h-3" strokeWidth={2} />
-              Analyse en cours
-            </span>
+            (() => {
+              const elapsed = currentStatus.submittedAt ? (Date.now() - currentStatus.submittedAt) / 1000 : 0
+              const isStuck = elapsed > 30
+              return (
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[11px]"
+                    style={{
+                      ...sans,
+                      fontWeight: 510,
+                      color: isStuck ? '#fbbf24' : '#8a8f98',
+                      background: isStuck ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${isStuck ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
+                    <Clock className="w-3 h-3" strokeWidth={2} />
+                    {isStuck ? 'Traitement plus long que prévu' : 'Analyse en cours'}
+                  </span>
+                  {isStuck && (
+                    <>
+                      <button
+                        onClick={handleRetryRecording}
+                        className="inline-flex items-center gap-1 px-2.5 h-[22px] text-[11px] rounded-full transition-colors"
+                        style={{
+                          ...sans,
+                          fontWeight: 510,
+                          color: '#d0d6e0',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        Relancer
+                      </button>
+                      <button
+                        onClick={handleDeleteRecording}
+                        className="inline-flex items-center gap-1 px-2.5 h-[22px] text-[11px] rounded-full transition-colors"
+                        style={{
+                          ...sans,
+                          fontWeight: 510,
+                          color: '#fca5a5',
+                          background: 'rgba(239,68,68,0.06)',
+                          border: '1px solid rgba(239,68,68,0.22)',
+                        }}
+                      >
+                        Supprimer
+                      </button>
+                    </>
+                  )}
+                </div>
+              )
+            })()
           ) : null}
         </div>
 
