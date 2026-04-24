@@ -12,7 +12,7 @@ import { Field } from '../components/ui/field'
 import { Button } from '../components/ui/button'
 import { Stepper } from '../components/ui/stepper'
 import type { Gender } from '../types/database'
-import { parseAuthError } from '../lib/auth-errors'
+import { parseAuthError, precheckWhitelist } from '../lib/auth-errors'
 
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -95,6 +95,15 @@ export function SpeakerRegisterPage() {
     setError('')
     setSubmitting(true)
     setSubmitted(true)
+
+    // Pré-check whitelist : court-circuite l'erreur DB cryptique côté Supabase Auth
+    const allowed = await precheckWhitelist(data.email.trim())
+    if (allowed === false) {
+      setError("Cet email n'est pas encore autorisé. Daandé est en beta privée — demandez un accès.")
+      setAccessDenied(true)
+      setSubmitting(false); setSubmitted(false)
+      return
+    }
 
     const { error: signUpError } = await signUp(
       data.email.trim(), data.password, data.name.trim(), 'speaker',

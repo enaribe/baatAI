@@ -10,7 +10,7 @@ import { PublicLayout } from '../components/layout/public-layout'
 import { Field } from '../components/ui/field'
 import { Button } from '../components/ui/button'
 import { ThemeToggle } from '../components/ui/theme-toggle'
-import { parseAuthError } from '../lib/auth-errors'
+import { parseAuthError, precheckWhitelist } from '../lib/auth-errors'
 
 type Role = 'client' | 'speaker' | null
 
@@ -52,6 +52,16 @@ export function RegisterPage() {
     setAccessDenied(false)
     if (!canSubmit) return
     setLoading(true)
+
+    // Pré-check whitelist : court-circuite l'erreur DB cryptique côté Supabase Auth
+    const allowed = await precheckWhitelist(email.trim())
+    if (allowed === false) {
+      setError("Cet email n'est pas encore autorisé. Daandé est en beta privée — demandez un accès.")
+      setAccessDenied(true)
+      setLoading(false)
+      return
+    }
+
     const { error: signUpError } = await signUp(
       email.trim(), password, fullName.trim(), 'client', organization || undefined,
     )
