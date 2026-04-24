@@ -7,6 +7,7 @@ import { ToastContainer } from './components/ui/toast'
 import { ProtectedRoute } from './components/protected-route'
 import { AppLayout } from './components/layout/app-layout'
 import { SpeakerLayout } from './components/layout/speaker-layout'
+import { AdminLayout } from './components/layout/admin-layout'
 
 // Pages chargées immédiatement (chemins critiques d'auth)
 import { LoginPage } from './pages/login-page'
@@ -21,6 +22,7 @@ const RecordPage = lazy(() => import('./pages/record-page').then(m => ({ default
 const SpeakersPage = lazy(() => import('./pages/speakers-page').then(m => ({ default: m.SpeakersPage })))
 const SpeakerDetailPage = lazy(() => import('./pages/speaker-detail-page').then(m => ({ default: m.SpeakerDetailPage })))
 const SpeakerRegisterPage = lazy(() => import('./pages/speaker-register-page').then(m => ({ default: m.SpeakerRegisterPage })))
+const RequestAccessPage = lazy(() => import('./pages/request-access-page').then(m => ({ default: m.RequestAccessPage })))
 const SpeakerOnboardingPage = lazy(() => import('./pages/speaker-onboarding-page').then(m => ({ default: m.SpeakerOnboardingPage })))
 const SpeakerDashboardPage = lazy(() => import('./pages/speaker-dashboard-page').then(m => ({ default: m.SpeakerDashboardPage })))
 const SpeakerProjectsPage = lazy(() => import('./pages/speaker-projects-page').then(m => ({ default: m.SpeakerProjectsPage })))
@@ -33,6 +35,11 @@ const SpeakerValidatePage = lazy(() => import('./pages/speaker-validate-page').t
 const SpeakerProfilePage = lazy(() => import('./pages/speaker-profile-page').then(m => ({ default: m.SpeakerProfilePage })))
 const SpeakerRecordPage = lazy(() => import('./pages/speaker-record-page').then(m => ({ default: m.SpeakerRecordPage })))
 const AdminWithdrawalsPage = lazy(() => import('./pages/admin-withdrawals-page').then(m => ({ default: m.AdminWithdrawalsPage })))
+const AdminDashboardPage = lazy(() => import('./pages/admin/admin-dashboard-page').then(m => ({ default: m.AdminDashboardPage })))
+const AdminRequestsPage = lazy(() => import('./pages/admin/admin-requests-page').then(m => ({ default: m.AdminRequestsPage })))
+const AdminWhitelistPage = lazy(() => import('./pages/admin/admin-whitelist-page').then(m => ({ default: m.AdminWhitelistPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/admin-users-page').then(m => ({ default: m.AdminUsersPage })))
+const AdminEmailsPage = lazy(() => import('./pages/admin/admin-emails-page').then(m => ({ default: m.AdminEmailsPage })))
 
 function PageFallback() {
   return (
@@ -54,6 +61,7 @@ export function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/speaker/register" element={<SpeakerRegisterPage />} />
+            <Route path="/request-access" element={<RequestAccessPage />} />
 
             {/* ── Record token anonyme (compat rétro) ── */}
             <Route path="/record/:token" element={<RecordPage />} />
@@ -195,10 +203,50 @@ export function App() {
 
             {/* ── Admin ── */}
             <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminDashboardPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/requests"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminRequestsPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/whitelist"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminWhitelistPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminUsersPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/emails"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminEmailsPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/withdrawals"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AppLayout><AdminWithdrawalsPage /></AppLayout>
+                  <AdminLayout><AdminWithdrawalsPage /></AdminLayout>
                 </ProtectedRoute>
               }
             />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import {
   Loader2, AlertCircle, Mail, Lock, User, Phone, MapPin, Calendar,
   ArrowRight, ArrowLeft, Check, Pencil,
@@ -12,6 +12,7 @@ import { Field } from '../components/ui/field'
 import { Button } from '../components/ui/button'
 import { Stepper } from '../components/ui/stepper'
 import type { Gender } from '../types/database'
+import { parseAuthError } from '../lib/auth-errors'
 
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -49,6 +50,7 @@ export function SpeakerRegisterPage() {
   const [step, setStep] = useState<Step>(1)
   const [data, setData] = useState<SpeakerForm>(INITIAL)
   const [error, setError] = useState('')
+  const [accessDenied, setAccessDenied] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
@@ -62,7 +64,7 @@ export function SpeakerRegisterPage() {
 
   if (user && role && !submitted) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
-    if (role === 'admin') return <Navigate to="/admin/withdrawals" replace />
+    if (role === 'admin') return <Navigate to="/admin" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -98,7 +100,9 @@ export function SpeakerRegisterPage() {
       data.email.trim(), data.password, data.name.trim(), 'speaker',
     )
     if (signUpError) {
-      setError(signUpError.message)
+      const parsed = parseAuthError(signUpError)
+      setError(parsed.message)
+      setAccessDenied(parsed.isAccessDenied)
       setSubmitting(false); setSubmitted(false)
       return
     }
@@ -169,9 +173,35 @@ export function SpeakerRegisterPage() {
       {/* Contenu */}
       <div className="flex-1 flex flex-col justify-center max-w-[520px] w-full mx-auto mt-8">
         {error && (
-          <div className="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5] border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>{error}</span>
+          <div
+            className="mb-4 flex flex-col gap-2 px-3 py-2.5 rounded-md text-[12px]"
+            style={{
+              color: 'var(--t-danger-text)',
+              border: '1px solid var(--t-danger-muted-border)',
+              background: 'var(--t-danger-muted-bg)',
+            }}
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+            {accessDenied && (
+              <Link
+                to="/request-access"
+                className="inline-flex items-center gap-1.5 self-start px-2.5 h-[26px] rounded-md text-[12px] transition-colors"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontFeatureSettings: "'cv01','ss03'",
+                  fontWeight: 510,
+                  color: 'var(--t-fg)',
+                  background: 'var(--t-surface)',
+                  border: '1px solid var(--t-border)',
+                }}
+              >
+                Demander un accès
+                <ArrowRight className="w-3 h-3" strokeWidth={1.75} />
+              </Link>
+            )}
           </div>
         )}
 

@@ -397,6 +397,30 @@ verify_jwt = false
 [functions.get-recording-status]
 verify_jwt = false
 
+[functions.request-access]
+verify_jwt = false
+
+[functions.approve-access-request]
+verify_jwt = false
+
+[functions.reject-access-request]
+verify_jwt = false
+
+[functions.add-to-whitelist]
+verify_jwt = false
+
+[functions.revoke-whitelist]
+verify_jwt = false
+
+[functions.suspend-account]
+verify_jwt = false
+
+[functions.reactivate-account]
+verify_jwt = false
+
+[functions.revoke-account]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

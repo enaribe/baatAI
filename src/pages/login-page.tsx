@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/use-auth'
 import {
-  Loader2, AlertCircle, Mail, Lock, ArrowRight, ShieldCheck,
+  Loader2, AlertCircle, Mail, Lock, ArrowRight, ShieldCheck, Info,
 } from 'lucide-react'
 import { PublicLayout } from '../components/layout/public-layout'
 import { Field } from '../components/ui/field'
 import { Button } from '../components/ui/button'
+import { ThemeToggle } from '../components/ui/theme-toggle'
 
 export function LoginPage() {
   const { signIn, user, loading: authLoading, role } = useAuth()
@@ -15,6 +16,18 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [searchParams] = useSearchParams()
+
+  const accountNotice = useMemo(() => {
+    const reason = searchParams.get('account')
+    if (reason === 'revoked') {
+      return 'Votre compte n\'existe plus. Contactez le support si c\'est une erreur.'
+    }
+    if (reason === 'suspended') {
+      return 'Votre compte a été suspendu. Contactez le support pour plus d\'informations.'
+    }
+    return null
+  }, [searchParams])
 
   if (authLoading) {
     return (
@@ -26,7 +39,7 @@ export function LoginPage() {
 
   if (user && role) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
-    if (role === 'admin') return <Navigate to="/admin/withdrawals" replace />
+    if (role === 'admin') return <Navigate to="/admin" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -51,20 +64,46 @@ export function LoginPage() {
       brandSubtitle="Vos projets, vos datasets et vos paiements — au même endroit."
     >
       {/* En-tête top bar */}
-      <div className="flex justify-between items-center">
-        <span className="text-[11px] text-[#62666d]" style={{ fontFamily: 'var(--font-mono)' }}>
+      <div className="flex items-center gap-3 h-[32px]">
+        <span
+          className="inline-flex items-center h-[22px] px-2 rounded-[5px] text-[11px]"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--t-fg-3)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border-subtle)',
+          }}
+        >
           /login
         </span>
-        <span className="text-[12px] text-[#62666d]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }}>
-          Pas encore de compte ?{' '}
-          <Link
-            to="/register"
-            className="text-[#f7f8f8] underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
-            style={{ textUnderlineOffset: 3 }}
-          >
-            Créer un compte
-          </Link>
+        <div className="flex-1" />
+        <span
+          className="hidden sm:inline text-[12px]"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            color: 'var(--t-fg-3)',
+          }}
+        >
+          Pas encore de compte ?
         </span>
+        <Link
+          to="/register"
+          className="inline-flex items-center h-[28px] px-2.5 text-[12px] rounded-md transition-colors"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            fontWeight: 510,
+            color: 'var(--t-fg)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
+        >
+          Créer un compte
+        </Link>
+        <ThemeToggle size={28} />
       </div>
 
       {/* Formulaire centré */}
@@ -91,6 +130,22 @@ export function LoginPage() {
         >
           Connectez-vous pour reprendre vos projets.
         </p>
+
+        {accountNotice && (
+          <div
+            className="mt-5 flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px]"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontFeatureSettings: "'cv01','ss03'",
+              color: 'var(--t-warning)',
+              background: 'var(--t-warning-muted-bg)',
+              border: '1px solid var(--t-warning-muted-border)',
+            }}
+          >
+            <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>{accountNotice}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3.5">
           {error && (

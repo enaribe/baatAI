@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Logo } from '../ui/logo'
-import { ThemeToggle } from '../ui/theme-toggle'
 
 interface PublicLayoutProps {
   children: ReactNode
@@ -26,9 +25,6 @@ export function PublicLayout({ children, brandTitle, brandSubtitle }: PublicLayo
     >
       <BrandSide title={brandTitle} sub={brandSubtitle} />
       <section className="relative flex flex-col min-h-screen overflow-y-auto p-6 sm:p-10 lg:p-11">
-        <div className="absolute top-4 right-4 sm:top-5 sm:right-5 z-10">
-          <ThemeToggle size={32} />
-        </div>
         {children}
       </section>
     </div>

@@ -95,7 +95,7 @@ function Nav() {
           Se connecter
         </Link>
         <Link
-          to="/register"
+          to="/request-access"
           className="inline-flex items-center h-[32px] px-3 text-[13px] rounded-md transition-colors"
           style={{
             ...sans,
@@ -155,7 +155,7 @@ function Hero() {
       </p>
       <div className="flex justify-center gap-2.5 mt-7 flex-wrap">
         <Link
-          to="/register"
+          to="/request-access"
           className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
           style={{
             ...sans,
@@ -167,10 +167,10 @@ function Hero() {
           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
         >
-          Créer un projet
+          Postuler comme client
         </Link>
         <Link
-          to="/speaker/register"
+          to="/request-access"
           className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
           style={{
             ...sans,
@@ -182,7 +182,7 @@ function Hero() {
           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
         >
-          Devenir locuteur rémunéré
+          Postuler comme locuteur
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -869,7 +869,7 @@ function CtaSection() {
         </div>
         <div className="flex justify-center gap-2.5 mt-8 flex-wrap">
           <Link
-            to="/register"
+            to="/request-access"
             className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
             style={{
               ...sans,

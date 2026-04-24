@@ -9,6 +9,8 @@ import {
 import { PublicLayout } from '../components/layout/public-layout'
 import { Field } from '../components/ui/field'
 import { Button } from '../components/ui/button'
+import { ThemeToggle } from '../components/ui/theme-toggle'
+import { parseAuthError } from '../lib/auth-errors'
 
 type Role = 'client' | 'speaker' | null
 
@@ -22,6 +24,7 @@ export function RegisterPage() {
   const [password, setPassword] = useState('')
   const [organization, setOrganization] = useState('')
   const [error, setError] = useState('')
+  const [accessDenied, setAccessDenied] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (authLoading) {
@@ -34,7 +37,7 @@ export function RegisterPage() {
 
   if (user && role) {
     if (role === 'speaker') return <Navigate to="/speaker/dashboard" replace />
-    if (role === 'admin') return <Navigate to="/admin/withdrawals" replace />
+    if (role === 'admin') return <Navigate to="/admin" replace />
     return <Navigate to="/dashboard" replace />
   }
 
@@ -46,13 +49,16 @@ export function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
+    setAccessDenied(false)
     if (!canSubmit) return
     setLoading(true)
     const { error: signUpError } = await signUp(
       email.trim(), password, fullName.trim(), 'client', organization || undefined,
     )
     if (signUpError) {
-      setError(signUpError.message)
+      const parsed = parseAuthError(signUpError)
+      setError(parsed.message)
+      setAccessDenied(parsed.isAccessDenied)
       setLoading(false)
     }
   }
@@ -63,24 +69,46 @@ export function RegisterPage() {
       brandSubtitle="Rejoignez Daandé pour construire ou alimenter des datasets vocaux en 34 langues africaines."
     >
       {/* En-tête top bar */}
-      <div className="flex justify-between items-center">
-        <span className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-fg-4)' }}>
+      <div className="flex items-center gap-3 h-[32px]">
+        <span
+          className="inline-flex items-center h-[22px] px-2 rounded-[5px] text-[11px]"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--t-fg-3)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border-subtle)',
+          }}
+        >
           /register
         </span>
-        <span className="text-[12px]" style={{ fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'", color: 'var(--t-fg-4)' }}>
-          Déjà un compte ?{' '}
-          <Link
-            to="/login"
-            className="underline"
-            style={{
-              color: 'var(--t-fg)',
-              textDecorationColor: 'var(--t-border-strong)',
-              textUnderlineOffset: 3,
-            }}
-          >
-            Se connecter
-          </Link>
+        <div className="flex-1" />
+        <span
+          className="hidden sm:inline text-[12px]"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            color: 'var(--t-fg-3)',
+          }}
+        >
+          Déjà un compte ?
         </span>
+        <Link
+          to="/login"
+          className="inline-flex items-center h-[28px] px-2.5 text-[12px] rounded-md transition-colors"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontFeatureSettings: "'cv01','ss03'",
+            fontWeight: 510,
+            color: 'var(--t-fg)',
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
+        >
+          Se connecter
+        </Link>
+        <ThemeToggle size={28} />
       </div>
 
       {/* Contenu */}
@@ -147,15 +175,34 @@ export function RegisterPage() {
 
             {error && (
               <div
-                className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px]"
+                className="flex flex-col gap-2 px-3 py-2.5 rounded-md text-[12px]"
                 style={{
                   color: 'var(--t-danger-text)',
                   border: '1px solid var(--t-danger-muted-border)',
                   background: 'var(--t-danger-muted-bg)',
                 }}
               >
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>{error}</span>
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+                {accessDenied && (
+                  <Link
+                    to="/request-access"
+                    className="inline-flex items-center gap-1.5 self-start px-2.5 h-[26px] rounded-md text-[12px] transition-colors"
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontFeatureSettings: "'cv01','ss03'",
+                      fontWeight: 510,
+                      color: 'var(--t-fg)',
+                      background: 'var(--t-surface)',
+                      border: '1px solid var(--t-border)',
+                    }}
+                  >
+                    Demander un accès
+                    <ArrowRight className="w-3 h-3" strokeWidth={1.75} />
+                  </Link>
+                )}
               </div>
             )}
 
