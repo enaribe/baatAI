@@ -23,6 +23,24 @@ interface RequestAccessBody {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// Limites max pour éviter l'abus / inflation de la table
+const MAX_NAME = 120
+const MAX_PHONE = 30
+const MAX_ORG = 200
+const MAX_CITY = 100
+const MAX_USE_CASE = 2000
+const MAX_MOTIVATION = 2000
+const MAX_VOLUME = 50
+const MAX_AGE_RANGE = 20
+const MAX_GENDER = 30
+const MAX_LANGUAGES = 20  // nb d'éléments dans le tableau
+
+function clip(s: string | undefined | null, max: number): string | null {
+  const t = s?.trim()
+  if (!t) return null
+  return t.length > max ? t.slice(0, max) : t
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req)
   if (req.method === 'OPTIONS') return handlePreflight(corsHeaders)
@@ -52,7 +70,7 @@ Deno.serve(async (req) => {
       return json({ error: 'Email invalide' }, 400)
     }
 
-    const fullName = body.full_name?.trim() ?? ''
+    const fullName = body.full_name?.trim().slice(0, MAX_NAME) ?? ''
     if (fullName.length < 2) {
       return json({ error: 'Nom complet requis (min 2 caractères)' }, 400)
     }
@@ -102,29 +120,29 @@ Deno.serve(async (req) => {
       }, 409)
     }
 
-    // Construire la payload
+    // Construire la payload (toutes les chaînes sont clip à leur taille max)
     const payload: Record<string, unknown> = {
       email,
       full_name: fullName,
       intended_role: role,
-      phone: body.phone?.trim() || null,
+      phone: clip(body.phone, MAX_PHONE),
     }
 
     if (role === 'client') {
-      payload.organization = body.organization?.trim() || null
-      payload.use_case = body.use_case?.trim() || null
-      payload.expected_volume = body.expected_volume?.trim() || null
+      payload.organization = clip(body.organization, MAX_ORG)
+      payload.use_case = clip(body.use_case, MAX_USE_CASE)
+      payload.expected_volume = clip(body.expected_volume, MAX_VOLUME)
       payload.target_languages = Array.isArray(body.target_languages) && body.target_languages.length > 0
-        ? body.target_languages
+        ? body.target_languages.slice(0, MAX_LANGUAGES).map(l => String(l).slice(0, 10))
         : null
     } else {
       payload.speaker_languages = Array.isArray(body.speaker_languages) && body.speaker_languages.length > 0
-        ? body.speaker_languages
+        ? body.speaker_languages.slice(0, MAX_LANGUAGES).map(l => String(l).slice(0, 10))
         : null
-      payload.speaker_city = body.speaker_city?.trim() || null
-      payload.speaker_age_range = body.speaker_age_range?.trim() || null
-      payload.speaker_gender = body.speaker_gender?.trim() || null
-      payload.speaker_motivation = body.speaker_motivation?.trim() || null
+      payload.speaker_city = clip(body.speaker_city, MAX_CITY)
+      payload.speaker_age_range = clip(body.speaker_age_range, MAX_AGE_RANGE)
+      payload.speaker_gender = clip(body.speaker_gender, MAX_GENDER)
+      payload.speaker_motivation = clip(body.speaker_motivation, MAX_MOTIVATION)
     }
 
     const { data: inserted, error: insertError } = await admin

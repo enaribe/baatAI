@@ -10,6 +10,22 @@
 --   2. Lancer ce script dans SQL Editor
 --   3. Lancer reset_storage.sh pour vider les buckets Storage
 --   4. npx supabase db push (applique 041 et bootstrap admin)
+--
+-- ⚠️⚠️⚠️ IMPORTANT — ÉVITER UN BUG VÉCU ⚠️⚠️⚠️
+-- Si tu rejoues ce script APRÈS avoir déjà appliqué la migration 041 :
+--   → la table allowed_emails est vidée
+--   → ton compte admin n'est plus whitelisté
+--   → impossible de te reconnecter ou créer un nouveau compte
+--
+-- DANS CE CAS, exécute ce SQL juste après pour ré-injecter ton bootstrap admin :
+--
+--   INSERT INTO public.allowed_emails (email, role, source, approved_at)
+--   VALUES ('papabdoulaye16@gmail.com', 'admin', 'bootstrap', now())
+--   ON CONFLICT (email) DO UPDATE
+--     SET role = 'admin', source = 'bootstrap',
+--         used_at = NULL, signed_up_user_id = NULL;
+--
+-- (Remplace l'email par celui de ton admin réel.)
 -- =============================================
 
 -- Étape 1 : statistiques AVANT reset (pour vérifier)
