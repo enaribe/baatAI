@@ -309,8 +309,10 @@ function AddEmailModal({
   notify: (args: { variant?: 'success' | 'error' | 'info'; title?: string; message: string }) => void
 }) {
   const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<'client' | 'speaker' | 'admin'>('client')
   const [expiresInDays, setExpiresInDays] = useState<number | ''>('')
+  const [sendInvite, setSendInvite] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -336,16 +338,31 @@ function AddEmailModal({
       body: JSON.stringify({
         email: email.trim().toLowerCase(),
         role,
+        full_name: fullName.trim() || undefined,
         expires_in_days: typeof expiresInDays === 'number' && expiresInDays > 0 ? expiresInDays : undefined,
+        send_invite_email: sendInvite,
       }),
     })
-    const json = await res.json() as { error?: string }
+    const json = await res.json() as {
+      error?: string
+      data?: { email_sent: boolean | null; email_error: string | null }
+    }
     setSubmitting(false)
     if (json.error) {
       setErr(json.error)
       return
     }
-    notify({ variant: 'success', message: `${email} ajouté à la whitelist` })
+    if (sendInvite && json.data?.email_sent === false) {
+      notify({
+        variant: 'error',
+        title: `${email} ajouté mais email échoué`,
+        message: json.data.email_error ?? 'Erreur inconnue (voir /admin/emails)',
+      })
+    } else if (sendInvite) {
+      notify({ variant: 'success', message: `${email} ajouté · email d'invitation envoyé` })
+    } else {
+      notify({ variant: 'success', message: `${email} ajouté (sans email)` })
+    }
     await onAdded()
   }
 
@@ -409,6 +426,25 @@ function AddEmailModal({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[12px]" style={{ ...sans, fontWeight: 510, color: 'var(--t-fg-2)' }}>
+              Nom complet (optionnel, utilisé dans l'email)
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              placeholder="Aminata Diop"
+              className="rounded-md px-3 py-2 text-[14px] outline-none"
+              style={{
+                ...sans,
+                color: 'var(--t-fg)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px]" style={{ ...sans, fontWeight: 510, color: 'var(--t-fg-2)' }}>
               Rôle
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -457,6 +493,31 @@ function AddEmailModal({
               }}
             />
           </div>
+
+          {/* Toggle envoi email d'invitation */}
+          <label
+            className="flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer"
+            style={{
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={sendInvite}
+              onChange={e => setSendInvite(e.target.checked)}
+              className="mt-0.5 w-4 h-4 cursor-pointer"
+              style={{ accentColor: 'var(--t-accent)' }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px]" style={{ ...sans, fontWeight: 510, color: 'var(--t-fg)' }}>
+                Envoyer un email d'invitation
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ ...sans, color: 'var(--t-fg-3)' }}>
+                La personne reçoit un email avec un lien pour créer son compte.
+              </p>
+            </div>
+          </label>
 
           {err && (
             <div
