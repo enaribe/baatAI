@@ -568,63 +568,56 @@ function LanguagesSection() {
   ]
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
-      {/* Header 2-cols : titre à gauche, mini-carte à droite */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 lg:gap-12 mb-12 items-center">
-        <div className="text-center lg:text-left">
-          <div
-            className="text-[11px] uppercase"
-            style={{
-              ...mono,
-              letterSpacing: '0.12em',
-              color: 'var(--t-fg-4)',
-            }}
-          >
-            Couverture
-          </div>
-          <div
-            className="text-[32px] md:text-[40px] mt-3"
-            style={{
-              ...sans,
-              fontWeight: 510,
-              lineHeight: 1.05,
-              letterSpacing: '-0.9px',
-              color: 'var(--t-fg)',
-            }}
-          >
-            4 langues au lancement.
-          </div>
-          <div
-            className="text-[15px] md:text-[17px] mt-3.5 mx-auto lg:mx-0"
-            style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)', maxWidth: 520 }}
-          >
-            Wolof, Pulaar, Sereer, Bambara — sélectionnées pour la demande
-            des équipes NLP au Sénégal et au Mali. D'autres suivront selon vos besoins.
-          </div>
-        </div>
+      <SectionTitle
+        kicker="Couverture"
+        title="4 langues au lancement."
+        subtitle="Wolof, Pulaar, Sereer, Bambara — sélectionnées pour la demande des équipes NLP au Sénégal et au Mali. D'autres suivront selon vos besoins."
+      />
 
-        {/* Mini-carte West Africa */}
+      {/* Carte West Africa — pleine largeur, panneau dark-locked */}
+      <div
+        data-theme="dark"
+        className="dark-lock relative rounded-[14px] overflow-hidden mb-6"
+        style={{
+          background: '#08090a',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 30px 60px -20px rgba(0,0,0,0.4)',
+        }}
+      >
+        <img
+          src="/images/landing/west-africa-map.webp"
+          alt="Carte de l'Afrique de l'Ouest avec Dakar, Saint-Louis, Bamako, Sikasso"
+          loading="lazy"
+          decoding="async"
+          width={1600}
+          height={550}
+          className="block w-full h-auto select-none"
+        />
         <div
-          className="relative rounded-[12px] overflow-hidden"
-          style={{
-            background: 'var(--t-surface)',
-            border: '1px solid var(--t-border-subtle)',
-          }}
+          className="absolute top-3.5 left-4 inline-flex items-center gap-1.5"
         >
-          <img
-            src="/images/landing/west-africa-map.webp"
-            alt="Carte de l'Afrique de l'Ouest avec Dakar, Saint-Louis, Bamako, Sikasso"
-            loading="lazy"
-            decoding="async"
-            width={720}
-            height={400}
-            className="block w-full h-auto select-none mix-blend-screen opacity-90"
-          />
-          <div
-            className="absolute top-2.5 left-3 text-[10px] uppercase"
-            style={{ ...mono, letterSpacing: '0.08em', color: 'var(--t-fg-4)' }}
+          <span
+            className="text-[10px] uppercase"
+            style={{ ...mono, letterSpacing: '0.12em', color: '#62666d' }}
           >
             Régions actives
-          </div>
+          </span>
+        </div>
+        <div
+          className="absolute top-3.5 right-4 inline-flex items-center gap-1.5 px-2 h-[20px] rounded-full text-[10px]"
+          style={{
+            ...sans,
+            fontWeight: 510,
+            color: '#d0d6e0',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+            style={{ background: '#10b981' }}
+          />
+          4 zones
         </div>
       </div>
 
@@ -704,26 +697,7 @@ function PipelineSection() {
           icon={<Mic className="w-5 h-5" strokeWidth={1.75} />}
           title="Capture mobile"
           body="Le locuteur enregistre depuis son téléphone, phrase par phrase. Upload résumable TUS — résiste à la 3G et aux coupures."
-          demo={
-            <div
-              className="relative -m-4 mt-3 rounded-[8px] overflow-hidden"
-              style={{
-                border: '1px solid var(--t-border-subtle)',
-                aspectRatio: '4 / 3',
-              }}
-            >
-              <img
-                src="/images/landing/phone-recording.webp"
-                alt="Locuteur enregistrant en wolof depuis un Samsung Galaxy A14"
-                loading="lazy"
-                decoding="async"
-                width={800}
-                height={1067}
-                className="block w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center 30%' }}
-              />
-            </div>
-          }
+          demo={<Waveform height={40} bars={48} />}
         />
         <PipelineCard
           inView={inView}
