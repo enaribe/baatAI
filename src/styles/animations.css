@@ -139,6 +139,40 @@
   100% { transform: translate(60px, 60px); }
 }
 
+/* --- Live badge dot (pulse vert continu) --- */
+@keyframes pulse-dot {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+
+/* --- Reveal en cascade pour les lignes de transcript --- */
+@keyframes reveal-line {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Slide-up + fade combiné (plus doux que fade-in-up classique) --- */
+@keyframes slide-up-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* --- Utility classes --- */
 .animate-pulse-record {
   animation: pulse-record 1.6s ease-in-out infinite;
@@ -197,6 +231,42 @@
   animation: stagger-in 500ms ease-out both;
 }
 
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-out infinite;
+}
+
+.animate-reveal-line {
+  animation: reveal-line 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-slide-up-fade {
+  animation: slide-up-fade 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Card lift au hover (Pipeline / cards) --- */
+.card-lift {
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 240ms ease,
+              background 240ms ease;
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--t-border-strong) !important;
+}
+
+/* --- Hero photo zoom subtil au hover --- */
+.photo-zoom {
+  overflow: hidden;
+}
+.photo-zoom img {
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.photo-zoom:hover img {
+  transform: scale(1.025);
+}
+
 /* --- Delays pour stagger --- */
 .animation-delay-100 { animation-delay: 100ms; }
 .animation-delay-150 { animation-delay: 150ms; }
@@ -219,9 +289,22 @@
   .animate-scale-in,
   .animate-float,
   .animate-pulse-soft,
-  .animate-stagger-in {
+  .animate-stagger-in,
+  .animate-pulse-dot,
+  .animate-reveal-line,
+  .animate-slide-up-fade {
     animation: none !important;
     opacity: 1 !important;
+    transform: none !important;
+  }
+  .card-lift,
+  .photo-zoom img {
+    transition: none !important;
+  }
+  .card-lift:hover {
+    transform: none !important;
+  }
+  .photo-zoom:hover img {
     transform: none !important;
   }
 }

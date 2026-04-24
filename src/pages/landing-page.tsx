@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Mic, FileText, ShieldCheck, ArrowRight,
@@ -6,6 +6,7 @@ import {
 import { Logo } from '../components/ui/logo'
 import { Waveform } from '../components/ui/waveform'
 import { ThemeToggle } from '../components/ui/theme-toggle'
+import { useInView } from '../hooks/use-in-view'
 
 /* ============================================================
    Landing Daandé — reproduction fidèle du mock marketing
@@ -117,220 +118,328 @@ function Nav() {
 /* ---------- Hero ---------- */
 function Hero() {
   return (
-    <section className="px-6 pt-20 pb-10 max-w-[1100px] mx-auto text-center">
+    <section className="relative px-6 pt-16 pb-10 max-w-[1100px] mx-auto overflow-hidden">
+      {/* Layout 2 colonnes : texte + photo */}
+      <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-10 lg:gap-12 items-center">
+        {/* Colonne gauche : titre + CTAs */}
+        <div className="text-center lg:text-left">
+          <div
+            className="inline-block text-[11px] uppercase mb-5"
+            style={{
+              ...mono,
+              letterSpacing: '0.12em',
+              color: 'var(--t-fg-4)',
+            }}
+          >
+            Beta privée · Dakar
+          </div>
+          <h1
+            className="text-[40px] sm:text-[52px] lg:text-[60px] leading-[1.02] m-0"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              letterSpacing: '-1.408px',
+              color: 'var(--t-fg)',
+            }}
+          >
+            Les voix de l'Afrique,<br />prêtes pour l'IA.
+          </h1>
+          <p
+            className="mt-6 text-[16px] sm:text-[17px] leading-[1.6] mx-auto lg:mx-0"
+            style={{
+              ...sans,
+              letterSpacing: '-0.165px',
+              maxWidth: 540,
+              color: 'var(--t-fg-3)',
+            }}
+          >
+            Plateforme de collecte de datasets vocaux pour 4 langues africaines —
+            Wolof, Pulaar, Sereer, Bambara. Pour les équipes IA qui construisent
+            leurs propres modèles ASR et TTS.
+          </p>
+          <div className="flex justify-center lg:justify-start gap-2.5 mt-7 flex-wrap">
+            <Link
+              to="/request-access"
+              className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                background: 'var(--t-solid-bg)',
+                color: 'var(--t-solid-fg)',
+                border: '1px solid var(--t-border)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
+            >
+              Postuler comme client
+            </Link>
+            <Link
+              to="/request-access"
+              className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: 'var(--t-fg-2)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
+            >
+              Postuler comme locuteur
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Colonne droite : photo locutrice */}
+        <div className="relative animate-slide-up-fade animation-delay-200">
+          <div
+            className="photo-zoom relative rounded-[14px]"
+            style={{
+              border: '1px solid var(--t-border)',
+              boxShadow: '0 30px 60px -20px rgba(0,0,0,0.4)',
+            }}
+          >
+            <img
+              src="/images/landing/hero-speaker.webp"
+              alt="Locutrice enregistrant sa voix sur smartphone à Dakar"
+              loading="eager"
+              decoding="async"
+              width={1600}
+              height={900}
+              className="block w-full h-auto select-none"
+            />
+            {/* Caption overlay */}
+            <div
+              className="absolute bottom-0 left-0 right-0 p-4 sm:p-5"
+              style={{
+                background: 'linear-gradient(to top, rgba(8,9,10,0.92) 0%, rgba(8,9,10,0.5) 50%, transparent 100%)',
+              }}
+            >
+              <div
+                className="text-[10px] uppercase mb-1"
+                style={{ ...mono, letterSpacing: '0.12em', color: '#d0d6e0' }}
+              >
+                Terrain · Dakar
+              </div>
+              <div
+                className="text-[13px]"
+                style={{ ...sans, fontWeight: 510, color: '#f7f8f8', lineHeight: 1.4 }}
+              >
+                Phrase par phrase, depuis son téléphone.
+              </div>
+            </div>
+          </div>
+          {/* Petit floating badge "live" — dot pulse animé */}
+          <div
+            className="absolute -top-3 -right-3 inline-flex items-center gap-1.5 px-2.5 h-[24px] rounded-full text-[10px]"
+            style={{
+              ...sans,
+              fontWeight: 590,
+              color: '#f7f8f8',
+              background: '#0a0b0c',
+              border: '1px solid rgba(255,255,255,0.18)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+              style={{ background: '#10b981' }}
+            />
+            En cours
+          </div>
+        </div>
+      </div>
+
+      {/* Showcase dataset preview — composant animé */}
+      <DatasetPreviewPanel />
+    </section>
+  )
+}
+
+/* ---------- Dataset Preview Panel (animé) ---------- */
+function DatasetPreviewPanel() {
+  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.25 })
+
+  // Compteur live qui démarre quand le panneau entre dans le viewport.
+  // Démarre à 85 et s'incrémente jusqu'à 92 (suggère "live data").
+  const [phraseCount, setPhraseCount] = useState(85)
+  useEffect(() => {
+    if (!inView) return
+    const target = 92
+    let current = 85
+    const interval = setInterval(() => {
+      current += 1
+      setPhraseCount(current)
+      if (current >= target) clearInterval(interval)
+    }, 1100)
+    return () => clearInterval(interval)
+  }, [inView])
+
+  const transcripts = [
+    { t: '00:01.2', s: 'Ndax nga fi nekk ci ngoon si ?', tr: 'Tu es là cet après-midi ?' },
+    { t: '00:03.6', s: 'Waaw, damay liggéey ci biro bi.', tr: 'Oui, je travaille au bureau.' },
+    { t: '00:06.8', s: 'Kon ñu dajaloo fukki waxtu.', tr: "Alors on se retrouve à 10h." },
+  ]
+
+  return (
+    <div
+      ref={ref}
+      data-theme="dark"
+      className="dark-lock mt-[52px] p-3.5 rounded-[14px] relative"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.2)',
+        color: '#f7f8f8',
+      }}
+    >
       <div
-        className="inline-block text-[11px] uppercase mb-5"
+        className="absolute -top-2.5 right-4 inline-flex items-center px-2 h-[20px] rounded-[2px] text-[10px] uppercase z-10"
         style={{
           ...mono,
-          letterSpacing: '0.12em',
-          color: 'var(--t-fg-4)',
+          letterSpacing: '0.08em',
+          color: '#62666d',
+          background: '#0f1011',
+          border: '1px solid rgba(255,255,255,0.12)',
         }}
       >
-        Beta privée · Dakar
+        Aperçu produit
       </div>
-      <h1
-        className="mx-auto text-[40px] sm:text-[56px] lg:text-[64px] leading-[1.02]"
-        style={{
-          ...sans,
-          fontWeight: 510,
-          letterSpacing: '-1.408px',
-          maxWidth: 860,
-          color: 'var(--t-fg)',
-        }}
-      >
-        Les voix de l'Afrique,<br />prêtes pour l'IA.
-      </h1>
-      <p
-        className="mx-auto mt-6 text-[16px] sm:text-[18px] leading-[1.6]"
-        style={{
-          ...sans,
-          letterSpacing: '-0.165px',
-          maxWidth: 640,
-          color: 'var(--t-fg-3)',
-        }}
-      >
-        Plateforme de collecte de datasets vocaux pour 4 langues africaines —
-        Wolof, Pulaar, Sereer, Bambara. Pour les équipes IA qui construisent
-        leurs propres modèles ASR et TTS.
-      </p>
-      <div className="flex justify-center gap-2.5 mt-7 flex-wrap">
-        <Link
-          to="/request-access"
-          className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
-          style={{
-            ...sans,
-            fontWeight: 510,
-            background: 'var(--t-solid-bg)',
-            color: 'var(--t-solid-fg)',
-            border: '1px solid var(--t-border)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
-        >
-          Postuler comme client
-        </Link>
-        <Link
-          to="/request-access"
-          className="inline-flex items-center gap-1.5 h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
-          style={{
-            ...sans,
-            fontWeight: 510,
-            color: 'var(--t-fg-2)',
-            background: 'var(--t-surface)',
-            border: '1px solid var(--t-border)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
-        >
-          Postuler comme locuteur
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
-      {/* Showcase dataset preview — reste dark-lock (moniteur stylisé) */}
-      <div
-        data-theme="dark"
-        className="dark-lock mt-[52px] p-3.5 rounded-[14px] relative"
-        style={{
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.2)',
-          color: '#f7f8f8',
-        }}
-      >
-        <div
-          className="absolute -top-2.5 right-4 inline-flex items-center px-2 h-[20px] rounded-[2px] text-[10px] uppercase z-10"
-          style={{
-            ...mono,
-            letterSpacing: '0.08em',
-            color: '#62666d',
-            background: '#0f1011',
-            border: '1px solid rgba(255,255,255,0.12)',
-          }}
-        >
-          Aperçu produit
+      <div className="rounded-[10px] overflow-hidden" style={{ background: '#0f1011' }}>
+        {/* Window chrome */}
+        <div className="px-3.5 py-2.5 border-b border-[rgba(255,255,255,0.05)] flex items-center gap-2.5">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div
+              className="text-[11px] text-[#62666d] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] rounded-md px-2.5 py-0.5"
+              style={mono}
+            >
+              baat-ai.com/dashboard/projects
+            </div>
+          </div>
+          <span
+            className="inline-flex items-center px-2 h-[18px] rounded-[2px] text-[10px] text-[#f7f8f8] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.05)]"
+            style={{ ...sans, fontWeight: 510 }}
+          >
+            v2.4
+          </span>
         </div>
-        <div className="rounded-[10px] overflow-hidden" style={{ background: '#0f1011' }}>
-          {/* Window chrome */}
-          <div className="px-3.5 py-2.5 border-b border-[rgba(255,255,255,0.05)] flex items-center gap-2.5">
-            <div className="flex gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3e3e44' }} />
-            </div>
-            <div className="flex-1 flex justify-center">
-              <div
-                className="text-[11px] text-[#62666d] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] rounded-md px-2.5 py-0.5"
-                style={mono}
-              >
-                baat-ai.com/dashboard/projects
-              </div>
-            </div>
-            <span
-              className="inline-flex items-center px-2 h-[18px] rounded-[2px] text-[10px] text-[#f7f8f8] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.05)]"
+
+        {/* Content */}
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] min-h-[340px]">
+          {/* Side list */}
+          <div className="border-r border-[rgba(255,255,255,0.05)] p-2.5 hidden md:block">
+            <div
+              className="px-2 py-1.5 text-[10px] text-[#62666d] uppercase tracking-[0.04em]"
               style={{ ...sans, fontWeight: 510 }}
             >
-              v2.4
-            </span>
+              Vos projets
+            </div>
+            {[
+              { n: 'Centre d\'appel · Wolof', s: 'Actif', on: true },
+              { n: 'Lecture phrases · Pulaar', s: 'Actif' },
+              { n: 'Conversation · Sereer', s: 'Brouillon' },
+              { n: 'Salutations · Bambara', s: 'Brouillon' },
+            ].map((d, i) => (
+              <div
+                key={i}
+                className="px-2 py-1.5 rounded-sm mb-0.5 flex items-center justify-between"
+                style={{ background: d.on ? 'rgba(255,255,255,0.04)' : 'transparent' }}
+              >
+                <span
+                  className="text-[12px] text-left"
+                  style={{ ...sans, color: d.on ? '#f7f8f8' : '#d0d6e0', fontWeight: d.on ? 510 : 400 }}
+                >
+                  {d.n}
+                </span>
+                <span className="text-[10px] text-[#62666d]" style={mono}>
+                  {d.s.toLowerCase()}
+                </span>
+              </div>
+            ))}
           </div>
 
-          {/* Content */}
-          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] min-h-[340px]">
-            {/* Side list */}
-            <div className="border-r border-[rgba(255,255,255,0.05)] p-2.5 hidden md:block">
+          {/* Main */}
+          <div className="p-4 sm:p-[18px] text-left">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <div
-                className="px-2 py-1.5 text-[10px] text-[#62666d] uppercase tracking-[0.04em]"
+                className="text-[18px] text-[#f7f8f8]"
+                style={{ ...sans, fontWeight: 590, letterSpacing: '-0.24px' }}
+              >
+                Centre d'appel — Wolof
+              </div>
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
                 style={{ ...sans, fontWeight: 510 }}
               >
-                Vos projets
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+                  style={{ background: '#10b981' }}
+                />
+                Collecte en cours
+              </span>
+            </div>
+            <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+              <span
+                className="tabular-nums"
+                style={{
+                  color: phraseCount > 85 ? '#f7f8f8' : '#8a8f98',
+                  transition: 'color 600ms ease',
+                }}
+              >
+                {phraseCount}
+              </span>
+              {' '}phrases · 12 locuteurs invités · WebM 48 kHz
+            </div>
+
+            {/* Waveform panel */}
+            <div
+              className="mt-[18px] p-3.5 rounded-[8px] border border-[rgba(255,255,255,0.05)]"
+              style={{ background: 'rgba(255,255,255,0.02)' }}
+            >
+              <Waveform height={52} bars={72} />
+              <div className="flex justify-between mt-2 text-[10px] text-[#62666d]" style={mono}>
+                <span>00:00:00</span>
+                <span>00:00:12.480</span>
               </div>
-              {[
-                { n: 'Centre d\'appel · Wolof', s: 'Actif', on: true },
-                { n: 'Lecture phrases · Pulaar', s: 'Actif' },
-                { n: 'Conversation · Sereer', s: 'Brouillon' },
-                { n: 'Salutations · Bambara', s: 'Brouillon' },
-              ].map((d, i) => (
+            </div>
+
+            {/* Transcript rows — reveal en cascade quand inView */}
+            <div className="mt-3.5 flex flex-col gap-1.5">
+              {transcripts.map((r, i) => (
                 <div
                   key={i}
-                  className="px-2 py-1.5 rounded-sm mb-0.5 flex items-center justify-between"
-                  style={{ background: d.on ? 'rgba(255,255,255,0.04)' : 'transparent' }}
+                  className={`grid grid-cols-[64px_1fr] md:grid-cols-[64px_1fr_1fr] gap-3 px-2 py-1.5 rounded-sm ${
+                    inView ? 'animate-reveal-line' : ''
+                  }`}
+                  style={{
+                    background: i === 0 ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    opacity: inView ? undefined : 0,
+                    animationDelay: inView ? `${i * 180 + 200}ms` : undefined,
+                  }}
                 >
-                  <span
-                    className="text-[12px] text-left"
-                    style={{ ...sans, color: d.on ? '#f7f8f8' : '#d0d6e0', fontWeight: d.on ? 510 : 400 }}
-                  >
-                    {d.n}
+                  <span className="text-[11px] text-[#62666d]" style={mono}>
+                    {r.t}
                   </span>
-                  <span className="text-[10px] text-[#62666d]" style={mono}>
-                    {d.s.toLowerCase()}
+                  <span className="text-[12px] text-[#f7f8f8]" style={sans}>
+                    {r.s}
+                  </span>
+                  <span className="text-[12px] text-[#8a8f98] italic hidden md:block" style={sans}>
+                    {r.tr}
                   </span>
                 </div>
               ))}
             </div>
-
-            {/* Main */}
-            <div className="p-4 sm:p-[18px] text-left">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <div
-                  className="text-[18px] text-[#f7f8f8]"
-                  style={{ ...sans, fontWeight: 590, letterSpacing: '-0.24px' }}
-                >
-                  Centre d'appel — Wolof
-                </div>
-                <span
-                  className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
-                  style={{ ...sans, fontWeight: 510 }}
-                >
-                  Collecte en cours
-                </span>
-              </div>
-              <div className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
-                85 phrases · 12 locuteurs invités · WebM 48 kHz
-              </div>
-
-              {/* Waveform panel */}
-              <div
-                className="mt-[18px] p-3.5 rounded-[8px] border border-[rgba(255,255,255,0.05)]"
-                style={{ background: 'rgba(255,255,255,0.02)' }}
-              >
-                <Waveform height={52} bars={72} />
-                <div className="flex justify-between mt-2 text-[10px] text-[#62666d]" style={mono}>
-                  <span>00:00:00</span>
-                  <span>00:00:12.480</span>
-                </div>
-              </div>
-
-              {/* Transcript rows */}
-              <div className="mt-3.5 flex flex-col gap-1.5">
-                {[
-                  { t: '00:01.2', s: 'Ndax nga fi nekk ci ngoon si ?', tr: 'Tu es là cet après-midi ?' },
-                  { t: '00:03.6', s: 'Waaw, damay liggéey ci biro bi.', tr: 'Oui, je travaille au bureau.' },
-                  { t: '00:06.8', s: 'Kon ñu dajaloo fukki waxtu.', tr: "Alors on se retrouve à 10h." },
-                ].map((r, i) => (
-                  <div
-                    key={i}
-                    className="grid grid-cols-[64px_1fr] md:grid-cols-[64px_1fr_1fr] gap-3 px-2 py-1.5 rounded-sm"
-                    style={{
-                      background: i === 0 ? 'rgba(255,255,255,0.05)' : 'transparent',
-                    }}
-                  >
-                    <span className="text-[11px] text-[#62666d]" style={mono}>
-                      {r.t}
-                    </span>
-                    <span className="text-[12px] text-[#f7f8f8]" style={sans}>
-                      {r.s}
-                    </span>
-                    <span className="text-[12px] text-[#8a8f98] italic hidden md:block" style={sans}>
-                      {r.tr}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -459,11 +568,66 @@ function LanguagesSection() {
   ]
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
-      <SectionTitle
-        kicker="Couverture"
-        title="4 langues au lancement."
-        subtitle="Wolof, Pulaar, Sereer, Bambara — sélectionnées pour la demande des équipes NLP au Sénégal et au Mali. D'autres suivront selon vos besoins."
-      />
+      {/* Header 2-cols : titre à gauche, mini-carte à droite */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 lg:gap-12 mb-12 items-center">
+        <div className="text-center lg:text-left">
+          <div
+            className="text-[11px] uppercase"
+            style={{
+              ...mono,
+              letterSpacing: '0.12em',
+              color: 'var(--t-fg-4)',
+            }}
+          >
+            Couverture
+          </div>
+          <div
+            className="text-[32px] md:text-[40px] mt-3"
+            style={{
+              ...sans,
+              fontWeight: 510,
+              lineHeight: 1.05,
+              letterSpacing: '-0.9px',
+              color: 'var(--t-fg)',
+            }}
+          >
+            4 langues au lancement.
+          </div>
+          <div
+            className="text-[15px] md:text-[17px] mt-3.5 mx-auto lg:mx-0"
+            style={{ ...sans, lineHeight: 1.55, color: 'var(--t-fg-3)', maxWidth: 520 }}
+          >
+            Wolof, Pulaar, Sereer, Bambara — sélectionnées pour la demande
+            des équipes NLP au Sénégal et au Mali. D'autres suivront selon vos besoins.
+          </div>
+        </div>
+
+        {/* Mini-carte West Africa */}
+        <div
+          className="relative rounded-[12px] overflow-hidden"
+          style={{
+            background: 'var(--t-surface)',
+            border: '1px solid var(--t-border-subtle)',
+          }}
+        >
+          <img
+            src="/images/landing/west-africa-map.webp"
+            alt="Carte de l'Afrique de l'Ouest avec Dakar, Saint-Louis, Bamako, Sikasso"
+            loading="lazy"
+            decoding="async"
+            width={720}
+            height={400}
+            className="block w-full h-auto select-none mix-blend-screen opacity-90"
+          />
+          <div
+            className="absolute top-2.5 left-3 text-[10px] uppercase"
+            style={{ ...mono, letterSpacing: '0.08em', color: 'var(--t-fg-4)' }}
+          >
+            Régions actives
+          </div>
+        </div>
+      </div>
+
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-[12px] overflow-hidden"
         style={{
@@ -525,6 +689,7 @@ function LangCell({ lang }: { lang: [string, string, string] }) {
 
 /* ---------- Pipeline ---------- */
 function PipelineSection() {
+  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.15 })
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
       <SectionTitle
@@ -532,14 +697,37 @@ function PipelineSection() {
         title="Contrôle qualité automatique."
         subtitle="Chaque enregistrement passe par un contrôle SNR, détection de clipping et ratio silence. Les segments sous le seuil sont rejetés et renvoyés au locuteur pour ré-enregistrement."
       />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <PipelineCard
+          inView={inView}
+          delay={0}
           icon={<Mic className="w-5 h-5" strokeWidth={1.75} />}
           title="Capture mobile"
           body="Le locuteur enregistre depuis son téléphone, phrase par phrase. Upload résumable TUS — résiste à la 3G et aux coupures."
-          demo={<Waveform height={40} bars={48} />}
+          demo={
+            <div
+              className="relative -m-4 mt-3 rounded-[8px] overflow-hidden"
+              style={{
+                border: '1px solid var(--t-border-subtle)',
+                aspectRatio: '4 / 3',
+              }}
+            >
+              <img
+                src="/images/landing/phone-recording.webp"
+                alt="Locuteur enregistrant en wolof depuis un Samsung Galaxy A14"
+                loading="lazy"
+                decoding="async"
+                width={800}
+                height={1067}
+                className="block w-full h-full object-cover select-none"
+                style={{ objectPosition: 'center 30%' }}
+              />
+            </div>
+          }
         />
         <PipelineCard
+          inView={inView}
+          delay={120}
           icon={<FileText className="w-5 h-5" strokeWidth={1.75} />}
           title="Métriques techniques"
           body="SNR, clipping, ratio silence, durée — calculés à l'arrivée sur chaque segment WebM. Profils ASR ou TTS selon le projet."
@@ -569,6 +757,8 @@ function PipelineSection() {
           }
         />
         <PipelineCard
+          inView={inView}
+          delay={240}
           icon={<ShieldCheck className="w-5 h-5" strokeWidth={1.75} />}
           title="Validation croisée"
           body="Vous écoutez et validez vous-même les enregistrements depuis le dashboard. Les rejets reviennent au locuteur avec la raison du refus."
@@ -608,14 +798,25 @@ function PipelineSection() {
 }
 
 function PipelineCard({
-  icon, title, body, demo,
-}: { icon: React.ReactNode; title: string; body: string; demo: React.ReactNode }) {
+  icon, title, body, demo, inView, delay = 0,
+}: {
+  icon: React.ReactNode
+  title: string
+  body: string
+  demo: React.ReactNode
+  inView?: boolean
+  delay?: number
+}) {
   return (
     <div
-      className="p-6 flex flex-col min-h-[280px] rounded-[12px]"
+      className={`card-lift p-6 flex flex-col min-h-[280px] rounded-[12px] overflow-hidden ${
+        inView ? 'animate-slide-up-fade' : ''
+      }`}
       style={{
         background: 'var(--t-surface)',
         border: '1px solid var(--t-border)',
+        opacity: inView === false ? 0 : undefined,
+        animationDelay: inView ? `${delay}ms` : undefined,
       }}
     >
       <div
@@ -846,58 +1047,114 @@ function QuoteSection() {
 
 /* ---------- CTA ---------- */
 function CtaSection() {
+  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.2 })
   return (
     <section className="px-6 py-20 max-w-[1100px] mx-auto">
       <div
-        className="p-10 md:p-16 rounded-[14px] text-center"
+        ref={ref}
+        data-theme="dark"
+        className={`dark-lock relative grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] rounded-[14px] overflow-hidden ${
+          inView ? 'animate-slide-up-fade' : ''
+        }`}
         style={{
-          background: 'var(--t-surface-2)',
-          border: '1px solid var(--t-border-strong)',
+          background: '#0a0b0c',
+          border: '1px solid rgba(255,255,255,0.08)',
+          color: '#f7f8f8',
+          opacity: inView === false ? 0 : undefined,
         }}
       >
-        <div
-          className="text-[36px] md:text-[48px]"
-          style={{
-            ...sans,
-            fontWeight: 510,
-            lineHeight: 1.0,
-            letterSpacing: '-1.056px',
-            color: 'var(--t-fg)',
-          }}
-        >
-          Construisez vos modèles sur<br />les voix qui vous concernent.
+        {/* Colonne gauche : photo équipe Dakar */}
+        <div className="photo-zoom relative min-h-[280px] lg:min-h-[400px]">
+          <img
+            src="/images/landing/team-dakar.webp"
+            alt="Équipe Daandé en atelier à Dakar"
+            loading="lazy"
+            decoding="async"
+            width={1600}
+            height={900}
+            className="absolute inset-0 w-full h-full object-cover select-none"
+            style={{ objectPosition: 'center' }}
+          />
+          {/* Overlay caption bas-gauche */}
+          <div
+            className="absolute bottom-0 left-0 right-0 p-5 sm:p-6"
+            style={{
+              background: 'linear-gradient(to top, rgba(8,9,10,0.92) 0%, rgba(8,9,10,0.4) 60%, transparent 100%)',
+            }}
+          >
+            <div
+              className="text-[10px] uppercase mb-1"
+              style={{ ...mono, letterSpacing: '0.12em', color: '#d0d6e0' }}
+            >
+              Équipe · Dakar
+            </div>
+            <div
+              className="text-[13px]"
+              style={{ ...sans, fontWeight: 510, color: '#f7f8f8', lineHeight: 1.4 }}
+            >
+              On accompagne chaque projet personnellement.
+            </div>
+          </div>
         </div>
-        <div className="flex justify-center gap-2.5 mt-8 flex-wrap">
-          <Link
-            to="/request-access"
-            className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors"
+
+        {/* Colonne droite : message + CTAs */}
+        <div className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center">
+          <div
+            className="text-[10px] uppercase mb-4"
+            style={{ ...mono, letterSpacing: '0.12em', color: '#62666d' }}
+          >
+            Démarrer
+          </div>
+          <div
+            className="text-[28px] sm:text-[34px] lg:text-[38px]"
             style={{
               ...sans,
               fontWeight: 510,
-              background: 'var(--t-solid-bg)',
-              color: 'var(--t-solid-fg)',
-              border: '1px solid var(--t-border)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.8px',
+              color: '#f7f8f8',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-solid-bg)')}
           >
-            Créer un projet
-          </Link>
-          <a
-            href="mailto:hello@baat-ai.com"
-            className="inline-flex items-center h-[36px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
-            style={{
-              ...sans,
-              fontWeight: 510,
-              color: 'var(--t-fg-2)',
-              background: 'var(--t-surface)',
-              border: '1px solid var(--t-border)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--t-surface-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--t-surface)')}
+            Construisez vos modèles sur les voix qui vous concernent.
+          </div>
+          <p
+            className="text-[14px] mt-4"
+            style={{ ...sans, lineHeight: 1.55, color: '#8a8f98' }}
           >
-            Parler à l'équipe
-          </a>
+            On répond à toutes les demandes sous 48h. Beta privée — accès sur invitation.
+          </p>
+          <div className="flex gap-2.5 mt-7 flex-wrap">
+            <Link
+              to="/request-access"
+              className="inline-flex items-center h-[38px] px-4 text-[14px] rounded-md transition-colors"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                background: '#f7f8f8',
+                color: '#08090a',
+                border: '1px solid rgba(255,255,255,0.18)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#ffffff')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#f7f8f8')}
+            >
+              Demander un accès
+            </Link>
+            <a
+              href="mailto:hello@daande.com"
+              className="inline-flex items-center h-[38px] px-4 text-[14px] rounded-md transition-colors cursor-pointer"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#d0d6e0',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+            >
+              Parler à l'équipe
+            </a>
+          </div>
         </div>
       </div>
     </section>
