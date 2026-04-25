@@ -59,10 +59,22 @@ export function RecordingDetailModal({ recording, phrase, session, onClose }: Re
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white dark:bg-sand-900 rounded-t-2xl sm:rounded-2xl shadow-xl border border-sand-200/60 dark:border-sand-800 w-full sm:max-w-[42rem] max-h-[92dvh] overflow-y-auto animate-scale-in"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+      <div
+        className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-[42rem] max-h-[92dvh] overflow-y-auto animate-scale-in"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          background: 'var(--t-modal-bg)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
+        }}
       >
-        <div className="sticky top-0 bg-white dark:bg-sand-900 border-b border-sand-200/60 dark:border-sand-800 px-6 py-4 flex items-start justify-between gap-4">
+        <div
+          className="sticky top-0 px-6 py-4 flex items-start justify-between gap-4 z-10"
+          style={{
+            background: 'var(--t-modal-bg)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge variant={statusVariant}>{translateRecordingStatus(recording.processing_status)}</Badge>
