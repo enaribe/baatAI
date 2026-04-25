@@ -517,8 +517,9 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
       <div
         className="rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-[480px] max-h-[92dvh] overflow-y-auto"
         style={{
-          background: 'var(--t-surface-2)',
+          background: 'var(--t-modal-bg)',
           border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
         }}
       >
         <div className="flex items-center gap-2 mb-1">

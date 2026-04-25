@@ -352,7 +352,7 @@ export function ProjectPage() {
           <div
             className="rounded-[12px] p-6 w-full max-w-[420px]"
             style={{
-              background: 'var(--t-surface-2)',
+              background: 'var(--t-modal-bg)',
               border: '1px solid rgba(255,255,255,0.08)',
               boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
             }}

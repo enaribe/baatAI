@@ -93,6 +93,10 @@ html[data-theme='dark'] {
   --t-surface-2: rgba(255, 255, 255, 0.04);   /* card plus prononcée */
   --t-surface-2-hover: rgba(255, 255, 255, 0.06);
 
+  /* Modal/dialog : fond OPAQUE, jamais transparent (lisibilité au-dessus
+     de l'overlay sombre + ne dépend pas de ce qui est derrière) */
+  --t-modal-bg: #15171a;
+
   /* Texte */
   --t-fg: #f7f8f8;                /* primary */
   --t-fg-2: #d0d6e0;              /* body */
@@ -157,6 +161,9 @@ html[data-theme='light'] {
   --t-surface-active: rgba(0, 0, 0, 0.05);
   --t-surface-2: rgba(0, 0, 0, 0.03);
   --t-surface-2-hover: rgba(0, 0, 0, 0.05);
+
+  /* Modal/dialog : fond opaque pour lisibilité */
+  --t-modal-bg: #ffffff;
 
   /* Texte */
   --t-fg: #1a1b1e;                /* primary */
