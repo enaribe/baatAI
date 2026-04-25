@@ -37,16 +37,25 @@ const ACCEPTED_MIME = [
 const MIN_RATE = 2000
 const STEP_LABELS = ['Infos', 'Phrases', 'Récap']
 
+import {
+  AI_PLAN_MIN_TOTAL,
+  AI_PLAN_MAX_TOTAL,
+  AI_PLAN_PRESETS,
+  IMPORT_DOC_ALLOWED_EXTENSIONS,
+  IMPORT_DOC_MAX_BYTES,
+  SUBTOPIC_TITLE_MIN,
+} from '../lib/quotas'
+
 type Step = 0 | 1 | 2
 type PhrasesSource = 'file' | 'manual' | 'ai' | 'import-translate'
 type PhrasesCategory = 'have' | 'generate'
 
-const IMPORT_TRANSLATE_EXT = ['.txt', '.md']
-const IMPORT_TRANSLATE_MAX_MB = 5
+const IMPORT_TRANSLATE_EXT = IMPORT_DOC_ALLOWED_EXTENSIONS
+const IMPORT_TRANSLATE_MAX_MB = IMPORT_DOC_MAX_BYTES / (1024 * 1024)
 
-const AI_PRESETS = [500, 1000, 2000, 5000]
-const AI_MIN = 100
-const AI_MAX = 5000
+const AI_PRESETS = AI_PLAN_PRESETS
+const AI_MIN = AI_PLAN_MIN_TOTAL
+const AI_MAX = AI_PLAN_MAX_TOTAL
 
 export function NewProjectPage() {
   const navigate = useNavigate()
@@ -141,7 +150,7 @@ export function NewProjectPage() {
   const handleImportFileSelect = useCallback((file: File) => {
     setImportError('')
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
-    if (!IMPORT_TRANSLATE_EXT.includes(ext)) {
+    if (!(IMPORT_TRANSLATE_EXT as readonly string[]).includes(ext)) {
       setImportError(`Format non supporté. Utilisez ${IMPORT_TRANSLATE_EXT.join(' ou ')}`)
       return
     }
@@ -186,7 +195,7 @@ export function NewProjectPage() {
 
   const aiThemeValid = aiTheme.trim().length >= 5 && aiTheme.trim().length <= 200
   const aiCountValid = aiTotalCount >= AI_MIN && aiTotalCount <= AI_MAX
-  const importValid = importFile !== null && importTitle.trim().length >= 3
+  const importValid = importFile !== null && importTitle.trim().length >= SUBTOPIC_TITLE_MIN
 
   const canProceedStep0 = name.trim().length > 0 && (isVolunteer || rateValue >= MIN_RATE)
   const canProceedStep1 =

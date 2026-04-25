@@ -12,14 +12,20 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
-import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { checkRateLimitDB } from "../_shared/rate-limit-db.ts";
+import { callGeminiJSON, callWithRetry, runWithConcurrency } from "../_shared/gemini.ts";
+import {
+  PHRASE_BATCH_SIZE,
+  GEMINI_MAX_PARALLEL,
+  PHRASE_MAX_LENGTH,
+  APPEND_MIN,
+  APPEND_MAX,
+  APPEND_DEFAULT,
+  RATE_LIMIT_GEN_PHRASES,
+} from "../_shared/quotas.ts";
 
-const GEMINI_MODEL = "gemini-flash-latest";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const BATCH_SIZE = 50;
-const MAX_PARALLEL = 2;
-const MAX_RETRIES = 3;
-const RETRY_DELAYS_MS = [2000, 4000, 8000];
+const BATCH_SIZE = PHRASE_BATCH_SIZE;
+const MAX_PARALLEL = GEMINI_MAX_PARALLEL;
 
 interface SubtopicRow {
   id: string;
@@ -48,56 +54,6 @@ function jsonResponse(body: unknown, status: number, corsHeaders: Record<string,
 interface PhrasePair {
   source: string;  // texte FR original
   target: string;  // traduction dans la langue cible
-}
-
-/**
- * Helper générique pour appeler Gemini avec un prompt et parser le JSON retourné.
- * Gère les retries via le wrapper appelant.
- */
-async function callGeminiJSON<T>(apiKey: string, prompt: string, temperature: number): Promise<T> {
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errBody = await response.text();
-    console.error("Gemini error:", response.status, errBody.slice(0, 300));
-    const err = new Error(`gemini_api_error_${response.status}`) as Error & { status?: number };
-    err.status = response.status;
-    throw err;
-  }
-
-  const data = await response.json() as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("gemini_empty_response");
-
-  let cleanText = text.trim();
-  if (cleanText.startsWith("```")) {
-    cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  }
-  const firstBrace = cleanText.indexOf("{");
-  const lastBrace = cleanText.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    cleanText = cleanText.slice(firstBrace, lastBrace + 1);
-  }
-
-  try {
-    return JSON.parse(cleanText) as T;
-  } catch (e) {
-    console.error("Gemini invalid JSON. Raw:", text.slice(0, 500));
-    throw new Error("gemini_invalid_json");
-  }
 }
 
 /**
@@ -145,12 +101,32 @@ Règles strictes :
 Réponds UNIQUEMENT avec un JSON valide, sans markdown :
 { "phrases": ["phrase 1", "phrase 2", ...] }`;
 
-  const parsed = await callGeminiJSON<{ phrases?: unknown }>(apiKey, prompt, 0.9);
+  const parsed = await callGeminiJSON<{ phrases?: unknown }>(apiKey, prompt, { temperature: 0.9 });
   if (!Array.isArray(parsed.phrases)) throw new Error("gemini_invalid_structure");
 
-  return parsed.phrases
-    .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
-    .map((p) => p.trim().slice(0, 500));
+  // I8 : validation stricte. On rejette les fragments (< 3 mots), les phrases
+  // trop longues (> 500 chars), les types non-string, les doublons exacts.
+  const seen = new Set<string>();
+  const cleaned: string[] = [];
+  for (const raw of parsed.phrases) {
+    if (typeof raw !== "string") continue;
+    const p = raw.trim().slice(0, PHRASE_MAX_LENGTH);
+    if (p.length < 5) continue;
+    const wordCount = p.split(/\s+/).length;
+    if (wordCount < 3) continue;
+    const key = p.toLowerCase().replace(/\s+/g, " ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    cleaned.push(p);
+  }
+
+  // Si Gemini a renvoyé moins de la moitié de ce qu'on demandait, considère
+  // ça comme un échec (souvent une réponse tronquée).
+  if (cleaned.length < Math.max(1, Math.floor(params.batchSize / 2))) {
+    throw new Error("gemini_too_few_valid_phrases");
+  }
+
+  return cleaned;
 }
 
 /**
@@ -183,14 +159,17 @@ ${numbered}
 Réponds UNIQUEMENT avec un JSON valide, sans markdown :
 { "translations": ["traduction 1", "traduction 2", ...] }`;
 
-  const parsed = await callGeminiJSON<{ translations?: unknown }>(apiKey, prompt, 0.3);
+  const parsed = await callGeminiJSON<{ translations?: unknown }>(apiKey, prompt, { temperature: 0.3 });
   if (!Array.isArray(parsed.translations)) throw new Error("gemini_invalid_structure");
 
-  const translations = parsed.translations.map((t) =>
-    typeof t === "string" ? t.trim().slice(0, 500) : ""
-  );
+  // I8 : on attend exactement N traductions. Si moins, c'est suspect mais
+  // on tolère et on remplit les manquantes avec le FR. Si plus, on tronque.
+  const translations: string[] = [];
+  for (const t of parsed.translations) {
+    if (typeof t === "string") translations.push(t.trim().slice(0, PHRASE_MAX_LENGTH));
+    else translations.push("");
+  }
 
-  // Si Gemini retourne un mauvais nombre, on aligne défensivement
   const pairs: PhrasePair[] = [];
   for (let i = 0; i < phrasesFR.length; i++) {
     const target = translations[i] && translations[i].length > 0 ? translations[i] : phrasesFR[i];
@@ -229,51 +208,6 @@ async function callGeminiBatch(
   }
 
   return translateBatch(apiKey, params.language, phrasesFR);
-}
-
-async function callGeminiBatchWithRetry(
-  apiKey: string,
-  params: Parameters<typeof callGeminiBatch>[1],
-): Promise<PhrasePair[]> {
-  let lastError: Error | null = null;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      return await callGeminiBatch(apiKey, params);
-    } catch (err) {
-      const e = err as Error & { status?: number };
-      lastError = e;
-      const isRetryable = e.status === 429 || e.status === 503 || e.status === 500;
-      if (!isRetryable || attempt === MAX_RETRIES) throw e;
-      const delay = RETRY_DELAYS_MS[attempt] ?? 8000;
-      console.warn(`Batch retry ${attempt + 1}/${MAX_RETRIES} after ${delay}ms (status ${e.status})`);
-      await new Promise((r) => setTimeout(r, delay));
-    }
-  }
-  throw lastError ?? new Error("gemini_unknown_error");
-}
-
-async function runWithConcurrency<T>(
-  tasks: Array<() => Promise<T>>,
-  limit: number,
-): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
-  let cursor = 0;
-
-  async function worker() {
-    while (true) {
-      const idx = cursor++;
-      if (idx >= tasks.length) return;
-      try {
-        const value = await tasks[idx]();
-        results[idx] = { status: "fulfilled", value };
-      } catch (err) {
-        results[idx] = { status: "rejected", reason: err };
-      }
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, () => worker()));
-  return results;
 }
 
 async function dedupeAndCap(pairs: PhrasePair[], target: number): Promise<PhrasePair[]> {
@@ -351,14 +285,16 @@ Deno.serve(async (req) => {
 
     const subtopicId = body.subtopic_id?.trim();
     const mode = body.mode === "append" ? "append" : "replace";
-    const extraCount = mode === "append" ? Math.max(10, Math.min(500, Number(body.extra_count) || 50)) : 0;
+    const extraCount = mode === "append"
+      ? Math.max(APPEND_MIN, Math.min(APPEND_MAX, Number(body.extra_count) || APPEND_DEFAULT))
+      : 0;
 
     if (!subtopicId) {
       return jsonResponse({ error: "subtopic_id requis" }, 400, corsHeaders);
     }
 
-    // 3. Rate limit : 30 générations / heure / utilisateur
-    if (checkRateLimit(`gen-phrases:${user.id}`, { max: 30, windowSec: 3600 })) {
+    // 3. Rate limit (persistant en DB)
+    if (await checkRateLimitDB(supabase, `gen-phrases:${user.id}`, RATE_LIMIT_GEN_PHRASES)) {
       return jsonResponse(
         { error: "Trop de générations récentes. Réessayez dans une heure." },
         429,
@@ -455,20 +391,20 @@ Deno.serve(async (req) => {
     const language = projectRow.language_label || projectRow.target_language || "Wolof";
     const usageType = projectRow.usage_type || "asr";
     const batchCount = Math.ceil(targetForRun / BATCH_SIZE);
-    const batches: Array<() => Promise<string[]>> = [];
+    const batches: Array<() => Promise<PhrasePair[]>> = [];
 
     for (let i = 0; i < batchCount; i++) {
       const remaining = targetForRun - i * BATCH_SIZE;
       const size = Math.min(BATCH_SIZE, remaining);
       batches.push(() =>
-        callGeminiBatchWithRetry(apiKey, {
+        callWithRetry(() => callGeminiBatch(apiKey, {
           language,
           subtopicTitle: subtopicRow.title,
           subtopicDescription: subtopicRow.description ?? "",
           usageType,
           batchSize: size,
           excludeSamples,
-        })
+        }))
       );
     }
 
@@ -505,14 +441,14 @@ Deno.serve(async (req) => {
       try {
         const fillSize = Math.min(BATCH_SIZE, shortfall);
         const fillExclude = finalPairs.slice(0, 30).map((p) => p.source);
-        const fill = await callGeminiBatchWithRetry(apiKey, {
+        const fill = await callWithRetry(() => callGeminiBatch(apiKey, {
           language,
           subtopicTitle: subtopicRow.title,
           subtopicDescription: subtopicRow.description ?? "",
           usageType,
           batchSize: fillSize,
           excludeSamples: [...excludeSamples, ...fillExclude],
-        });
+        }));
         finalPairs = await dedupeAndCap([...finalPairs, ...fill], targetForRun);
       } catch (fillErr) {
         console.warn("Fill batch failed:", fillErr);

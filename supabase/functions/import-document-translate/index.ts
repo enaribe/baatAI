@@ -12,18 +12,22 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
-import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { checkRateLimitDB } from "../_shared/rate-limit-db.ts";
+import { callGeminiJSON, callWithRetry, runWithConcurrency } from "../_shared/gemini.ts";
+import {
+  IMPORT_DOC_MAX_BYTES,
+  IMPORT_DOC_MAX_PHRASES,
+  PROJECT_PHRASE_QUOTA,
+  TRANSLATE_BATCH_SIZE,
+  GEMINI_MAX_PARALLEL,
+  PHRASE_MAX_LENGTH,
+  SUBTOPIC_TITLE_MAX,
+  RATE_LIMIT_IMPORT_DOC,
+} from "../_shared/quotas.ts";
 
-const GEMINI_MODEL = "gemini-flash-latest";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const MAX_PHRASES = 2000;
-const PROJECT_PHRASE_QUOTA = 5000;
-const TRANSLATE_BATCH_SIZE = 30;
-const MAX_PARALLEL = 2;
-const MAX_RETRIES = 3;
-const RETRY_DELAYS_MS = [2000, 4000, 8000];
+const MAX_FILE_SIZE = IMPORT_DOC_MAX_BYTES;
+const MAX_PHRASES = IMPORT_DOC_MAX_PHRASES;
+const MAX_PARALLEL = GEMINI_MAX_PARALLEL;
 
 interface ProjectRow {
   id: string;
@@ -37,6 +41,23 @@ function jsonResponse(body: unknown, status: number, corsHeaders: Record<string,
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+/**
+ * Vérifie qu'une chaîne ressemble à du texte exploitable (et pas à un binaire
+ * renommé en .txt/.md). On regarde le ratio de caractères imprimables ASCII +
+ * UTF-8 courants. Refuse si le contenu est majoritairement de la donnée binaire,
+ * pour éviter d'envoyer du garbage à Gemini (et payer pour rien).
+ */
+function isPlausibleText(s: string): boolean {
+  if (s.length < 10) return false;
+  // Compte les caractères de contrôle (hors \n \r \t) qui ne devraient pas
+  // apparaître dans du texte normal.
+  // eslint-disable-next-line no-control-regex
+  const controlChars = (s.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g) ?? []).length;
+  const ratio = controlChars / s.length;
+  // Tolérance < 1 % de caractères de contrôle (vrais .txt en ont 0)
+  return ratio < 0.01;
 }
 
 /**
@@ -122,52 +143,6 @@ function dedupePhrases(phrases: string[]): string[] {
   return out;
 }
 
-async function callGeminiJSON<T>(apiKey: string, prompt: string, temperature: number): Promise<T> {
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errBody = await response.text();
-    console.error("Gemini error:", response.status, errBody.slice(0, 300));
-    const err = new Error(`gemini_api_error_${response.status}`) as Error & { status?: number };
-    err.status = response.status;
-    throw err;
-  }
-
-  const data = await response.json() as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("gemini_empty_response");
-
-  let cleanText = text.trim();
-  if (cleanText.startsWith("```")) {
-    cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  }
-  const firstBrace = cleanText.indexOf("{");
-  const lastBrace = cleanText.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    cleanText = cleanText.slice(firstBrace, lastBrace + 1);
-  }
-
-  try {
-    return JSON.parse(cleanText) as T;
-  } catch (e) {
-    console.error("Gemini invalid JSON. Raw:", text.slice(0, 500));
-    throw new Error("gemini_invalid_json");
-  }
-}
-
 async function translateBatch(
   apiKey: string,
   language: string,
@@ -190,57 +165,22 @@ ${numbered}
 Réponds UNIQUEMENT avec un JSON valide :
 { "translations": ["...", "...", ...] }`;
 
-  const parsed = await callGeminiJSON<{ translations?: unknown }>(apiKey, prompt, 0.3);
+  const parsed = await callGeminiJSON<{ translations?: unknown }>(apiKey, prompt, { temperature: 0.3 });
   if (!Array.isArray(parsed.translations)) throw new Error("gemini_invalid_structure");
 
-  return parsed.translations.map((t, i) => {
-    if (typeof t !== "string" || t.trim().length === 0) return phrasesFR[i] ?? "";
-    return t.trim().slice(0, 500);
-  });
-}
-
-async function translateBatchWithRetry(
-  apiKey: string,
-  language: string,
-  phrasesFR: string[],
-): Promise<string[]> {
-  let lastError: Error | null = null;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      return await translateBatch(apiKey, language, phrasesFR);
-    } catch (err) {
-      const e = err as Error & { status?: number };
-      lastError = e;
-      const isRetryable = e.status === 429 || e.status === 503 || e.status === 500;
-      if (!isRetryable || attempt === MAX_RETRIES) throw e;
-      const delay = RETRY_DELAYS_MS[attempt] ?? 8000;
-      console.warn(`Translate retry ${attempt + 1}/${MAX_RETRIES} after ${delay}ms (status ${e.status})`);
-      await new Promise((r) => setTimeout(r, delay));
+  // I8 : validation stricte. Pour chaque slot attendu, on vérifie le type.
+  // Fallback sur le FR si traduction manquante/invalide → garantit qu'on
+  // n'aura jamais de phrase vide en DB.
+  const out: string[] = [];
+  for (let i = 0; i < phrasesFR.length; i++) {
+    const t = parsed.translations[i];
+    if (typeof t === "string" && t.trim().length > 0) {
+      out.push(t.trim().slice(0, PHRASE_MAX_LENGTH));
+    } else {
+      out.push(phrasesFR[i]);
     }
   }
-  throw lastError ?? new Error("gemini_unknown_error");
-}
-
-async function runWithConcurrency<T>(
-  tasks: Array<() => Promise<T>>,
-  limit: number,
-): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
-  let cursor = 0;
-  async function worker() {
-    while (true) {
-      const idx = cursor++;
-      if (idx >= tasks.length) return;
-      try {
-        const value = await tasks[idx]();
-        results[idx] = { status: "fulfilled", value };
-      } catch (err) {
-        results[idx] = { status: "rejected", reason: err };
-      }
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, () => worker()));
-  return results;
+  return out;
 }
 
 async function markFailed(supabase: SupabaseClient, subtopicId: string, reason: string): Promise<void> {
@@ -289,8 +229,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Utilisateur non authentifié" }, 401, corsHeaders);
     }
 
-    // 2. Rate limit
-    if (checkRateLimit(`import-doc:${user.id}`, { max: 5, windowSec: 3600 })) {
+    // 2. Rate limit (persistant en DB)
+    if (await checkRateLimitDB(supabase, `import-doc:${user.id}`, RATE_LIMIT_IMPORT_DOC)) {
       return jsonResponse(
         { error: "Trop d'imports récents. Réessayez dans une heure." },
         429,
@@ -349,6 +289,17 @@ Deno.serve(async (req) => {
 
     // 6. Parse fichier
     let rawText = await file.text();
+
+    // Garde-fou : refuse les fichiers binaires renommés .txt/.md (évite envoi
+    // garbage à Gemini = coût direct).
+    if (!isPlausibleText(rawText)) {
+      return jsonResponse(
+        { error: "Le fichier ne contient pas de texte exploitable. Vérifiez qu'il s'agit bien d'un .txt ou .md valide." },
+        400,
+        corsHeaders,
+      );
+    }
+
     if (isMd) rawText = stripMarkdown(rawText);
     let phrasesFR = splitIntoPhrases(rawText);
     phrasesFR = dedupePhrases(phrasesFR);
@@ -402,7 +353,7 @@ Deno.serve(async (req) => {
       .insert({
         project_id: projectId,
         position: startPosition,
-        title: subtopicTitle.slice(0, 200),
+        title: subtopicTitle.slice(0, SUBTOPIC_TITLE_MAX),
         description: `Importé depuis ${file.name} (${phrasesFR.length} phrases)`,
         target_count: phrasesFR.length,
         source: "imported",
@@ -446,7 +397,7 @@ Deno.serve(async (req) => {
         const start = i;
         batches.push(async () => ({
           start,
-          translations: await translateBatchWithRetry(apiKey, language, slice),
+          translations: await callWithRetry(() => translateBatch(apiKey, language, slice)),
         }));
       }
 

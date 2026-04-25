@@ -10,11 +10,17 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
-import { checkRateLimit } from "../_shared/rate-limit.ts";
-
-const GEMINI_MODEL = "gemini-flash-latest";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const PROJECT_PHRASE_QUOTA = 5000;
+import { checkRateLimitDB } from "../_shared/rate-limit-db.ts";
+import { callGeminiJSON } from "../_shared/gemini.ts";
+import {
+  PROJECT_PHRASE_QUOTA,
+  AI_PLAN_MIN_TOTAL,
+  SUBTOPIC_MIN_PHRASES,
+  SUBTOPIC_MAX_PHRASES,
+  SUBTOPIC_TITLE_MAX,
+  SUBTOPIC_DESC_MAX,
+  RATE_LIMIT_GEN_PLAN,
+} from "../_shared/quotas.ts";
 
 interface GeminiSubtopic {
   title: string;
@@ -59,73 +65,24 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans texte avant/après 
   ]
 }`;
 
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.7,
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
+  const parsed = await callGeminiJSON<{ subtopics?: unknown }>(apiKey, prompt, { temperature: 0.7 });
 
-  if (!response.ok) {
-    const errBody = await response.text();
-    console.error("Gemini API error:", response.status, errBody);
-    throw new Error(`gemini_api_error_${response.status}`);
-  }
-
-  const data = await response.json() as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    console.error("Gemini empty response:", JSON.stringify(data));
-    throw new Error("gemini_empty_response");
-  }
-
-  // Gemini renvoie parfois du markdown autour du JSON malgré responseMimeType.
-  // On nettoie défensivement : retire ```json...``` et tout texte avant le 1er {
-  let cleanText = text.trim();
-  if (cleanText.startsWith("```")) {
-    cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  }
-  const firstBrace = cleanText.indexOf("{");
-  const lastBrace = cleanText.lastIndexOf("}");
-  if (firstBrace > 0 || lastBrace < cleanText.length - 1) {
-    if (firstBrace >= 0 && lastBrace > firstBrace) {
-      cleanText = cleanText.slice(firstBrace, lastBrace + 1);
-    }
-  }
-
-  let parsed: { subtopics?: GeminiSubtopic[] };
-  try {
-    parsed = JSON.parse(cleanText);
-  } catch (e) {
-    console.error("Gemini invalid JSON. Raw text:", text.slice(0, 800));
-    console.error("Cleaned attempt:", cleanText.slice(0, 800));
-    throw new Error("gemini_invalid_json");
-  }
-
-  const subtopics = parsed.subtopics;
-  if (!Array.isArray(subtopics) || subtopics.length < 3) {
+  if (!Array.isArray(parsed.subtopics) || parsed.subtopics.length < 3) {
     throw new Error("gemini_invalid_structure");
   }
 
-  // Validation + clamp défensif
+  // Validation + clamp défensif (I8) : on ne fait confiance à aucun champ.
   const validated: GeminiSubtopic[] = [];
-  for (const s of subtopics) {
+  for (const raw of parsed.subtopics) {
+    if (!raw || typeof raw !== "object") continue;
+    const s = raw as Record<string, unknown>;
     if (typeof s.title !== "string" || s.title.trim().length === 0) continue;
     const count = Number(s.target_count);
     if (!Number.isFinite(count) || count < 1) continue;
     validated.push({
-      title: s.title.trim().slice(0, 200),
-      description: typeof s.description === "string" ? s.description.trim().slice(0, 500) : "",
-      target_count: Math.max(50, Math.min(500, Math.round(count))),
+      title: s.title.trim().slice(0, SUBTOPIC_TITLE_MAX),
+      description: typeof s.description === "string" ? s.description.trim().slice(0, SUBTOPIC_DESC_MAX) : "",
+      target_count: Math.max(SUBTOPIC_MIN_PHRASES, Math.min(SUBTOPIC_MAX_PHRASES, Math.round(count))),
     });
   }
 
@@ -201,16 +158,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!Number.isFinite(totalCount) || totalCount < 100 || totalCount > PROJECT_PHRASE_QUOTA) {
+    if (!Number.isFinite(totalCount) || totalCount < AI_PLAN_MIN_TOTAL || totalCount > PROJECT_PHRASE_QUOTA) {
       return jsonResponse(
-        { error: `La quantité doit être entre 100 et ${PROJECT_PHRASE_QUOTA} phrases` },
+        { error: `La quantité doit être entre ${AI_PLAN_MIN_TOTAL} et ${PROJECT_PHRASE_QUOTA} phrases` },
         400,
         corsHeaders,
       );
     }
 
-    // 3. Rate limit : 5 plans / heure / utilisateur
-    if (checkRateLimit(`gen-plan:${user.id}`, { max: 5, windowSec: 3600 })) {
+    // 3. Rate limit (persistant en DB)
+    if (await checkRateLimitDB(supabase, `gen-plan:${user.id}`, RATE_LIMIT_GEN_PLAN)) {
       return jsonResponse(
         { error: "Trop de générations récentes. Réessayez dans une heure." },
         429,

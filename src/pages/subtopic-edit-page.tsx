@@ -1,14 +1,25 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  ArrowLeft, Loader2, Search, Trash2, Pencil, Check, X,
+  ArrowLeft, Loader2, Search, Trash2, Check,
   Sparkles, RefreshCw, AlertCircle, AlertTriangle, Plus, Unlock, Eye, EyeOff,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { usePhraseDrafts } from '../hooks/use-phrase-drafts'
 import { useToast } from '../hooks/use-toast'
 import { Skeleton } from '../components/ui/skeleton'
+import { DraftsSkeleton } from '../components/drafts-skeleton'
+import { DraftsTable } from '../components/drafts-table'
+import { ConfirmModal } from '../components/ui/confirm-modal'
+import { APPEND_MIN, APPEND_MAX, APPEND_DEFAULT } from '../lib/quotas'
 import type { PhraseDraft } from '../types/database'
+
+// Actions qui demandent confirmation avant exécution
+type PendingAction =
+  | null
+  | { type: 'delete-one'; id: string; preview: string }
+  | { type: 'delete-selected'; count: number }
+  | { type: 'regenerate-all'; currentCount: number }
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
 const mono = { fontFamily: 'var(--font-mono)' }
@@ -25,11 +36,17 @@ export function SubtopicEditPage() {
   const [editingText, setEditingText] = useState('')
   const [validating, setValidating] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [extraCount, setExtraCount] = useState(50)
+  const [extraCount, setExtraCount] = useState(APPEND_DEFAULT)
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [unvalidating, setUnvalidating] = useState(false)
   const [showUnvalidateModal, setShowUnvalidateModal] = useState(false)
   const [showSource, setShowSource] = useState(true)
+  // I2 : verrou pour éviter d'écraser une autre phrase en cours de save.
+  // Bloque tous les boutons Modifier/Supprimer pendant qu'un save tourne.
+  const [savingEdit, setSavingEdit] = useState(false)
+  // M5 : action en attente de confirmation via ConfirmModal
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
+  const [confirmBusy, setConfirmBusy] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return drafts
@@ -69,7 +86,8 @@ export function SubtopicEditPage() {
   }
 
   const saveEdit = async () => {
-    if (!editingId || !editingText.trim()) return
+    if (!editingId || !editingText.trim() || savingEdit) return
+    setSavingEdit(true)
     try {
       const { error: updErr } = await supabase
         .from('phrase_drafts')
@@ -84,11 +102,26 @@ export function SubtopicEditPage() {
         title: 'Modification impossible',
         message: err instanceof Error ? err.message : 'Erreur inconnue',
       })
+    } finally {
+      setSavingEdit(false)
     }
   }
 
-  const deleteOne = async (id: string) => {
-    if (!confirm('Supprimer cette phrase ?')) return
+  const askDeleteOne = (d: PhraseDraft) => {
+    setPendingAction({
+      type: 'delete-one',
+      id: d.id,
+      preview: d.content.slice(0, 80),
+    })
+  }
+
+  const askDeleteSelected = () => {
+    if (selected.size === 0) return
+    setPendingAction({ type: 'delete-selected', count: selected.size })
+  }
+
+  const performDeleteOne = async (id: string) => {
+    setConfirmBusy(true)
     try {
       const { error: delErr } = await supabase.from('phrase_drafts').delete().eq('id', id)
       if (delErr) throw delErr
@@ -97,6 +130,7 @@ export function SubtopicEditPage() {
         next.delete(id)
         return next
       })
+      setPendingAction(null)
       await refetch()
     } catch (err) {
       notify({
@@ -104,12 +138,14 @@ export function SubtopicEditPage() {
         title: 'Suppression impossible',
         message: err instanceof Error ? err.message : 'Erreur inconnue',
       })
+    } finally {
+      setConfirmBusy(false)
     }
   }
 
-  const deleteSelected = async () => {
+  const performDeleteSelected = async () => {
     if (selected.size === 0) return
-    if (!confirm(`Supprimer ${selected.size} phrase(s) sélectionnée(s) ?`)) return
+    setConfirmBusy(true)
     setBulkDeleting(true)
     try {
       const { error: delErr } = await supabase
@@ -117,8 +153,10 @@ export function SubtopicEditPage() {
         .delete()
         .in('id', Array.from(selected))
       if (delErr) throw delErr
+      const count = selected.size
       setSelected(new Set())
-      notify({ variant: 'success', title: 'Phrases supprimées', message: `${selected.size} entrées` })
+      setPendingAction(null)
+      notify({ variant: 'success', title: 'Phrases supprimées', message: `${count} entrées` })
       await refetch()
     } catch (err) {
       notify({
@@ -128,11 +166,12 @@ export function SubtopicEditPage() {
       })
     } finally {
       setBulkDeleting(false)
+      setConfirmBusy(false)
     }
   }
 
   const generateMore = async () => {
-    if (!subId || extraCount < 10) return
+    if (!subId || extraCount < APPEND_MIN) return
     setGenerating(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -166,8 +205,13 @@ export function SubtopicEditPage() {
     }
   }
 
-  const regenerateAll = async () => {
+  const askRegenerateAll = () => {
+    setPendingAction({ type: 'regenerate-all', currentCount: drafts.length })
+  }
+
+  const performRegenerateAll = async () => {
     if (!subId) return
+    setConfirmBusy(true)
     setGenerating(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -184,6 +228,7 @@ export function SubtopicEditPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Erreur de génération')
+      setPendingAction(null)
       notify({
         variant: 'success',
         title: 'Phrases régénérées',
@@ -198,6 +243,7 @@ export function SubtopicEditPage() {
       })
     } finally {
       setGenerating(false)
+      setConfirmBusy(false)
     }
   }
 
@@ -276,10 +322,11 @@ export function SubtopicEditPage() {
 
   if (loading) {
     return (
-      <div className="px-5 lg:px-8 py-10">
-        <Skeleton className="h-5 w-32 mb-4" />
-        <Skeleton className="h-10 w-96 mb-6" />
-        <Skeleton className="h-64" />
+      <div className="px-5 lg:px-8 py-10 max-w-[960px] mx-auto">
+        <Skeleton className="h-4 w-40 mb-6" />
+        <Skeleton className="h-7 w-72 mb-3" />
+        <Skeleton className="h-4 w-[60%] mb-8" />
+        <DraftsSkeleton rows={8} bilingual={true} />
       </div>
     )
   }
@@ -419,7 +466,7 @@ export function SubtopicEditPage() {
           {!isValidated && selected.size > 0 && (
             <button
               type="button"
-              onClick={deleteSelected}
+              onClick={askDeleteSelected}
               disabled={bulkDeleting}
               className="inline-flex items-center gap-1.5 h-[34px] px-3 text-[12px] rounded-md transition-colors disabled:opacity-40"
               style={{
@@ -436,174 +483,25 @@ export function SubtopicEditPage() {
           )}
         </div>
 
-        {/* Table */}
-        <div
-          className="rounded-md overflow-hidden"
-          style={{ background: 'var(--t-surface)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          {/* Header table */}
-          <div
-            className={`grid items-center px-3 h-[36px] border-b text-[11px] text-[#62666d] uppercase ${
-              showSource && hasAnySource
-                ? 'grid-cols-[36px_44px_1fr_1fr_72px] gap-3'
-                : 'grid-cols-[36px_44px_1fr_72px]'
-            }`}
-            style={{
-              ...sans,
-              fontWeight: 510,
-              letterSpacing: '0.04em',
-              borderColor: 'rgba(255,255,255,0.08)',
-            }}
-          >
-            {!isValidated ? (
-              <input
-                type="checkbox"
-                checked={filtered.length > 0 && selected.size === filtered.length}
-                onChange={toggleAll}
-                className="w-3.5 h-3.5 accent-[#5e6ad2]"
-              />
-            ) : <span />}
-            <span style={mono}>#</span>
-            {showSource && hasAnySource ? (
-              <>
-                <span>Français (source)</span>
-                <span>Traduction (à valider)</span>
-              </>
-            ) : (
-              <span>Phrase</span>
-            )}
-            <span className="text-right">Actions</span>
-          </div>
-
-          {filtered.length === 0 && (
-            <div className="px-4 py-10 text-center">
-              <p className="text-[13px] text-[#8a8f98]" style={sans}>
-                {search ? 'Aucune phrase ne correspond à votre recherche.' : 'Aucune phrase générée pour ce sous-thème.'}
-              </p>
-            </div>
-          )}
-
-          {filtered.map((d) => (
-            <div
-              key={d.id}
-              className={`grid items-start px-3 py-2.5 border-b last:border-b-0 ${
-                showSource && hasAnySource
-                  ? 'grid-cols-[36px_44px_1fr_1fr_72px] gap-3'
-                  : 'grid-cols-[36px_44px_1fr_72px] items-center'
-              }`}
-              style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-            >
-              {!isValidated ? (
-                <input
-                  type="checkbox"
-                  checked={selected.has(d.id)}
-                  onChange={() => toggleSelected(d.id)}
-                  className={`w-3.5 h-3.5 accent-[#5e6ad2] ${showSource && hasAnySource ? 'mt-1' : ''}`}
-                />
-              ) : <span />}
-              <span
-                className={`text-[11px] text-[#62666d] tabular-nums ${showSource && hasAnySource ? 'mt-0.5' : ''}`}
-                style={mono}
-              >
-                {d.position}
-              </span>
-
-              {/* Cellule source FR (visible uniquement si toggle ON) */}
-              {showSource && hasAnySource && (
-                <span
-                  className="text-[12px] text-[#8a8f98] italic leading-relaxed break-words"
-                  style={sans}
-                >
-                  {d.source_text || <span className="text-[#3e3e44]">—</span>}
-                </span>
-              )}
-
-              {/* Cellule traduction WO (éditable) */}
-              {editingId === d.id ? (
-                <input
-                  type="text"
-                  value={editingText}
-                  onChange={(e) => setEditingText(e.target.value)}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void saveEdit()
-                    if (e.key === 'Escape') cancelEdit()
-                  }}
-                  className="w-full h-[28px] px-2 text-[13px] text-[#f7f8f8] rounded bg-[rgba(255,255,255,0.05)] border border-[rgba(113,112,255,0.4)] focus:outline-none"
-                  style={sans}
-                />
-              ) : showSource && hasAnySource ? (
-                <span className="text-[13px] text-[#f7f8f8] leading-relaxed break-words flex items-start gap-2" style={sans}>
-                  <span>{d.content}</span>
-                  {d.edited && (
-                    <span className="text-[9px] text-[#62666d] uppercase shrink-0 mt-0.5" style={{ ...sans, letterSpacing: '0.04em' }}>
-                      modifié
-                    </span>
-                  )}
-                </span>
-              ) : (
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  {d.source_text && (
-                    <span
-                      className="text-[11px] text-[#62666d] italic truncate"
-                      style={sans}
-                      title={d.source_text}
-                    >
-                      {d.source_text}
-                    </span>
-                  )}
-                  <span className="text-[13px] text-[#f7f8f8] flex items-center gap-2" style={sans}>
-                    {d.content}
-                    {d.edited && (
-                      <span className="text-[9px] text-[#62666d] uppercase" style={{ ...sans, letterSpacing: '0.04em' }}>
-                        modifié
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center justify-end gap-0.5">
-                {isValidated ? null : editingId === d.id ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={saveEdit}
-                      className="w-7 h-7 flex items-center justify-center rounded text-[#10b981] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                    >
-                      <Check className="w-3.5 h-3.5" strokeWidth={2} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelEdit}
-                      className="w-7 h-7 flex items-center justify-center rounded text-[#8a8f98] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" strokeWidth={1.75} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => startEdit(d)}
-                      className="w-7 h-7 flex items-center justify-center rounded text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                      title="Modifier"
-                    >
-                      <Pencil className="w-3 h-3" strokeWidth={1.75} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteOne(d.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded text-[#8a8f98] hover:text-[#fca5a5] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                      title="Supprimer"
-                    >
-                      <Trash2 className="w-3 h-3" strokeWidth={1.75} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <DraftsTable
+          drafts={drafts}
+          filtered={filtered}
+          isValidated={isValidated}
+          showSource={showSource}
+          hasAnySource={hasAnySource}
+          selected={selected}
+          search={search}
+          editingId={editingId}
+          editingText={editingText}
+          savingEdit={savingEdit}
+          onToggleSelected={toggleSelected}
+          onToggleAll={toggleAll}
+          onStartEdit={startEdit}
+          onCancelEdit={cancelEdit}
+          onChangeEditingText={setEditingText}
+          onSaveEdit={saveEdit}
+          onAskDelete={askDeleteOne}
+        />
 
         {/* Footer actions */}
         {!isValidated && (
@@ -611,8 +509,8 @@ export function SubtopicEditPage() {
             <div className="flex items-center gap-1.5">
               <input
                 type="number"
-                min={10}
-                max={500}
+                min={APPEND_MIN}
+                max={APPEND_MAX}
                 step={10}
                 value={extraCount}
                 onChange={(e) => setExtraCount(parseInt(e.target.value, 10) || 0)}
@@ -622,7 +520,7 @@ export function SubtopicEditPage() {
               <button
                 type="button"
                 onClick={generateMore}
-                disabled={generating || extraCount < 10}
+                disabled={generating || extraCount < APPEND_MIN}
                 className="inline-flex items-center gap-1.5 h-[34px] px-3 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-40"
                 style={{
                   ...sans,
@@ -638,11 +536,7 @@ export function SubtopicEditPage() {
             <div className="ml-auto flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => {
-                  if (confirm(`Régénérer toutes les phrases ? Les ${drafts.length} phrases actuelles seront supprimées.`)) {
-                    void regenerateAll()
-                  }
-                }}
+                onClick={askRegenerateAll}
                 disabled={generating}
                 className="inline-flex items-center gap-1.5 h-[34px] px-3 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-40"
                 style={{ ...sans, fontWeight: 510 }}
@@ -669,6 +563,58 @@ export function SubtopicEditPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={pendingAction?.type === 'delete-one'}
+        title="Supprimer cette phrase ?"
+        message={
+          pendingAction?.type === 'delete-one'
+            ? `« ${pendingAction.preview}${pendingAction.preview.length >= 80 ? '…' : ''} »`
+            : ''
+        }
+        details="Action irréversible. Le draft sera retiré du sous-thème."
+        tone="danger"
+        confirmLabel="Supprimer"
+        busy={confirmBusy}
+        onConfirm={() => {
+          if (pendingAction?.type === 'delete-one') {
+            void performDeleteOne(pendingAction.id)
+          }
+        }}
+        onClose={() => setPendingAction(null)}
+      />
+
+      <ConfirmModal
+        open={pendingAction?.type === 'delete-selected'}
+        title="Supprimer la sélection ?"
+        message={
+          pendingAction?.type === 'delete-selected'
+            ? `${pendingAction.count} phrase${pendingAction.count > 1 ? 's' : ''} sélectionnée${pendingAction.count > 1 ? 's' : ''} seront supprimées du sous-thème.`
+            : ''
+        }
+        details="Action irréversible."
+        tone="danger"
+        confirmLabel="Supprimer"
+        busy={confirmBusy}
+        onConfirm={() => void performDeleteSelected()}
+        onClose={() => setPendingAction(null)}
+      />
+
+      <ConfirmModal
+        open={pendingAction?.type === 'regenerate-all'}
+        title="Régénérer toutes les phrases ?"
+        message={
+          pendingAction?.type === 'regenerate-all'
+            ? `Les ${pendingAction.currentCount} phrases actuelles seront supprimées et remplacées par une nouvelle génération.`
+            : ''
+        }
+        details="Vos éditions manuelles seront perdues. Action irréversible."
+        tone="warning"
+        confirmLabel="Régénérer"
+        busy={confirmBusy}
+        onConfirm={() => void performRegenerateAll()}
+        onClose={() => setPendingAction(null)}
+      />
 
       {showUnvalidateModal && (
         <div

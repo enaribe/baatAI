@@ -2,11 +2,20 @@ import { useState, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Sparkles, Loader2, Check, AlertCircle, RefreshCw, Plus, X,
-  ArrowRight, Eye, FileText,
+  ArrowRight, Eye, FileText, ChevronDown, ChevronRight,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { useSubtopics } from '../hooks/use-subtopics'
+import { useCollapsed } from '../hooks/use-collapsed'
 import { useToast } from '../hooks/use-toast'
+import { ConfirmModal } from './ui/confirm-modal'
+import {
+  SUBTOPIC_MIN_PHRASES,
+  SUBTOPIC_MAX_PHRASES,
+  SUBTOPIC_TITLE_MIN,
+  SUBTOPIC_TITLE_MAX,
+  SUBTOPIC_DESC_MAX,
+  PROJECT_PHRASE_QUOTA,
+} from '../lib/quotas'
 import type { Subtopic, SubtopicStatus } from '../types/database'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
@@ -14,6 +23,9 @@ const mono = { fontFamily: 'var(--font-mono)' }
 
 interface SubtopicsPanelProps {
   projectId: string
+  subtopics: Subtopic[]
+  loading: boolean
+  refetchSubtopics: () => Promise<void>
   onValidated?: () => void
 }
 
@@ -25,12 +37,16 @@ const STATUS_META: Record<SubtopicStatus, { label: string; color: string; dotCol
   failed: { label: 'Échec', color: '#fca5a5', dotColor: '#ef4444' },
 }
 
-export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) {
-  const { subtopics, loading, refetch } = useSubtopics(projectId)
+export function SubtopicsPanel({
+  projectId, subtopics, loading, refetchSubtopics, onValidated,
+}: SubtopicsPanelProps) {
+  const refetch = refetchSubtopics
   const { notify } = useToast()
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
   const [showAddModal, setShowAddModal] = useState(false)
   const [validatingAll, setValidatingAll] = useState(false)
+  // M5 : modal de confirmation pour régénération depuis une carte
+  const [regenerateTarget, setRegenerateTarget] = useState<Subtopic | null>(null)
 
   const totalTarget = useMemo(
     () => subtopics.reduce((s, st) => s + st.target_count, 0),
@@ -41,6 +57,16 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
     [subtopics],
   )
   const readyCount = subtopics.filter((s) => s.status === 'ready').length
+
+  // Groupage par statut : "À traiter" (pending/generating/ready) vs "Validé" vs "Échec"
+  const grouped = useMemo(() => {
+    const todo = subtopics.filter((s) =>
+      s.status === 'pending' || s.status === 'generating' || s.status === 'ready'
+    )
+    const validated = subtopics.filter((s) => s.status === 'validated')
+    const failed = subtopics.filter((s) => s.status === 'failed')
+    return { todo, validated, failed }
+  }, [subtopics])
 
   // Une seule génération à la fois : verrouille tous les "Générer" si déjà en cours.
   // Évite de saturer les quotas Gemini quand on lance 4 cartes à la suite.
@@ -171,11 +197,14 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: '#7170ff' }} strokeWidth={1.75} />
           <h2 className="text-[15px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
-            Plan de génération
+            Sous-thèmes
           </h2>
+          <span className="text-[12px] text-[#62666d] tabular-nums" style={mono}>
+            {subtopics.length}
+          </span>
         </div>
         <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
-          {totalGenerated.toLocaleString('fr-FR')} / {totalTarget.toLocaleString('fr-FR')} phrases générées
+          · {totalGenerated.toLocaleString('fr-FR')} / {totalTarget.toLocaleString('fr-FR')} phrases
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <button
@@ -221,20 +250,105 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
         </div>
       )}
 
-      {/* Grille de cartes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {subtopics.map((s) => (
-          <SubtopicCard
-            key={s.id}
-            subtopic={s}
-            projectId={projectId}
-            busy={busyIds.has(s.id)}
-            disabled={anyGenerating && !busyIds.has(s.id) && s.status !== 'generating'}
-            onGenerate={handleGenerate}
-            onValidate={handleValidate}
-          />
-        ))}
-      </div>
+      <ConfirmModal
+        open={regenerateTarget !== null}
+        title="Régénérer ce sous-thème ?"
+        message={
+          regenerateTarget
+            ? `Les ${regenerateTarget.generated_count} phrases de "${regenerateTarget.title}" seront supprimées et remplacées par une nouvelle génération.`
+            : ''
+        }
+        details="Vos éditions manuelles seront perdues. Action irréversible."
+        tone="warning"
+        confirmLabel="Régénérer"
+        onConfirm={() => {
+          const target = regenerateTarget
+          setRegenerateTarget(null)
+          if (target) handleGenerate(target, 'replace')
+        }}
+        onClose={() => setRegenerateTarget(null)}
+      />
+
+      {/* Section : Échecs (en haut, urgent) */}
+      {grouped.failed.length > 0 && (
+        <Section
+          title="Échecs"
+          count={grouped.failed.length}
+          tone="danger"
+          hint="Cliquez sur Réessayer pour relancer la génération."
+          storageKey={`subtopics:${projectId}:failed`}
+          defaultCollapsed={false}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {grouped.failed.map((s) => (
+              <SubtopicCard
+                key={s.id}
+                subtopic={s}
+                projectId={projectId}
+                busy={busyIds.has(s.id)}
+                disabled={anyGenerating && !busyIds.has(s.id)}
+                onGenerate={handleGenerate}
+                onAskRegenerate={setRegenerateTarget}
+                onValidate={handleValidate}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Section : À traiter (pending/generating/ready) */}
+      {grouped.todo.length > 0 && (
+        <Section
+          title="En attente d'action"
+          count={grouped.todo.length}
+          tone="active"
+          hint="Générez les phrases, relisez-les puis validez le sous-thème pour l'intégrer au projet."
+          storageKey={`subtopics:${projectId}:todo`}
+          defaultCollapsed={false}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {grouped.todo.map((s) => (
+              <SubtopicCard
+                key={s.id}
+                subtopic={s}
+                projectId={projectId}
+                busy={busyIds.has(s.id)}
+                disabled={anyGenerating && !busyIds.has(s.id) && s.status !== 'generating'}
+                onGenerate={handleGenerate}
+                onAskRegenerate={setRegenerateTarget}
+                onValidate={handleValidate}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Section : Validés (intégrés au projet) */}
+      {grouped.validated.length > 0 && (
+        <Section
+          title="Intégrés au projet"
+          count={grouped.validated.length}
+          tone="success"
+          hint="Ces phrases sont prêtes à être enregistrées par les locuteurs."
+          storageKey={`subtopics:${projectId}:validated`}
+          defaultCollapsed={true}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {grouped.validated.map((s) => (
+              <SubtopicCard
+                key={s.id}
+                subtopic={s}
+                projectId={projectId}
+                busy={busyIds.has(s.id)}
+                disabled={false}
+                onGenerate={handleGenerate}
+                onAskRegenerate={setRegenerateTarget}
+                onValidate={handleValidate}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
 
       {showAddModal && (
         <AddSubtopicModal
@@ -247,6 +361,58 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
   )
 }
 
+/* ---------- Section regroupant des cartes par statut ---------- */
+
+interface SectionProps {
+  title: string
+  count: number
+  tone: 'active' | 'success' | 'danger'
+  hint?: string
+  storageKey: string
+  defaultCollapsed: boolean
+  children: React.ReactNode
+}
+
+function Section({ title, count, tone, hint, storageKey, defaultCollapsed, children }: SectionProps) {
+  const toneColor = tone === 'success' ? '#10b981' : tone === 'danger' ? '#ef4444' : '#7170ff'
+  const [collapsed, toggle] = useCollapsed(storageKey, defaultCollapsed)
+  return (
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex items-center gap-2 -mx-1 px-1 py-1 rounded-md hover:bg-[rgba(255,255,255,0.02)] transition-colors text-left"
+      >
+        {collapsed
+          ? <ChevronRight className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={1.75} />
+          : <ChevronDown className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={1.75} />
+        }
+        <span
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase"
+          style={{
+            ...sans,
+            fontWeight: 590,
+            letterSpacing: '0.06em',
+            color: 'var(--t-fg-2)',
+          }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: toneColor }} />
+          {title}
+          <span className="text-[#62666d] tabular-nums" style={mono}>
+            {count}
+          </span>
+        </span>
+        {hint && !collapsed && (
+          <span className="text-[11px] text-[#62666d] hidden sm:inline" style={sans}>
+            · {hint}
+          </span>
+        )}
+      </button>
+      {!collapsed && children}
+    </div>
+  )
+}
+
 /* ---------- Carte ---------- */
 
 interface SubtopicCardProps {
@@ -255,10 +421,13 @@ interface SubtopicCardProps {
   busy: boolean
   disabled?: boolean
   onGenerate: (s: Subtopic, mode?: 'replace' | 'append') => void
+  onAskRegenerate: (s: Subtopic) => void
   onValidate: (s: Subtopic) => void
 }
 
-function SubtopicCard({ subtopic: s, projectId, busy, disabled, onGenerate, onValidate }: SubtopicCardProps) {
+function SubtopicCard({
+  subtopic: s, projectId, busy, disabled, onGenerate, onAskRegenerate, onValidate,
+}: SubtopicCardProps) {
   const meta = STATUS_META[s.status]
   const isGenerating = s.status === 'generating' || busy
   const lockGenerate = disabled || isGenerating
@@ -434,11 +603,7 @@ function SubtopicCard({ subtopic: s, projectId, busy, disabled, onGenerate, onVa
         {s.status === 'ready' && (
           <button
             type="button"
-            onClick={() => {
-              if (confirm(`Régénérer toutes les ${s.generated_count} phrases de "${s.title}" ? Les phrases actuelles seront supprimées.`)) {
-                onGenerate(s, 'replace')
-              }
-            }}
+            onClick={() => onAskRegenerate(s)}
             disabled={lockGenerate}
             className="inline-flex items-center gap-1 h-[28px] px-2 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-40 ml-auto"
             style={{ ...sans, fontWeight: 510 }}
@@ -468,37 +633,48 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
   const [error, setError] = useState('')
   const { notify } = useToast()
 
-  const valid = title.trim().length >= 3 && targetCount >= 50 && targetCount <= 500
+  const valid =
+    title.trim().length >= SUBTOPIC_TITLE_MIN &&
+    targetCount >= SUBTOPIC_MIN_PHRASES &&
+    targetCount <= SUBTOPIC_MAX_PHRASES
 
   const handleSubmit = async () => {
     if (!valid) return
     setSubmitting(true)
     setError('')
     try {
-      // Position max actuelle
-      const { data: maxRow } = await supabase
-        .from('subtopics')
-        .select('position')
-        .eq('project_id', projectId)
-        .order('position', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      // RPC SECURITY DEFINER : valide ownership, quota, position atomique côté DB.
+      // L'INSERT direct dans subtopics depuis le client est interdit par les
+      // policies (migration 049) — on doit passer par cette fonction.
+      const { error: rpcErr } = await (supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: string | null
+          error: { message: string } | null
+        }>
+      }).rpc('add_manual_subtopic', {
+        p_project_id: projectId,
+        p_title: title.trim(),
+        p_description: description.trim() || null,
+        p_target_count: targetCount,
+      })
 
-      const nextPos = ((maxRow as { position?: number } | null)?.position ?? 0) + 1
-
-      const { error: insertErr } = await supabase
-        .from('subtopics')
-        .insert({
-          project_id: projectId,
-          position: nextPos,
-          title: title.trim(),
-          description: description.trim() || null,
-          target_count: targetCount,
-          source: 'manual',
-          status: 'pending',
-        } as never)
-
-      if (insertErr) throw insertErr
+      if (rpcErr) {
+        // Messages d'erreur DB → traduire en français lisible
+        const msg = rpcErr.message
+        if (msg.includes('project_quota_exceeded')) {
+          throw new Error(`Quota du projet dépassé (maximum ${PROJECT_PHRASE_QUOTA.toLocaleString('fr-FR')} phrases planifiées).`)
+        }
+        if (msg.includes('title_invalid')) {
+          throw new Error('Titre invalide (entre 3 et 200 caractères).')
+        }
+        if (msg.includes('target_count_invalid')) {
+          throw new Error('Quantité invalide (entre 50 et 500).')
+        }
+        if (msg.includes('forbidden')) {
+          throw new Error('Accès refusé à ce projet.')
+        }
+        throw new Error(msg)
+      }
       notify({ variant: 'success', title: 'Sous-thème ajouté', message: title.trim() })
       onCreated()
     } catch (err) {
@@ -549,7 +725,7 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex : Vocabulaire des sages-femmes"
-              maxLength={200}
+              maxLength={SUBTOPIC_TITLE_MAX}
               className="w-full h-[36px] px-3 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.22)]"
               style={sans}
             />
@@ -563,7 +739,7 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Décrivez le contexte pour orienter la génération…"
               rows={2}
-              maxLength={500}
+              maxLength={SUBTOPIC_DESC_MAX}
               className="w-full px-3 py-2.5 text-[13px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.22)] resize-y"
               style={{ ...sans, lineHeight: 1.5 }}
             />
@@ -574,8 +750,8 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
             </label>
             <input
               type="number"
-              min={50}
-              max={500}
+              min={SUBTOPIC_MIN_PHRASES}
+              max={SUBTOPIC_MAX_PHRASES}
               step={10}
               value={targetCount}
               onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || 0)}
@@ -583,7 +759,7 @@ function AddSubtopicModal({ projectId, onClose, onCreated }: AddSubtopicModalPro
               style={sans}
             />
             <p className="text-[11px] text-[#62666d] mt-1.5" style={sans}>
-              Min 50, max 500 par sous-thème.
+              Min {SUBTOPIC_MIN_PHRASES}, max {SUBTOPIC_MAX_PHRASES} par sous-thème.
             </p>
           </div>
         </div>

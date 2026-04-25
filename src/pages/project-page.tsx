@@ -3,10 +3,12 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, FileText, Users, Mic, Package, Loader2, UserPlus, Settings,
   Circle, CircleCheck, CircleDashed, Clock, Archive, Trash2, AlertTriangle,
-  MoreHorizontal, Star,
+  MoreHorizontal, Star, ChevronDown, ChevronRight,
 } from 'lucide-react'
 import { useProject } from '../hooks/use-project'
 import { useRealtimeRecordings } from '../hooks/use-realtime-recordings'
+import { useSubtopics } from '../hooks/use-subtopics'
+import { useCollapsed } from '../hooks/use-collapsed'
 import { useToast } from '../hooks/use-toast'
 import { translateRejectReasons } from '../lib/qc-translations'
 import { supabase } from '../lib/supabase'
@@ -18,6 +20,7 @@ import { ExportPanel } from '../components/export-panel'
 import { RecruitmentPanel } from '../components/recruitment/recruitment-panel'
 import { ProjectSettingsPanel } from '../components/project-settings-panel'
 import { SubtopicsPanel } from '../components/subtopics-panel'
+import { PhrasesQuotaBanner } from '../components/phrases-quota-banner'
 import type { ProjectStatus } from '../types/database'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
@@ -38,6 +41,9 @@ export function ProjectPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { project, phrases, sessions, recordings, exports, loading, error, refetch } = useProject(id)
+  // Hisser useSubtopics ici plutôt que dans 2 enfants (panel + bandeau) :
+  // évite double fetch + double channel Realtime sur la même donnée.
+  const { subtopics, loading: subtopicsLoading, refetch: refetchSubtopics } = useSubtopics(id)
   const initialTab = (searchParams.get('tab') as Tab | null) ?? 'phrases'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -308,14 +314,29 @@ export function ProjectPage() {
       {/* Tab content */}
       <div className="p-5 lg:p-8 animate-fade-in-up">
         {activeTab === 'phrases' && (
-          <div className="flex flex-col gap-8">
-            <SubtopicsPanel projectId={project.id} onValidated={refetch} />
-            <PhraseList
-              phrases={phrases}
-              recordings={recordings}
+          <div className="flex flex-col gap-6">
+            <PhrasesQuotaBanner subtopics={subtopics} validatedPhrasesCount={totalPhrases} />
+            <SubtopicsPanel
               projectId={project.id}
-              onPhrasesAdded={refetch}
+              subtopics={subtopics}
+              loading={subtopicsLoading}
+              refetchSubtopics={refetchSubtopics}
+              onValidated={() => { void refetch(); void refetchSubtopics() }}
             />
+            <CollapsibleBlock
+              title="Toutes les phrases du projet"
+              count={totalPhrases}
+              storageKey={`project:${project.id}:all-phrases`}
+              defaultCollapsed={true}
+              hint="Liste plate, sans regroupement par sous-thème."
+            >
+              <PhraseList
+                phrases={phrases}
+                recordings={recordings}
+                projectId={project.id}
+                onPhrasesAdded={refetch}
+              />
+            </CollapsibleBlock>
           </div>
         )}
         {activeTab === 'sessions' && (
@@ -456,4 +477,53 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 
 function StatSep() {
   return <span className="w-px h-3 bg-[rgba(255,255,255,0.08)]" />
+}
+
+interface CollapsibleBlockProps {
+  title: string
+  count?: number
+  storageKey: string
+  defaultCollapsed: boolean
+  hint?: string
+  children: React.ReactNode
+}
+
+function CollapsibleBlock({ title, count, storageKey, defaultCollapsed, hint, children }: CollapsibleBlockProps) {
+  const [collapsed, toggle] = useCollapsed(storageKey, defaultCollapsed)
+  return (
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex items-center gap-2 -mx-1 px-1 py-1 rounded-md hover:bg-[rgba(255,255,255,0.02)] transition-colors text-left"
+      >
+        {collapsed
+          ? <ChevronRight className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={1.75} />
+          : <ChevronDown className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={1.75} />
+        }
+        <span
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase"
+          style={{
+            ...sans,
+            fontWeight: 590,
+            letterSpacing: '0.06em',
+            color: 'var(--t-fg-2)',
+          }}
+        >
+          {title}
+          {count != null && (
+            <span className="text-[#62666d] tabular-nums" style={mono}>
+              {count}
+            </span>
+          )}
+        </span>
+        {hint && !collapsed && (
+          <span className="text-[11px] text-[#62666d] hidden sm:inline" style={sans}>
+            · {hint}
+          </span>
+        )}
+      </button>
+      {!collapsed && children}
+    </div>
+  )
 }
