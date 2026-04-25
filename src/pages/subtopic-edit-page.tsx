@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Loader2, Search, Trash2, Pencil, Check, X,
-  Sparkles, RefreshCw, AlertCircle, AlertTriangle, Plus,
+  Sparkles, RefreshCw, AlertCircle, AlertTriangle, Plus, Unlock,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { usePhraseDrafts } from '../hooks/use-phrase-drafts'
@@ -27,6 +27,8 @@ export function SubtopicEditPage() {
   const [generating, setGenerating] = useState(false)
   const [extraCount, setExtraCount] = useState(50)
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [unvalidating, setUnvalidating] = useState(false)
+  const [showUnvalidateModal, setShowUnvalidateModal] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return drafts
@@ -194,6 +196,49 @@ export function SubtopicEditPage() {
     }
   }
 
+  const handleUnvalidate = useCallback(async () => {
+    if (!subId) return
+    setUnvalidating(true)
+    try {
+      const { data, error: rpcErr } = await (supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: number | null
+          error: { message: string } | null
+        }>
+      }).rpc('unvalidate_subtopic', { p_subtopic_id: subId })
+
+      if (rpcErr) {
+        // Cas garde-fou : recordings existants
+        if (rpcErr.message.includes('has_recordings')) {
+          notify({
+            variant: 'error',
+            title: 'Dévalidation bloquée',
+            message: rpcErr.message.replace(/^.*has_recordings:\s*/i, ''),
+          })
+        } else {
+          throw new Error(rpcErr.message)
+        }
+        return
+      }
+
+      notify({
+        variant: 'success',
+        title: 'Sous-thème dévalidé',
+        message: `${data ?? 0} phrases retirées du projet. Vous pouvez à nouveau modifier.`,
+      })
+      setShowUnvalidateModal(false)
+      await refetch()
+    } catch (err) {
+      notify({
+        variant: 'error',
+        title: 'Dévalidation impossible',
+        message: err instanceof Error ? err.message : 'Erreur inconnue',
+      })
+    } finally {
+      setUnvalidating(false)
+    }
+  }, [subId, notify, refetch])
+
   const validate = useCallback(async () => {
     if (!subId) return
     setValidating(true)
@@ -302,15 +347,37 @@ export function SubtopicEditPage() {
 
         {isValidated && (
           <div
-            className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#10b981] mb-5"
+            className="flex items-start gap-3 px-3 py-3 rounded-md text-[12px] mb-5"
             style={{
               ...sans,
               background: 'rgba(16,185,129,0.06)',
               border: '1px solid rgba(16,185,129,0.18)',
             }}
           >
-            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" strokeWidth={2} />
-            <span>Ce sous-thème est déjà validé. Les phrases ont été ajoutées au projet et sont en lecture seule.</span>
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#10b981]" strokeWidth={2} />
+            <div className="flex-1">
+              <p className="text-[#10b981] m-0" style={{ ...sans, fontWeight: 510 }}>
+                Sous-thème validé · phrases ajoutées au projet
+              </p>
+              <p className="text-[#8a8f98] mt-1 leading-relaxed" style={sans}>
+                Pour modifier, vous devez dévalider. Cela retire les phrases du projet et les remet en mode édition. Bloqué si des enregistrements existent déjà.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowUnvalidateModal(true)}
+              className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md transition-colors shrink-0"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: '#d0d6e0',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              <Unlock className="w-3 h-3" strokeWidth={1.75} />
+              Dévalider
+            </button>
           </div>
         )}
 
@@ -530,6 +597,81 @@ export function SubtopicEditPage() {
           </div>
         )}
       </div>
+
+      {showUnvalidateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowUnvalidateModal(false) }}
+        >
+          <div
+            className="rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-[460px] max-h-[92dvh] overflow-y-auto"
+            style={{
+              background: 'var(--t-surface-2)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div
+                className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                style={{
+                  background: 'rgba(251,191,36,0.08)',
+                  border: '1px solid rgba(251,191,36,0.25)',
+                }}
+              >
+                <AlertTriangle className="w-4 h-4 text-[#fbbf24]" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-[15px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+                  Dévalider ce sous-thème ?
+                </h2>
+                <p className="text-[12px] text-[#8a8f98] mt-1" style={sans}>
+                  Les phrases seront retirées du projet.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 mb-4">
+              <p className="text-[13px] text-[#d0d6e0]" style={sans}>
+                Cette action va :
+              </p>
+              <ul className="text-[12px] text-[#8a8f98] flex flex-col gap-1 pl-4 list-disc" style={sans}>
+                <li>Retirer les {drafts.length} phrases du projet</li>
+                <li>Repasser le sous-thème en mode édition</li>
+                <li>Échouer si des locuteurs ont déjà enregistré ces phrases</li>
+              </ul>
+              <p className="text-[12px] text-[#62666d] mt-1" style={sans}>
+                Vous pourrez ensuite éditer, régénérer puis re-valider.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowUnvalidateModal(false)}
+                disabled={unvalidating}
+                className="flex-1 h-[34px] text-[13px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                style={{ ...sans, fontWeight: 510 }}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleUnvalidate}
+                disabled={unvalidating}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-[34px] text-[13px] rounded-md transition-colors disabled:opacity-40"
+                style={{
+                  ...sans,
+                  fontWeight: 510,
+                  color: '#ffffff',
+                  background: '#fbbf24',
+                }}
+              >
+                {unvalidating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlock className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                Dévalider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
