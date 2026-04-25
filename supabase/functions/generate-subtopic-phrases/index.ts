@@ -45,53 +45,23 @@ function jsonResponse(body: unknown, status: number, corsHeaders: Record<string,
   });
 }
 
-async function callGeminiBatch(
-  apiKey: string,
-  params: {
-    language: string;
-    subtopicTitle: string;
-    subtopicDescription: string;
-    usageType: string;
-    batchSize: number;
-    excludeSamples: string[];
-  },
-): Promise<string[]> {
-  const usageHint = params.usageType === "tts"
-    ? "phonétiquement variées (couvrent un large éventail de sons)"
-    : params.usageType === "asr"
-    ? "naturelles, conversationnelles, telles qu'un locuteur les prononcerait spontanément"
-    : "naturelles et phonétiquement variées";
+interface PhrasePair {
+  source: string;  // texte FR original
+  target: string;  // traduction dans la langue cible
+}
 
-  const excludeSection = params.excludeSamples.length > 0
-    ? `\n\nÉvite absolument de répéter ces phrases déjà existantes (ou des variantes proches) :\n${
-      params.excludeSamples.map((p) => `- ${p}`).join("\n")
-    }`
-    : "";
-
-  const prompt = `Génère exactement ${params.batchSize} phrases en ${params.language} sur le sous-thème "${params.subtopicTitle}".
-
-Description du sous-thème : ${params.subtopicDescription || "(aucune)"}
-
-Les phrases doivent être ${usageHint}.
-
-Règles strictes :
-- Longueur : 5 à 15 mots par phrase
-- Variété : mélange affirmations, questions, exclamations, négations
-- Vocabulaire : courant ET spécialisé du sous-thème
-- AUCUN doublon entre les phrases générées
-- Phrases complètes, pas de fragments
-- Pas d'emoji, pas de ponctuation décorative${excludeSection}
-
-Réponds UNIQUEMENT avec un JSON valide, sans markdown :
-{ "phrases": ["phrase 1", "phrase 2", ...] }`;
-
+/**
+ * Helper générique pour appeler Gemini avec un prompt et parser le JSON retourné.
+ * Gère les retries via le wrapper appelant.
+ */
+async function callGeminiJSON<T>(apiKey: string, prompt: string, temperature: number): Promise<T> {
   const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.9,
+        temperature,
         responseMimeType: "application/json",
         thinkingConfig: { thinkingBudget: 0 },
       },
@@ -100,7 +70,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
 
   if (!response.ok) {
     const errBody = await response.text();
-    console.error("Gemini batch error:", response.status, errBody.slice(0, 300));
+    console.error("Gemini error:", response.status, errBody.slice(0, 300));
     const err = new Error(`gemini_api_error_${response.status}`) as Error & { status?: number };
     err.status = response.status;
     throw err;
@@ -109,11 +79,9 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
   const data = await response.json() as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
-
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("gemini_empty_response");
 
-  // Cleanup défensif au cas où Gemini renvoie du markdown
   let cleanText = text.trim();
   if (cleanText.startsWith("```")) {
     cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
@@ -124,13 +92,60 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
     cleanText = cleanText.slice(firstBrace, lastBrace + 1);
   }
 
-  let parsed: { phrases?: unknown };
   try {
-    parsed = JSON.parse(cleanText) as { phrases?: unknown };
+    return JSON.parse(cleanText) as T;
   } catch (e) {
-    console.error("Gemini batch invalid JSON. Raw:", text.slice(0, 500));
+    console.error("Gemini invalid JSON. Raw:", text.slice(0, 500));
     throw new Error("gemini_invalid_json");
   }
+}
+
+/**
+ * Étape 1 : génère N phrases EN FRANÇAIS sur un sous-thème.
+ * Le français est la langue forte de Gemini → phrases naturelles, variées.
+ */
+async function generatePhrasesFR(
+  apiKey: string,
+  params: {
+    subtopicTitle: string;
+    subtopicDescription: string;
+    usageType: string;
+    batchSize: number;
+    excludeSamples: string[]; // déjà en FR si dispo
+  },
+): Promise<string[]> {
+  const usageHint = params.usageType === "tts"
+    ? "phonétiquement variées (couvrent un large éventail de sons)"
+    : params.usageType === "asr"
+    ? "naturelles, conversationnelles, telles qu'un locuteur les prononcerait spontanément"
+    : "naturelles et phonétiquement variées";
+
+  const excludeSection = params.excludeSamples.length > 0
+    ? `\n\nÉvite de répéter ces phrases déjà existantes (ou des variantes proches) :\n${
+      params.excludeSamples.slice(0, 30).map((p) => `- ${p}`).join("\n")
+    }`
+    : "";
+
+  const prompt = `Génère exactement ${params.batchSize} phrases en français sur le sous-thème "${params.subtopicTitle}".
+
+Description du sous-thème : ${params.subtopicDescription || "(aucune)"}
+
+Contexte : ces phrases serviront ensuite à être traduites en langue africaine puis enregistrées vocalement par des locuteurs.
+
+Les phrases doivent être ${usageHint}.
+
+Règles strictes :
+- Longueur : 5 à 15 mots par phrase
+- Variété : mélange affirmations, questions, exclamations, négations
+- Vocabulaire : courant et accessible, contextualisé pour l'Afrique de l'Ouest quand pertinent
+- AUCUN doublon entre les phrases générées
+- Phrases complètes, pas de fragments
+- Pas d'emoji, pas de ponctuation décorative${excludeSection}
+
+Réponds UNIQUEMENT avec un JSON valide, sans markdown :
+{ "phrases": ["phrase 1", "phrase 2", ...] }`;
+
+  const parsed = await callGeminiJSON<{ phrases?: unknown }>(apiKey, prompt, 0.9);
   if (!Array.isArray(parsed.phrases)) throw new Error("gemini_invalid_structure");
 
   return parsed.phrases
@@ -138,10 +153,88 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
     .map((p) => p.trim().slice(0, 500));
 }
 
+/**
+ * Étape 2 : traduit un batch de phrases FR vers la langue cible.
+ * Préserve l'ordre et le nombre. Si une traduction échoue, on garde le FR
+ * dans target pour ne rien perdre (le client pourra corriger).
+ */
+async function translateBatch(
+  apiKey: string,
+  language: string,
+  phrasesFR: string[],
+): Promise<PhrasePair[]> {
+  if (phrasesFR.length === 0) return [];
+
+  const numbered = phrasesFR.map((p, i) => `${i + 1}. ${p}`).join("\n");
+
+  const prompt = `Traduis ces ${phrasesFR.length} phrases du français vers le ${language}.
+
+Règles strictes :
+- Conserve l'ordre exact
+- Conserve le nombre exact (${phrasesFR.length} traductions)
+- Traduis NATURELLEMENT, pas mot à mot. Adapte la syntaxe à la langue cible.
+- Garde le registre et le ton de la phrase originale
+- Si un nom propre n'a pas d'équivalent, garde-le tel quel
+- Pas de note, pas d'explication, juste les traductions
+
+Phrases à traduire :
+${numbered}
+
+Réponds UNIQUEMENT avec un JSON valide, sans markdown :
+{ "translations": ["traduction 1", "traduction 2", ...] }`;
+
+  const parsed = await callGeminiJSON<{ translations?: unknown }>(apiKey, prompt, 0.3);
+  if (!Array.isArray(parsed.translations)) throw new Error("gemini_invalid_structure");
+
+  const translations = parsed.translations.map((t) =>
+    typeof t === "string" ? t.trim().slice(0, 500) : ""
+  );
+
+  // Si Gemini retourne un mauvais nombre, on aligne défensivement
+  const pairs: PhrasePair[] = [];
+  for (let i = 0; i < phrasesFR.length; i++) {
+    const target = translations[i] && translations[i].length > 0 ? translations[i] : phrasesFR[i];
+    pairs.push({ source: phrasesFR[i], target });
+  }
+  return pairs;
+}
+
+/**
+ * Pipeline complet d'un batch : génère FR puis traduit en langue cible.
+ */
+async function callGeminiBatch(
+  apiKey: string,
+  params: {
+    language: string;
+    subtopicTitle: string;
+    subtopicDescription: string;
+    usageType: string;
+    batchSize: number;
+    excludeSamples: string[];
+  },
+): Promise<PhrasePair[]> {
+  const phrasesFR = await generatePhrasesFR(apiKey, {
+    subtopicTitle: params.subtopicTitle,
+    subtopicDescription: params.subtopicDescription,
+    usageType: params.usageType,
+    batchSize: params.batchSize,
+    excludeSamples: params.excludeSamples,
+  });
+
+  if (phrasesFR.length === 0) return [];
+
+  // Si la langue cible est le français (rare mais possible), pas besoin de traduire
+  if (params.language.toLowerCase() === "français" || params.language.toLowerCase() === "francais") {
+    return phrasesFR.map((p) => ({ source: p, target: p }));
+  }
+
+  return translateBatch(apiKey, params.language, phrasesFR);
+}
+
 async function callGeminiBatchWithRetry(
   apiKey: string,
   params: Parameters<typeof callGeminiBatch>[1],
-): Promise<string[]> {
+): Promise<PhrasePair[]> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -183,11 +276,11 @@ async function runWithConcurrency<T>(
   return results;
 }
 
-async function dedupeAndCap(phrases: string[], target: number): Promise<string[]> {
+async function dedupeAndCap(pairs: PhrasePair[], target: number): Promise<PhrasePair[]> {
   const seen = new Set<string>();
-  const out: string[] = [];
-  for (const p of phrases) {
-    const key = p.toLowerCase().replace(/\s+/g, " ").trim();
+  const out: PhrasePair[] = [];
+  for (const p of pairs) {
+    const key = p.target.toLowerCase().replace(/\s+/g, " ").trim();
     if (key.length < 3) continue;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -342,14 +435,19 @@ Deno.serve(async (req) => {
     } else {
       const { data: existingDrafts } = await supabase
         .from("phrase_drafts")
-        .select("position, content")
+        .select("position, content, source_text")
         .eq("subtopic_id", subtopicId)
         .order("position", { ascending: false });
 
-      const drafts = (existingDrafts ?? []) as Array<{ position: number; content: string }>;
+      const drafts = (existingDrafts ?? []) as Array<{
+        position: number;
+        content: string;
+        source_text: string | null;
+      }>;
       startPosition = drafts.length > 0 ? drafts[0].position : 0;
-      // On envoie max 30 phrases en exclusion pour ne pas exploser le prompt
-      excludeSamples = drafts.slice(0, 30).map((d) => d.content);
+      // Exclusion en FR (source_text) pour aider Gemini à éviter doublons en génération.
+      // Fallback sur content si source_text manque (anciens drafts).
+      excludeSamples = drafts.slice(0, 30).map((d) => d.source_text ?? d.content);
       targetForRun = extraCount;
     }
 
@@ -376,19 +474,19 @@ Deno.serve(async (req) => {
 
     // 9. Exécution avec concurrence limitée
     const settled = await runWithConcurrency(batches, MAX_PARALLEL);
-    const allPhrases: string[] = [];
+    const allPairs: PhrasePair[] = [];
     let failureCount = 0;
 
     for (const r of settled) {
       if (r.status === "fulfilled") {
-        allPhrases.push(...r.value);
+        allPairs.push(...r.value);
       } else {
         failureCount++;
         console.error("Batch failed:", r.reason);
       }
     }
 
-    if (allPhrases.length === 0) {
+    if (allPairs.length === 0) {
       await markFailed(supabase, subtopicId, "Aucune phrase générée par l'IA");
       subtopicIdForCleanup = null;
       return jsonResponse(
@@ -399,15 +497,14 @@ Deno.serve(async (req) => {
     }
 
     // 10. Dédup + cap au target
-    let finalPhrases = await dedupeAndCap(allPhrases, targetForRun);
+    let finalPairs = await dedupeAndCap(allPairs, targetForRun);
 
     // 10b. Si on est significativement sous le target, lancer un batch de complétion
-    // (utile quand un batch a échoué malgré les retries, ou beaucoup de doublons)
-    const shortfall = targetForRun - finalPhrases.length;
+    const shortfall = targetForRun - finalPairs.length;
     if (shortfall >= 20 && failureCount < settled.length) {
       try {
         const fillSize = Math.min(BATCH_SIZE, shortfall);
-        const fillExclude = finalPhrases.slice(0, 30);
+        const fillExclude = finalPairs.slice(0, 30).map((p) => p.source);
         const fill = await callGeminiBatchWithRetry(apiKey, {
           language,
           subtopicTitle: subtopicRow.title,
@@ -416,18 +513,19 @@ Deno.serve(async (req) => {
           batchSize: fillSize,
           excludeSamples: [...excludeSamples, ...fillExclude],
         });
-        finalPhrases = await dedupeAndCap([...finalPhrases, ...fill], targetForRun);
+        finalPairs = await dedupeAndCap([...finalPairs, ...fill], targetForRun);
       } catch (fillErr) {
         console.warn("Fill batch failed:", fillErr);
       }
     }
 
-    // 11. INSERT phrase_drafts
-    const rows = finalPhrases.map((content, i) => ({
+    // 11. INSERT phrase_drafts (content = traduction WO, source_text = original FR)
+    const rows = finalPairs.map((pair, i) => ({
       subtopic_id: subtopicId,
       project_id: subtopicRow.project_id,
       position: startPosition + i + 1,
-      content,
+      content: pair.target,
+      source_text: pair.source,
       edited: false,
     }));
 

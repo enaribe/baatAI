@@ -113,7 +113,7 @@ export interface Phrase {
 }
 
 export type SubtopicStatus = 'pending' | 'generating' | 'ready' | 'validated' | 'failed'
-export type SubtopicSource = 'ai' | 'manual'
+export type SubtopicSource = 'ai' | 'manual' | 'imported'
 
 export interface Subtopic {
   id: string
@@ -137,6 +137,7 @@ export interface PhraseDraft {
   project_id: string
   position: number
   content: string
+  source_text: string | null
   edited: boolean
   created_at: string
 }

@@ -481,14 +481,25 @@ export function SubtopicEditPage() {
                   style={sans}
                 />
               ) : (
-                <span className="text-[13px] text-[#f7f8f8] flex items-center gap-2" style={sans}>
-                  {d.content}
-                  {d.edited && (
-                    <span className="text-[9px] text-[#62666d] uppercase" style={{ ...sans, letterSpacing: '0.04em' }}>
-                      modifié
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  {d.source_text && (
+                    <span
+                      className="text-[11px] text-[#62666d] italic truncate"
+                      style={sans}
+                      title={d.source_text}
+                    >
+                      {d.source_text}
                     </span>
                   )}
-                </span>
+                  <span className="text-[13px] text-[#f7f8f8] flex items-center gap-2" style={sans}>
+                    {d.content}
+                    {d.edited && (
+                      <span className="text-[9px] text-[#62666d] uppercase" style={{ ...sans, letterSpacing: '0.04em' }}>
+                        modifié
+                      </span>
+                    )}
+                  </span>
+                </div>
               )}
               <div className="flex items-center justify-end gap-0.5">
                 {isValidated ? null : editingId === d.id ? (

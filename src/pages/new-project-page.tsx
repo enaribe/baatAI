@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2, File,
   Globe, Lock, Languages, Type, AlertCircle, FolderPlus, Pencil, Sparkles,
+  Languages as LanguagesIcon,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/use-auth'
@@ -37,7 +38,10 @@ const MIN_RATE = 2000
 const STEP_LABELS = ['Infos', 'Phrases', 'Récap']
 
 type Step = 0 | 1 | 2
-type PhrasesSource = 'file' | 'manual' | 'ai'
+type PhrasesSource = 'file' | 'manual' | 'ai' | 'import-translate'
+
+const IMPORT_TRANSLATE_EXT = ['.txt', '.md']
+const IMPORT_TRANSLATE_MAX_MB = 5
 
 const AI_PRESETS = [500, 1000, 2000, 5000]
 const AI_MIN = 100
@@ -76,6 +80,12 @@ export function NewProjectPage() {
   // Étape 1 — mode IA
   const [aiTheme, setAiTheme] = useState('')
   const [aiTotalCount, setAiTotalCount] = useState<number>(2000)
+
+  // Étape 1 — mode import + traduction
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importTitle, setImportTitle] = useState('')
+  const [importError, setImportError] = useState('')
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   const languageLabel = LANGUAGES.find((l) => l.value === targetLanguage)?.label ?? targetLanguage
   const rateValue = isVolunteer ? 0 : parseInt(rateInput, 10) || 0
@@ -126,6 +136,30 @@ export function NewProjectPage() {
     setDragOver(true)
   }, [])
 
+  const handleImportFileSelect = useCallback((file: File) => {
+    setImportError('')
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
+    if (!IMPORT_TRANSLATE_EXT.includes(ext)) {
+      setImportError(`Format non supporté. Utilisez ${IMPORT_TRANSLATE_EXT.join(' ou ')}`)
+      return
+    }
+    if (file.size > IMPORT_TRANSLATE_MAX_MB * 1024 * 1024) {
+      setImportError(`Fichier trop volumineux (max ${IMPORT_TRANSLATE_MAX_MB} MB)`)
+      return
+    }
+    setImportFile(file)
+    if (!importTitle.trim()) {
+      // Auto-rempli le titre avec le nom du fichier sans l'extension
+      const baseName = file.name.replace(/\.(txt|md)$/i, '').slice(0, 80)
+      setImportTitle(baseName)
+    }
+  }, [importTitle])
+
+  const handleImportFileInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleImportFileSelect(file)
+  }, [handleImportFileSelect])
+
   const handleManualParse = useCallback(() => {
     if (!manualText.trim()) return
     const parsed = parseTextToPhrases(manualText)
@@ -141,17 +175,21 @@ export function NewProjectPage() {
     setPhrases([]); setTotalPhrases(0); setPhrasesSource(null)
     setFileName(''); setSelectedFile(null); setManualText(''); setUploadError('')
     setAiTheme('')
+    setImportFile(null); setImportTitle(''); setImportError('')
     if (fileInputRef.current) fileInputRef.current.value = ''
+    if (importInputRef.current) importInputRef.current.value = ''
   }, [])
 
   const aiThemeValid = aiTheme.trim().length >= 5 && aiTheme.trim().length <= 200
   const aiCountValid = aiTotalCount >= AI_MIN && aiTotalCount <= AI_MAX
+  const importValid = importFile !== null && importTitle.trim().length >= 3
 
   const canProceedStep0 = name.trim().length > 0 && (isVolunteer || rateValue >= MIN_RATE)
   const canProceedStep1 =
     totalPhrases > 0 ||
     selectedFile !== null ||
-    (phrasesSource === 'ai' && aiThemeValid && aiCountValid)
+    (phrasesSource === 'ai' && aiThemeValid && aiCountValid) ||
+    (phrasesSource === 'import-translate' && importValid)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -243,13 +281,37 @@ export function NewProjectPage() {
           if (!fnRes.ok) throw new Error(fnJson.error ?? 'Erreur lors de la génération du plan')
         }
 
+        if (phrasesSource === 'import-translate' && importFile) {
+          setUploading(true)
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) throw new Error('Session expirée, reconnectez-vous.')
+
+          const formData = new FormData()
+          formData.append('file', importFile)
+          formData.append('project_id', project.id)
+          formData.append('subtopic_title', importTitle.trim())
+
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/import-document-translate`
+          const fnRes = await fetch(fnUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: formData,
+          })
+          setUploading(false)
+          const fnJson = await fnRes.json()
+          if (!fnRes.ok) throw new Error(fnJson.error ?? "Erreur lors de l'import")
+        }
+
         const { error: updateError } = await supabase
           .from('projects')
           .update({ status: 'active' } as never)
           .eq('id', project.id)
         if (updateError) throw updateError
 
-        if (phrasesSource === 'ai') {
+        if (phrasesSource === 'ai' || phrasesSource === 'import-translate') {
           navigate(`/project/${project.id}?tab=phrases`)
         } else {
           navigate(`/project/${project.id}?tab=recruitment&invite=1`)
@@ -511,21 +573,21 @@ export function NewProjectPage() {
             </div>
 
             {/* Choix de la source */}
-            {!selectedFile && phrasesSource !== 'manual' && phrasesSource !== 'ai' && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {!selectedFile && phrasesSource !== 'manual' && phrasesSource !== 'ai' && phrasesSource !== 'import-translate' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <SourceCard
                   active={false}
                   onClick={() => fileInputRef.current?.click()}
                   icon={<Upload className="w-4 h-4" strokeWidth={1.75} />}
                   title="Uploader un fichier"
-                  desc=".txt, .pdf ou .docx — extraction automatique"
+                  desc={`.txt, .pdf ou .docx déjà en ${languageLabel}`}
                 />
                 <SourceCard
                   active={false}
                   onClick={() => setPhrasesSource('manual')}
                   icon={<Type className="w-4 h-4" strokeWidth={1.75} />}
                   title="Saisir manuellement"
-                  desc="Coller directement le texte"
+                  desc={`Coller directement le texte en ${languageLabel}`}
                 />
                 <SourceCard
                   active={false}
@@ -533,6 +595,14 @@ export function NewProjectPage() {
                   icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />}
                   title="Générer avec l'IA"
                   desc={`Décrivez un thème, on génère jusqu'à ${AI_MAX} phrases en ${languageLabel}`}
+                  highlight
+                />
+                <SourceCard
+                  active={false}
+                  onClick={() => setPhrasesSource('import-translate')}
+                  icon={<LanguagesIcon className="w-4 h-4" strokeWidth={1.75} />}
+                  title="Importer + traduire"
+                  desc={`Doc texte en français → traduit automatiquement en ${languageLabel}`}
                   highlight
                 />
                 <input
@@ -622,6 +692,122 @@ export function NewProjectPage() {
                     )}
                   </p>
                 </FieldBlock>
+
+                <button
+                  type="button"
+                  onClick={clearPhrases}
+                  className="self-start inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                  style={{ ...sans, fontWeight: 510 }}
+                >
+                  <X className="w-3 h-3" strokeWidth={1.75} />
+                  Choisir un autre mode
+                </button>
+              </div>
+            )}
+
+            {/* Panneau Import + traduction */}
+            {phrasesSource === 'import-translate' && (
+              <div className="flex flex-col gap-4">
+                <div
+                  className="flex items-start gap-3 p-3.5 rounded-md"
+                  style={{
+                    background: 'var(--t-accent-muted-bg)',
+                    border: '1px solid var(--t-accent-muted-border)',
+                  }}
+                >
+                  <LanguagesIcon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#7170ff' }} strokeWidth={1.75} />
+                  <div>
+                    <p className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+                      Import + traduction automatique
+                    </p>
+                    <p className="text-[11px] text-[#8a8f98] mt-0.5 leading-relaxed" style={sans}>
+                      Uploadez un texte en français (.txt ou .md). On segmente en phrases, on traduit chaque phrase vers le {languageLabel}, et vous pouvez ensuite éditer les traductions douteuses avant validation.
+                    </p>
+                  </div>
+                </div>
+
+                <FieldBlock label="Document français à traduire" required>
+                  {!importFile ? (
+                    <button
+                      type="button"
+                      onClick={() => importInputRef.current?.click()}
+                      className="w-full flex items-center justify-center gap-2 h-[80px] rounded-md text-[13px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors"
+                      style={{
+                        ...sans,
+                        background: 'var(--t-surface)',
+                        border: '1px dashed rgba(255,255,255,0.15)',
+                      }}
+                    >
+                      <Upload className="w-4 h-4" strokeWidth={1.75} />
+                      Choisir un fichier .txt ou .md (max {IMPORT_TRANSLATE_MAX_MB} MB)
+                    </button>
+                  ) : (
+                    <div
+                      className="flex items-center gap-3 p-3 rounded-md"
+                      style={{
+                        background: 'var(--t-surface)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <div
+                        className="w-9 h-9 flex items-center justify-center rounded-md shrink-0"
+                        style={{
+                          background: 'var(--t-surface-active)',
+                          border: '1px solid rgba(255,255,255,0.05)',
+                        }}
+                      >
+                        <File className="w-4 h-4 text-[#d0d6e0]" strokeWidth={1.75} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] text-[#f7f8f8] truncate" style={{ ...sans, fontWeight: 510 }}>
+                          {importFile.name}
+                        </p>
+                        <p className="text-[11px] text-[#62666d]" style={sans}>
+                          {(importFile.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setImportFile(null); if (importInputRef.current) importInputRef.current.value = '' }}
+                        className="w-7 h-7 flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    ref={importInputRef}
+                    type="file"
+                    accept=".txt,.md"
+                    onChange={handleImportFileInputChange}
+                    className="hidden"
+                  />
+                </FieldBlock>
+
+                <FieldBlock label="Titre du sous-thème" required>
+                  <TextInput
+                    value={importTitle}
+                    onChange={setImportTitle}
+                    placeholder="Ex : Article santé maternelle"
+                  />
+                  <p className="text-[11px] text-[#62666d] mt-1.5" style={sans}>
+                    Visible dans la liste des sous-thèmes du projet.
+                  </p>
+                </FieldBlock>
+
+                {importError && (
+                  <div
+                    className="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-[#fca5a5]"
+                    style={{
+                      ...sans,
+                      background: 'var(--t-danger-muted-bg)',
+                      border: '1px solid var(--t-danger-muted-border)',
+                    }}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{importError}</span>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -794,11 +980,13 @@ export function NewProjectPage() {
                 value={
                   phrasesSource === 'ai'
                     ? `Génération IA · ${aiTotalCount.toLocaleString('fr-FR')} phrases sur "${aiTheme.trim()}"`
-                    : phrasesSource === 'file'
-                      ? `${fileName} (extraction à la création)`
-                      : totalPhrases > 0
-                        ? `${totalPhrases} phrases`
-                        : '—'
+                    : phrasesSource === 'import-translate' && importFile
+                      ? `Import + traduction · ${importFile.name} → "${importTitle.trim()}"`
+                      : phrasesSource === 'file'
+                        ? `${fileName} (extraction à la création)`
+                        : totalPhrases > 0
+                          ? `${totalPhrases} phrases`
+                          : '—'
                 }
                 onEdit={() => setStep(1)}
               />
@@ -830,9 +1018,11 @@ export function NewProjectPage() {
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     {phrasesSource === 'ai'
                       ? 'Génération du plan…'
-                      : uploading
-                        ? 'Traitement du fichier…'
-                        : 'Création…'}
+                      : phrasesSource === 'import-translate'
+                        ? 'Import et traduction…'
+                        : uploading
+                          ? 'Traitement du fichier…'
+                          : 'Création…'}
                   </>
                 ) : (
                   <>
