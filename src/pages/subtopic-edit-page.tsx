@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Loader2, Search, Trash2, Pencil, Check, X,
-  Sparkles, RefreshCw, AlertCircle, AlertTriangle, Plus, Unlock,
+  Sparkles, RefreshCw, AlertCircle, AlertTriangle, Plus, Unlock, Eye, EyeOff,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { usePhraseDrafts } from '../hooks/use-phrase-drafts'
@@ -29,12 +29,17 @@ export function SubtopicEditPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [unvalidating, setUnvalidating] = useState(false)
   const [showUnvalidateModal, setShowUnvalidateModal] = useState(false)
+  const [showSource, setShowSource] = useState(true)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return drafts
     const s = search.toLowerCase()
-    return drafts.filter((d) => d.content.toLowerCase().includes(s))
+    return drafts.filter(
+      (d) => d.content.toLowerCase().includes(s) || (d.source_text ?? '').toLowerCase().includes(s),
+    )
   }, [drafts, search])
+
+  const hasAnySource = useMemo(() => drafts.some((d) => d.source_text), [drafts])
 
   const toggleSelected = (id: string) => {
     setSelected((prev) => {
@@ -394,6 +399,23 @@ export function SubtopicEditPage() {
               style={sans}
             />
           </div>
+          {hasAnySource && (
+            <button
+              type="button"
+              onClick={() => setShowSource((v) => !v)}
+              title={showSource ? 'Masquer les phrases françaises' : 'Afficher les phrases françaises'}
+              className="inline-flex items-center gap-1.5 h-[34px] px-3 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                background: showSource ? 'rgba(113,112,255,0.06)' : 'var(--t-surface)',
+                border: `1px solid ${showSource ? 'rgba(113,112,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
+              }}
+            >
+              {showSource ? <Eye className="w-3 h-3" strokeWidth={1.75} /> : <EyeOff className="w-3 h-3" strokeWidth={1.75} />}
+              <span className="hidden sm:inline">Source FR</span>
+            </button>
+          )}
           {!isValidated && selected.size > 0 && (
             <button
               type="button"
@@ -421,7 +443,11 @@ export function SubtopicEditPage() {
         >
           {/* Header table */}
           <div
-            className="grid grid-cols-[36px_44px_1fr_72px] items-center px-3 h-[36px] border-b text-[11px] text-[#62666d] uppercase"
+            className={`grid items-center px-3 h-[36px] border-b text-[11px] text-[#62666d] uppercase ${
+              showSource && hasAnySource
+                ? 'grid-cols-[36px_44px_1fr_1fr_72px] gap-3'
+                : 'grid-cols-[36px_44px_1fr_72px]'
+            }`}
             style={{
               ...sans,
               fontWeight: 510,
@@ -438,7 +464,14 @@ export function SubtopicEditPage() {
               />
             ) : <span />}
             <span style={mono}>#</span>
-            <span>Phrase</span>
+            {showSource && hasAnySource ? (
+              <>
+                <span>Français (source)</span>
+                <span>Traduction (à valider)</span>
+              </>
+            ) : (
+              <span>Phrase</span>
+            )}
             <span className="text-right">Actions</span>
           </div>
 
@@ -453,7 +486,11 @@ export function SubtopicEditPage() {
           {filtered.map((d) => (
             <div
               key={d.id}
-              className="grid grid-cols-[36px_44px_1fr_72px] items-center px-3 py-2.5 border-b last:border-b-0"
+              className={`grid items-start px-3 py-2.5 border-b last:border-b-0 ${
+                showSource && hasAnySource
+                  ? 'grid-cols-[36px_44px_1fr_1fr_72px] gap-3'
+                  : 'grid-cols-[36px_44px_1fr_72px] items-center'
+              }`}
               style={{ borderColor: 'rgba(255,255,255,0.04)' }}
             >
               {!isValidated ? (
@@ -461,12 +498,27 @@ export function SubtopicEditPage() {
                   type="checkbox"
                   checked={selected.has(d.id)}
                   onChange={() => toggleSelected(d.id)}
-                  className="w-3.5 h-3.5 accent-[#5e6ad2]"
+                  className={`w-3.5 h-3.5 accent-[#5e6ad2] ${showSource && hasAnySource ? 'mt-1' : ''}`}
                 />
               ) : <span />}
-              <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
+              <span
+                className={`text-[11px] text-[#62666d] tabular-nums ${showSource && hasAnySource ? 'mt-0.5' : ''}`}
+                style={mono}
+              >
                 {d.position}
               </span>
+
+              {/* Cellule source FR (visible uniquement si toggle ON) */}
+              {showSource && hasAnySource && (
+                <span
+                  className="text-[12px] text-[#8a8f98] italic leading-relaxed break-words"
+                  style={sans}
+                >
+                  {d.source_text || <span className="text-[#3e3e44]">—</span>}
+                </span>
+              )}
+
+              {/* Cellule traduction WO (éditable) */}
               {editingId === d.id ? (
                 <input
                   type="text"
@@ -480,6 +532,15 @@ export function SubtopicEditPage() {
                   className="w-full h-[28px] px-2 text-[13px] text-[#f7f8f8] rounded bg-[rgba(255,255,255,0.05)] border border-[rgba(113,112,255,0.4)] focus:outline-none"
                   style={sans}
                 />
+              ) : showSource && hasAnySource ? (
+                <span className="text-[13px] text-[#f7f8f8] leading-relaxed break-words flex items-start gap-2" style={sans}>
+                  <span>{d.content}</span>
+                  {d.edited && (
+                    <span className="text-[9px] text-[#62666d] uppercase shrink-0 mt-0.5" style={{ ...sans, letterSpacing: '0.04em' }}>
+                      modifié
+                    </span>
+                  )}
+                </span>
               ) : (
                 <div className="flex flex-col gap-0.5 min-w-0">
                   {d.source_text && (
