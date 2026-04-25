@@ -395,10 +395,20 @@ function SubtopicCard({ subtopic: s, projectId, busy, disabled, onGenerate, onVa
         )}
 
         {s.status === 'validated' && (
-          <span className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] text-[#10b981]" style={sans}>
-            <Check className="w-3 h-3" strokeWidth={2} />
-            Intégré au projet
-          </span>
+          <>
+            <span className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] text-[#10b981]" style={sans}>
+              <Check className="w-3 h-3" strokeWidth={2} />
+              Intégré au projet
+            </span>
+            <Link
+              to={`/project/${projectId}/subtopic/${s.id}`}
+              className="ml-auto inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+              style={{ ...sans, fontWeight: 510 }}
+            >
+              <Eye className="w-3 h-3" strokeWidth={1.75} />
+              Relire ({s.generated_count})
+            </Link>
+          </>
         )}
 
         {s.status === 'failed' && (
