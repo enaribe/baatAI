@@ -3,7 +3,7 @@ import type { FormEvent, ChangeEvent, DragEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, Upload, FileText, X, Check, Loader2, File,
-  Globe, Lock, Languages, Type, AlertCircle, FolderPlus, Pencil,
+  Globe, Lock, Languages, Type, AlertCircle, FolderPlus, Pencil, Sparkles,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/use-auth'
@@ -37,7 +37,11 @@ const MIN_RATE = 2000
 const STEP_LABELS = ['Infos', 'Phrases', 'Récap']
 
 type Step = 0 | 1 | 2
-type PhrasesSource = 'file' | 'manual'
+type PhrasesSource = 'file' | 'manual' | 'ai'
+
+const AI_PRESETS = [500, 1000, 2000, 5000]
+const AI_MIN = 100
+const AI_MAX = 5000
 
 export function NewProjectPage() {
   const navigate = useNavigate()
@@ -68,6 +72,10 @@ export function NewProjectPage() {
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+
+  // Étape 1 — mode IA
+  const [aiTheme, setAiTheme] = useState('')
+  const [aiTotalCount, setAiTotalCount] = useState<number>(2000)
 
   const languageLabel = LANGUAGES.find((l) => l.value === targetLanguage)?.label ?? targetLanguage
   const rateValue = isVolunteer ? 0 : parseInt(rateInput, 10) || 0
@@ -132,11 +140,18 @@ export function NewProjectPage() {
   const clearPhrases = useCallback(() => {
     setPhrases([]); setTotalPhrases(0); setPhrasesSource(null)
     setFileName(''); setSelectedFile(null); setManualText(''); setUploadError('')
+    setAiTheme('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
+  const aiThemeValid = aiTheme.trim().length >= 5 && aiTheme.trim().length <= 200
+  const aiCountValid = aiTotalCount >= AI_MIN && aiTotalCount <= AI_MAX
+
   const canProceedStep0 = name.trim().length > 0 && (isVolunteer || rateValue >= MIN_RATE)
-  const canProceedStep1 = totalPhrases > 0 || selectedFile !== null
+  const canProceedStep1 =
+    totalPhrases > 0 ||
+    selectedFile !== null ||
+    (phrasesSource === 'ai' && aiThemeValid && aiCountValid)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -206,13 +221,39 @@ export function NewProjectPage() {
           }
         }
 
+        if (phrasesSource === 'ai') {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) throw new Error('Session expirée, reconnectez-vous.')
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-subtopics-plan`
+          const fnRes = await fetch(fnUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              project_id: project.id,
+              theme: aiTheme.trim(),
+              language: languageLabel,
+              total_count: aiTotalCount,
+            }),
+          })
+          const fnJson = await fnRes.json()
+          if (!fnRes.ok) throw new Error(fnJson.error ?? 'Erreur lors de la génération du plan')
+        }
+
         const { error: updateError } = await supabase
           .from('projects')
           .update({ status: 'active' } as never)
           .eq('id', project.id)
         if (updateError) throw updateError
 
-        navigate(`/project/${project.id}?tab=recruitment&invite=1`)
+        if (phrasesSource === 'ai') {
+          navigate(`/project/${project.id}?tab=phrases`)
+        } else {
+          navigate(`/project/${project.id}?tab=recruitment&invite=1`)
+        }
       } catch (innerErr) {
         await rollback()
         throw innerErr
@@ -470,8 +511,8 @@ export function NewProjectPage() {
             </div>
 
             {/* Choix de la source */}
-            {!selectedFile && phrasesSource !== 'manual' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {!selectedFile && phrasesSource !== 'manual' && phrasesSource !== 'ai' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <SourceCard
                   active={false}
                   onClick={() => fileInputRef.current?.click()}
@@ -486,6 +527,14 @@ export function NewProjectPage() {
                   title="Saisir manuellement"
                   desc="Coller directement le texte"
                 />
+                <SourceCard
+                  active={false}
+                  onClick={() => setPhrasesSource('ai')}
+                  icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />}
+                  title="Générer avec l'IA"
+                  desc={`Décrivez un thème, on génère jusqu'à ${AI_MAX} phrases en ${languageLabel}`}
+                  highlight
+                />
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -493,6 +542,96 @@ export function NewProjectPage() {
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
+              </div>
+            )}
+
+            {/* Panneau IA */}
+            {phrasesSource === 'ai' && (
+              <div className="flex flex-col gap-4">
+                <div
+                  className="flex items-start gap-3 p-3.5 rounded-md"
+                  style={{
+                    background: 'var(--t-accent-muted-bg)',
+                    border: '1px solid var(--t-accent-muted-border)',
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#7170ff' }} strokeWidth={1.75} />
+                  <div>
+                    <p className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+                      Génération assistée par IA
+                    </p>
+                    <p className="text-[11px] text-[#8a8f98] mt-0.5 leading-relaxed" style={sans}>
+                      L'IA va proposer un découpage en sous-thèmes équilibrés. Vous pourrez ensuite générer les phrases sous-thème par sous-thème, les éditer, puis les valider.
+                    </p>
+                  </div>
+                </div>
+
+                <FieldBlock label="Thème du dataset" required>
+                  <TextInput
+                    value={aiTheme}
+                    onChange={setAiTheme}
+                    placeholder="Ex : Santé maternelle au Sénégal"
+                  />
+                  <p className="text-[11px] text-[#62666d] mt-1.5" style={sans}>
+                    Soyez précis : un thème clair = un meilleur découpage en sous-thèmes.
+                  </p>
+                </FieldBlock>
+
+                <FieldBlock label={`Quantité totale en ${languageLabel}`} required>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {AI_PRESETS.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setAiTotalCount(preset)}
+                        className="px-3 h-[28px] text-[12px] rounded-full transition-colors tabular-nums"
+                        style={{
+                          ...sans,
+                          fontWeight: 510,
+                          color: aiTotalCount === preset ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                          background: aiTotalCount === preset ? 'rgba(255,255,255,0.06)' : 'var(--t-surface)',
+                          border: `1px solid ${aiTotalCount === preset ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                        }}
+                      >
+                        {preset.toLocaleString('fr-FR')}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={AI_MIN}
+                      max={AI_MAX}
+                      step={100}
+                      value={aiTotalCount}
+                      onChange={(e) => setAiTotalCount(parseInt(e.target.value, 10) || 0)}
+                      className="w-full h-[36px] pl-3 pr-20 text-[14px] text-[#f7f8f8] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.22)] tabular-nums"
+                      style={sans}
+                    />
+                    <span
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#62666d] pointer-events-none"
+                      style={mono}
+                    >
+                      phrases
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#62666d] mt-1.5" style={sans}>
+                    Min {AI_MIN} · Max {AI_MAX.toLocaleString('fr-FR')} (quota beta par projet).
+                    {aiTotalCount > 0 && aiCountValid && (
+                      <span className="text-[#10b981] ml-1.5">✓ Valide</span>
+                    )}
+                  </p>
+                </FieldBlock>
+
+                <button
+                  type="button"
+                  onClick={clearPhrases}
+                  className="self-start inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                  style={{ ...sans, fontWeight: 510 }}
+                >
+                  <X className="w-3 h-3" strokeWidth={1.75} />
+                  Choisir un autre mode
+                </button>
               </div>
             )}
 
@@ -653,11 +792,13 @@ export function NewProjectPage() {
               <Summary
                 label="Phrases"
                 value={
-                  phrasesSource === 'file'
-                    ? `${fileName} (extraction à la création)`
-                    : totalPhrases > 0
-                      ? `${totalPhrases} phrases`
-                      : '—'
+                  phrasesSource === 'ai'
+                    ? `Génération IA · ${aiTotalCount.toLocaleString('fr-FR')} phrases sur "${aiTheme.trim()}"`
+                    : phrasesSource === 'file'
+                      ? `${fileName} (extraction à la création)`
+                      : totalPhrases > 0
+                        ? `${totalPhrases} phrases`
+                        : '—'
                 }
                 onEdit={() => setStep(1)}
               />
@@ -687,7 +828,11 @@ export function NewProjectPage() {
                 {submitting ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    {uploading ? 'Traitement du fichier…' : 'Création…'}
+                    {phrasesSource === 'ai'
+                      ? 'Génération du plan…'
+                      : uploading
+                        ? 'Traitement du fichier…'
+                        : 'Création…'}
                   </>
                 ) : (
                   <>
@@ -847,29 +992,53 @@ function VisibilityCard({
 }
 
 function SourceCard({
-  active, onClick, icon, title, desc,
+  active, onClick, icon, title, desc, highlight,
 }: {
   active: boolean
   onClick: () => void
   icon: React.ReactNode
   title: string
   desc: string
+  highlight?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-3 p-5 rounded-md text-left transition-colors min-h-[140px]"
+      className="relative flex flex-col gap-3 p-5 rounded-md text-left transition-colors min-h-[140px]"
       style={{
         background: active ? 'rgba(255,255,255,0.05)' : 'var(--t-surface)',
-        border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+        border: `1px solid ${
+          active
+            ? 'rgba(255,255,255,0.22)'
+            : highlight
+              ? 'var(--t-accent-muted-border)'
+              : 'rgba(255,255,255,0.08)'
+        }`,
       }}
     >
+      {highlight && (
+        <span
+          className="absolute top-3 right-3 px-1.5 h-[18px] inline-flex items-center text-[9px] uppercase tracking-wider rounded"
+          style={{
+            ...sans,
+            fontWeight: 590,
+            letterSpacing: '0.06em',
+            color: '#7170ff',
+            background: 'rgba(113,112,255,0.08)',
+            border: '1px solid rgba(113,112,255,0.25)',
+          }}
+        >
+          Nouveau
+        </span>
+      )}
       <span
         className="w-9 h-9 flex items-center justify-center rounded-md text-[#f7f8f8]"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: highlight
+            ? 'linear-gradient(135deg, rgba(113,112,255,0.18), rgba(113,112,255,0.04))'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
+          border: `1px solid ${highlight ? 'rgba(113,112,255,0.25)' : 'rgba(255,255,255,0.1)'}`,
         }}
       >
         {icon}

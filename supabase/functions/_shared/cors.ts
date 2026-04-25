@@ -1,8 +1,8 @@
 // CORS helper partagé pour toutes les Edge Functions Daandé.
 //
 // Whitelist d'origines configurée via la variable d'env ALLOWED_ORIGINS
-// (séparée par virgules). Si non définie, on autorise uniquement le domaine
-// de prod baat-ai.vercel.app + localhost en dev.
+// (séparée par virgules). Si non définie, on autorise les domaines
+// par défaut listés ci-dessous.
 //
 // Usage :
 //   import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts'
@@ -10,6 +10,8 @@
 //   if (req.method === 'OPTIONS') return handlePreflight(cors)
 
 const DEFAULT_ALLOWED = [
+  'https://daande.dev',
+  'https://www.daande.dev',
   'https://baat-ai.vercel.app',
   'http://localhost:5173',
   'http://localhost:4173',

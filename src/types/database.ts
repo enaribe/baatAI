@@ -112,6 +112,35 @@ export interface Phrase {
   created_at: string
 }
 
+export type SubtopicStatus = 'pending' | 'generating' | 'ready' | 'validated' | 'failed'
+export type SubtopicSource = 'ai' | 'manual'
+
+export interface Subtopic {
+  id: string
+  project_id: string
+  position: number
+  title: string
+  description: string | null
+  target_count: number
+  source: SubtopicSource
+  status: SubtopicStatus
+  generated_count: number
+  failed_reason: string | null
+  created_at: string
+  generated_at: string | null
+  validated_at: string | null
+}
+
+export interface PhraseDraft {
+  id: string
+  subtopic_id: string
+  project_id: string
+  position: number
+  content: string
+  edited: boolean
+  created_at: string
+}
+
 export interface RecordingSession {
   id: string
   project_id: string

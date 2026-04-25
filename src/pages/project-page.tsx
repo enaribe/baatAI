@@ -17,6 +17,7 @@ import { RecordingList } from '../components/recording-list'
 import { ExportPanel } from '../components/export-panel'
 import { RecruitmentPanel } from '../components/recruitment/recruitment-panel'
 import { ProjectSettingsPanel } from '../components/project-settings-panel'
+import { SubtopicsPanel } from '../components/subtopics-panel'
 import type { ProjectStatus } from '../types/database'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
@@ -307,12 +308,15 @@ export function ProjectPage() {
       {/* Tab content */}
       <div className="p-5 lg:p-8 animate-fade-in-up">
         {activeTab === 'phrases' && (
-          <PhraseList
-            phrases={phrases}
-            recordings={recordings}
-            projectId={project.id}
-            onPhrasesAdded={refetch}
-          />
+          <div className="flex flex-col gap-8">
+            <SubtopicsPanel projectId={project.id} onValidated={refetch} />
+            <PhraseList
+              phrases={phrases}
+              recordings={recordings}
+              projectId={project.id}
+              onPhrasesAdded={refetch}
+            />
+          </div>
         )}
         {activeTab === 'sessions' && (
           <SessionList

@@ -18,6 +18,7 @@ const LandingPage = lazy(() => import('./pages/landing-page').then(m => ({ defau
 const DashboardPage = lazy(() => import('./pages/dashboard-page').then(m => ({ default: m.DashboardPage })))
 const NewProjectPage = lazy(() => import('./pages/new-project-page').then(m => ({ default: m.NewProjectPage })))
 const ProjectPage = lazy(() => import('./pages/project-page').then(m => ({ default: m.ProjectPage })))
+const SubtopicEditPage = lazy(() => import('./pages/subtopic-edit-page').then(m => ({ default: m.SubtopicEditPage })))
 const RecordPage = lazy(() => import('./pages/record-page').then(m => ({ default: m.RecordPage })))
 const SpeakersPage = lazy(() => import('./pages/speakers-page').then(m => ({ default: m.SpeakersPage })))
 const SpeakerDetailPage = lazy(() => import('./pages/speaker-detail-page').then(m => ({ default: m.SpeakerDetailPage })))
@@ -173,6 +174,14 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['client', 'admin']}>
                   <AppLayout><ProjectPage /></AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/project/:id/subtopic/:subId"
+              element={
+                <ProtectedRoute allowedRoles={['client', 'admin']}>
+                  <AppLayout><SubtopicEditPage /></AppLayout>
                 </ProtectedRoute>
               }
             />
