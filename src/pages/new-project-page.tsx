@@ -39,6 +39,7 @@ const STEP_LABELS = ['Infos', 'Phrases', 'Récap']
 
 type Step = 0 | 1 | 2
 type PhrasesSource = 'file' | 'manual' | 'ai' | 'import-translate'
+type PhrasesCategory = 'have' | 'generate'
 
 const IMPORT_TRANSLATE_EXT = ['.txt', '.md']
 const IMPORT_TRANSLATE_MAX_MB = 5
@@ -67,6 +68,7 @@ export function NewProjectPage() {
   const [requiredLanguages, setRequiredLanguages] = useState<string[]>(['wol'])
 
   // Étape 1
+  const [phrasesCategory, setPhrasesCategory] = useState<PhrasesCategory | null>(null)
   const [phrasesSource, setPhrasesSource] = useState<PhrasesSource | null>(null)
   const [phrases, setPhrases] = useState<string[]>([])
   const [totalPhrases, setTotalPhrases] = useState(0)
@@ -171,7 +173,9 @@ export function NewProjectPage() {
     setUploadError('')
   }, [manualText])
 
-  const clearPhrases = useCallback(() => {
+  // Reset les sources mais conserve la catégorie sélectionnée.
+  // Utilisé pour "Choisir un autre mode" et la suppression d'un fichier.
+  const resetSourceOnly = useCallback(() => {
     setPhrases([]); setTotalPhrases(0); setPhrasesSource(null)
     setFileName(''); setSelectedFile(null); setManualText(''); setUploadError('')
     setAiTheme('')
@@ -572,39 +576,50 @@ export function NewProjectPage() {
               </p>
             </div>
 
-            {/* Choix de la source */}
-            {!selectedFile && phrasesSource !== 'manual' && phrasesSource !== 'ai' && phrasesSource !== 'import-translate' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Niveau 1 : choix de la catégorie */}
+            {!selectedFile && phrasesSource === null && phrasesCategory === null && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SourceCard
                   active={false}
-                  onClick={() => fileInputRef.current?.click()}
-                  icon={<Upload className="w-4 h-4" strokeWidth={1.75} />}
-                  title="Uploader un fichier"
-                  desc={`.txt, .pdf ou .docx déjà en ${languageLabel}`}
+                  onClick={() => setPhrasesCategory('have')}
+                  icon={<FileText className="w-4 h-4" strokeWidth={1.75} />}
+                  title={`J'ai déjà mes phrases en ${languageLabel}`}
+                  desc="Uploadez un fichier ou saisissez votre texte directement"
                 />
                 <SourceCard
                   active={false}
-                  onClick={() => setPhrasesSource('manual')}
-                  icon={<Type className="w-4 h-4" strokeWidth={1.75} />}
-                  title="Saisir manuellement"
-                  desc={`Coller directement le texte en ${languageLabel}`}
-                />
-                <SourceCard
-                  active={false}
-                  onClick={() => setPhrasesSource('ai')}
+                  onClick={() => setPhrasesCategory('generate')}
                   icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />}
-                  title="Générer avec l'IA"
-                  desc={`Décrivez un thème, on génère jusqu'à ${AI_MAX} phrases en ${languageLabel}`}
+                  title="Je veux que l'IA génère mes phrases"
+                  desc={`Depuis un thème ou en traduisant un texte français vers le ${languageLabel}`}
                   highlight
                 />
-                <SourceCard
-                  active={false}
-                  onClick={() => setPhrasesSource('import-translate')}
-                  icon={<LanguagesIcon className="w-4 h-4" strokeWidth={1.75} />}
-                  title="Importer + traduire"
-                  desc={`Doc texte en français → traduit automatiquement en ${languageLabel}`}
-                  highlight
+              </div>
+            )}
+
+            {/* Niveau 2 — catégorie "j'ai déjà" */}
+            {!selectedFile && phrasesSource === null && phrasesCategory === 'have' && (
+              <div className="flex flex-col gap-3">
+                <CategoryHeader
+                  title={`J'ai déjà mes phrases en ${languageLabel}`}
+                  onBack={() => setPhrasesCategory(null)}
                 />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <SourceCard
+                    active={false}
+                    onClick={() => fileInputRef.current?.click()}
+                    icon={<Upload className="w-4 h-4" strokeWidth={1.75} />}
+                    title="Uploader un fichier"
+                    desc=".txt, .pdf ou .docx — extraction automatique"
+                  />
+                  <SourceCard
+                    active={false}
+                    onClick={() => setPhrasesSource('manual')}
+                    icon={<Type className="w-4 h-4" strokeWidth={1.75} />}
+                    title="Saisir manuellement"
+                    desc="Coller directement le texte"
+                  />
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -612,6 +627,32 @@ export function NewProjectPage() {
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
+              </div>
+            )}
+
+            {/* Niveau 2 — catégorie "je veux générer" */}
+            {!selectedFile && phrasesSource === null && phrasesCategory === 'generate' && (
+              <div className="flex flex-col gap-3">
+                <CategoryHeader
+                  title="Je veux que l'IA génère mes phrases"
+                  onBack={() => setPhrasesCategory(null)}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <SourceCard
+                    active={false}
+                    onClick={() => setPhrasesSource('ai')}
+                    icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />}
+                    title="À partir d'un thème"
+                    desc={`Décrivez un thème, on génère jusqu'à ${AI_MAX} phrases en ${languageLabel}`}
+                  />
+                  <SourceCard
+                    active={false}
+                    onClick={() => setPhrasesSource('import-translate')}
+                    icon={<LanguagesIcon className="w-4 h-4" strokeWidth={1.75} />}
+                    title="Importer + traduire"
+                    desc={`Doc texte en français → traduit automatiquement en ${languageLabel}`}
+                  />
+                </div>
               </div>
             )}
 
@@ -695,7 +736,7 @@ export function NewProjectPage() {
 
                 <button
                   type="button"
-                  onClick={clearPhrases}
+                  onClick={resetSourceOnly}
                   className="self-start inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                   style={{ ...sans, fontWeight: 510 }}
                 >
@@ -811,7 +852,7 @@ export function NewProjectPage() {
 
                 <button
                   type="button"
-                  onClick={clearPhrases}
+                  onClick={resetSourceOnly}
                   className="self-start inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                   style={{ ...sans, fontWeight: 510 }}
                 >
@@ -853,7 +894,7 @@ export function NewProjectPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={clearPhrases}
+                    onClick={resetSourceOnly}
                     className="w-7 h-7 flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                   >
                     <X className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -883,7 +924,7 @@ export function NewProjectPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={clearPhrases}
+                    onClick={resetSourceOnly}
                     className="h-[30px] px-3 text-[12px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                     style={{ ...sans, fontWeight: 510 }}
                   >
@@ -1178,6 +1219,27 @@ function VisibilityCard({
         </span>
       )}
     </button>
+  )
+}
+
+function CategoryHeader({
+  title, onBack,
+}: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+        style={{ ...sans, fontWeight: 510 }}
+      >
+        <ArrowLeft className="w-3 h-3" strokeWidth={1.75} />
+        Retour
+      </button>
+      <span className="text-[13px] text-[#d0d6e0]" style={{ ...sans, fontWeight: 510 }}>
+        {title}
+      </span>
+    </div>
   )
 }
 
