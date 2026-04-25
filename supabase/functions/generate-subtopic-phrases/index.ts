@@ -14,10 +14,12 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-flash-latest";
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const BATCH_SIZE = 50;
-const MAX_PARALLEL = 4;
+const MAX_PARALLEL = 2;
+const MAX_RETRIES = 3;
+const RETRY_DELAYS_MS = [2000, 4000, 8000];
 
 interface SubtopicRow {
   id: string;
@@ -91,6 +93,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
       generationConfig: {
         temperature: 0.9,
         responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 0 },
       },
     }),
   });
@@ -98,7 +101,9 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
   if (!response.ok) {
     const errBody = await response.text();
     console.error("Gemini batch error:", response.status, errBody.slice(0, 300));
-    throw new Error(`gemini_api_error_${response.status}`);
+    const err = new Error(`gemini_api_error_${response.status}`) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
 
   const data = await response.json() as {
@@ -131,6 +136,27 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown :
   return parsed.phrases
     .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
     .map((p) => p.trim().slice(0, 500));
+}
+
+async function callGeminiBatchWithRetry(
+  apiKey: string,
+  params: Parameters<typeof callGeminiBatch>[1],
+): Promise<string[]> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await callGeminiBatch(apiKey, params);
+    } catch (err) {
+      const e = err as Error & { status?: number };
+      lastError = e;
+      const isRetryable = e.status === 429 || e.status === 503 || e.status === 500;
+      if (!isRetryable || attempt === MAX_RETRIES) throw e;
+      const delay = RETRY_DELAYS_MS[attempt] ?? 8000;
+      console.warn(`Batch retry ${attempt + 1}/${MAX_RETRIES} after ${delay}ms (status ${e.status})`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastError ?? new Error("gemini_unknown_error");
 }
 
 async function runWithConcurrency<T>(
@@ -337,7 +363,7 @@ Deno.serve(async (req) => {
       const remaining = targetForRun - i * BATCH_SIZE;
       const size = Math.min(BATCH_SIZE, remaining);
       batches.push(() =>
-        callGeminiBatch(apiKey, {
+        callGeminiBatchWithRetry(apiKey, {
           language,
           subtopicTitle: subtopicRow.title,
           subtopicDescription: subtopicRow.description ?? "",
@@ -373,7 +399,28 @@ Deno.serve(async (req) => {
     }
 
     // 10. Dédup + cap au target
-    const finalPhrases = await dedupeAndCap(allPhrases, targetForRun);
+    let finalPhrases = await dedupeAndCap(allPhrases, targetForRun);
+
+    // 10b. Si on est significativement sous le target, lancer un batch de complétion
+    // (utile quand un batch a échoué malgré les retries, ou beaucoup de doublons)
+    const shortfall = targetForRun - finalPhrases.length;
+    if (shortfall >= 20 && failureCount < settled.length) {
+      try {
+        const fillSize = Math.min(BATCH_SIZE, shortfall);
+        const fillExclude = finalPhrases.slice(0, 30);
+        const fill = await callGeminiBatchWithRetry(apiKey, {
+          language,
+          subtopicTitle: subtopicRow.title,
+          subtopicDescription: subtopicRow.description ?? "",
+          usageType,
+          batchSize: fillSize,
+          excludeSamples: [...excludeSamples, ...fillExclude],
+        });
+        finalPhrases = await dedupeAndCap([...finalPhrases, ...fill], targetForRun);
+      } catch (fillErr) {
+        console.warn("Fill batch failed:", fillErr);
+      }
+    }
 
     // 11. INSERT phrase_drafts
     const rows = finalPhrases.map((content, i) => ({

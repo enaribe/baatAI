@@ -42,6 +42,10 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
   )
   const readyCount = subtopics.filter((s) => s.status === 'ready').length
 
+  // Une seule génération à la fois : verrouille tous les "Générer" si déjà en cours.
+  // Évite de saturer les quotas Gemini quand on lance 4 cartes à la suite.
+  const anyGenerating = busyIds.size > 0 || subtopics.some((s) => s.status === 'generating')
+
   const setBusy = (id: string, busy: boolean) => {
     setBusyIds((prev) => {
       const next = new Set(prev)
@@ -203,6 +207,20 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
         </div>
       </div>
 
+      {anyGenerating && (
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-[12px] text-[#8a8f98]"
+          style={{
+            ...sans,
+            background: 'rgba(113,112,255,0.04)',
+            border: '1px solid rgba(113,112,255,0.15)',
+          }}
+        >
+          <Loader2 className="w-3 h-3 animate-spin" style={{ color: '#7170ff' }} />
+          Une génération est en cours. Patientez avant d'en lancer une autre pour ne pas saturer le quota IA.
+        </div>
+      )}
+
       {/* Grille de cartes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {subtopics.map((s) => (
@@ -211,6 +229,7 @@ export function SubtopicsPanel({ projectId, onValidated }: SubtopicsPanelProps) 
             subtopic={s}
             projectId={projectId}
             busy={busyIds.has(s.id)}
+            disabled={anyGenerating && !busyIds.has(s.id) && s.status !== 'generating'}
             onGenerate={handleGenerate}
             onValidate={handleValidate}
           />
@@ -234,13 +253,15 @@ interface SubtopicCardProps {
   subtopic: Subtopic
   projectId: string
   busy: boolean
+  disabled?: boolean
   onGenerate: (s: Subtopic, mode?: 'replace' | 'append') => void
   onValidate: (s: Subtopic) => void
 }
 
-function SubtopicCard({ subtopic: s, projectId, busy, onGenerate, onValidate }: SubtopicCardProps) {
+function SubtopicCard({ subtopic: s, projectId, busy, disabled, onGenerate, onValidate }: SubtopicCardProps) {
   const meta = STATUS_META[s.status]
   const isGenerating = s.status === 'generating' || busy
+  const lockGenerate = disabled || isGenerating
   const progressPct = s.target_count > 0
     ? Math.min(100, Math.round((s.generated_count / s.target_count) * 100))
     : 0
@@ -323,7 +344,8 @@ function SubtopicCard({ subtopic: s, projectId, busy, onGenerate, onValidate }: 
           <button
             type="button"
             onClick={() => onGenerate(s)}
-            disabled={isGenerating}
+            disabled={lockGenerate}
+            title={disabled ? 'Une autre génération est en cours' : undefined}
             className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md transition-colors disabled:opacity-40"
             style={{
               ...sans,
@@ -383,7 +405,8 @@ function SubtopicCard({ subtopic: s, projectId, busy, onGenerate, onValidate }: 
           <button
             type="button"
             onClick={() => onGenerate(s)}
-            disabled={busy}
+            disabled={lockGenerate}
+            title={disabled ? 'Une autre génération est en cours' : undefined}
             className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md transition-colors disabled:opacity-40"
             style={{
               ...sans,
@@ -406,7 +429,7 @@ function SubtopicCard({ subtopic: s, projectId, busy, onGenerate, onValidate }: 
                 onGenerate(s, 'replace')
               }
             }}
-            disabled={busy}
+            disabled={lockGenerate}
             className="inline-flex items-center gap-1 h-[28px] px-2 text-[11px] rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-40 ml-auto"
             style={{ ...sans, fontWeight: 510 }}
             title="Régénérer (écrase l'existant)"
