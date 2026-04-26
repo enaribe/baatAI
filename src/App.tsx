@@ -27,6 +27,7 @@ const RequestAccessPage = lazy(() => import('./pages/request-access-page').then(
 const SpeakerOnboardingPage = lazy(() => import('./pages/speaker-onboarding-page').then(m => ({ default: m.SpeakerOnboardingPage })))
 const SpeakerDashboardPage = lazy(() => import('./pages/speaker-dashboard-page').then(m => ({ default: m.SpeakerDashboardPage })))
 const SpeakerProjectsPage = lazy(() => import('./pages/speaker-projects-page').then(m => ({ default: m.SpeakerProjectsPage })))
+const SpeakerRecordingsPage = lazy(() => import('./pages/speaker-recordings-page').then(m => ({ default: m.SpeakerRecordingsPage })))
 const SpeakerInvitationsPage = lazy(() => import('./pages/speaker-invitations-page').then(m => ({ default: m.SpeakerInvitationsPage })))
 const SpeakerInvitationDetailPage = lazy(() => import('./pages/speaker-invitation-detail-page').then(m => ({ default: m.SpeakerInvitationDetailPage })))
 const SpeakerNotificationsPage = lazy(() => import('./pages/speaker-notifications-page').then(m => ({ default: m.SpeakerNotificationsPage })))
@@ -41,6 +42,7 @@ const AdminRequestsPage = lazy(() => import('./pages/admin/admin-requests-page')
 const AdminWhitelistPage = lazy(() => import('./pages/admin/admin-whitelist-page').then(m => ({ default: m.AdminWhitelistPage })))
 const AdminUsersPage = lazy(() => import('./pages/admin/admin-users-page').then(m => ({ default: m.AdminUsersPage })))
 const AdminEmailsPage = lazy(() => import('./pages/admin/admin-emails-page').then(m => ({ default: m.AdminEmailsPage })))
+const AdminFeedbacksPage = lazy(() => import('./pages/admin/admin-feedbacks-page').then(m => ({ default: m.AdminFeedbacksPage })))
 
 function PageFallback() {
   return (
@@ -100,6 +102,14 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['speaker']}>
                   <SpeakerLayout><SpeakerProjectsPage /></SpeakerLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/speaker/recordings"
+              element={
+                <ProtectedRoute allowedRoles={['speaker']}>
+                  <SpeakerLayout><SpeakerRecordingsPage /></SpeakerLayout>
                 </ProtectedRoute>
               }
             />
@@ -248,6 +258,14 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminLayout><AdminEmailsPage /></AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/feedbacks"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout><AdminFeedbacksPage /></AdminLayout>
                 </ProtectedRoute>
               }
             />

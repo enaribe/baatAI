@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../../hooks/use-auth'
 import { useDarkMode } from '../../hooks/use-dark-mode'
 import { Logo } from '../ui/logo'
+import { FeedbackButton } from '../feedback-button'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -198,6 +199,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="animate-fade-in-up">{children}</div>
         </div>
       </main>
+
+      <FeedbackButton />
 
       {/* Mobile bottom nav */}
       <nav

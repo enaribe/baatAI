@@ -45,7 +45,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Fetch phrases for the project
+    // 2a. Fetch project metadata (usage_type pour les conseils d'enregistrement)
+    const { data: project } = await supabase
+      .from("projects")
+      .select("usage_type, name")
+      .eq("id", session.project_id)
+      .single();
+
+    // 2b. Fetch phrases for the project
     const { data: phrases, error: phrasesError } = await supabase
       .from("phrases")
       .select("id, project_id, position, content, normalized_content")
@@ -96,6 +103,8 @@ Deno.serve(async (req) => {
             project_id: session.project_id,
             speaker_name: session.speaker_name,
             status: session.status === "pending" ? "active" : session.status,
+            usage_type: (project as { usage_type?: string } | null)?.usage_type ?? null,
+            project_name: (project as { name?: string } | null)?.name ?? null,
           },
           phrases: phrases ?? [],
           recorded_phrase_ids: recordedPhraseIds,

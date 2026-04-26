@@ -125,8 +125,6 @@ export function SpeakerProfilePage() {
                     [
                       ['male', 'Homme'],
                       ['female', 'Femme'],
-                      ['other', 'Autre'],
-                      ['prefer_not_to_say', 'Non précisé'],
                     ] as [Gender, string][]
                   ).map(([val, lbl]) => {
                     const on = gender === val

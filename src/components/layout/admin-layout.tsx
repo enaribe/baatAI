@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Inbox, Mail, Users, Banknote, LogOut, User, Sun, Moon, Send,
+  LayoutDashboard, Inbox, Mail, Users, Banknote, LogOut, User, Sun, Moon, Send, MessageSquare,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
 import { useDarkMode } from '../../hooks/use-dark-mode'
@@ -16,7 +16,7 @@ interface NavItem {
   to: string
   icon: typeof LayoutDashboard
   label: string
-  badgeKey?: 'pendingRequests' | 'pendingWithdrawals'
+  badgeKey?: 'pendingRequests' | 'pendingWithdrawals' | 'newFeedbacks'
 }
 
 const navItems: NavItem[] = [
@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { to: '/admin/requests', icon: Inbox, label: 'Demandes', badgeKey: 'pendingRequests' },
   { to: '/admin/whitelist', icon: Mail, label: 'Whitelist' },
   { to: '/admin/users', icon: Users, label: 'Utilisateurs' },
+  { to: '/admin/feedbacks', icon: MessageSquare, label: 'Feedbacks', badgeKey: 'newFeedbacks' },
   { to: '/admin/emails', icon: Send, label: 'Emails' },
   { to: '/admin/withdrawals', icon: Banknote, label: 'Retraits', badgeKey: 'pendingWithdrawals' },
 ]
@@ -31,30 +32,39 @@ const navItems: NavItem[] = [
 interface PendingCounts {
   pendingRequests: number
   pendingWithdrawals: number
+  newFeedbacks: number
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { signOut, user } = useAuth()
   const { isDark, toggle } = useDarkMode()
   const navigate = useNavigate()
-  const [counts, setCounts] = useState<PendingCounts>({ pendingRequests: 0, pendingWithdrawals: 0 })
+  const [counts, setCounts] = useState<PendingCounts>({
+    pendingRequests: 0,
+    pendingWithdrawals: 0,
+    newFeedbacks: 0,
+  })
 
   useEffect(() => {
     let cancelled = false
 
     const fetchCounts = async () => {
-      const [requestsRes, withdrawalsRes] = await Promise.all([
+      const [requestsRes, withdrawalsRes, feedbacksRes] = await Promise.all([
         (supabase.from('access_requests')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'pending') as unknown as Promise<{ count: number | null }>),
         (supabase.from('withdrawals')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'pending') as unknown as Promise<{ count: number | null }>),
+        (supabase.from('feedbacks')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'new') as unknown as Promise<{ count: number | null }>),
       ])
       if (cancelled) return
       setCounts({
         pendingRequests: requestsRes.count ?? 0,
         pendingWithdrawals: withdrawalsRes.count ?? 0,
+        newFeedbacks: feedbacksRes.count ?? 0,
       })
     }
 

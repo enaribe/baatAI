@@ -39,8 +39,6 @@ const LABELS = ['Compte', 'Identité', 'Langues', 'Présentation', 'Récap']
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Homme' },
   { value: 'female', label: 'Femme' },
-  { value: 'other', label: 'Autre' },
-  { value: 'prefer_not_to_say', label: 'Non précisé' },
 ]
 
 export function SpeakerRegisterPage() {

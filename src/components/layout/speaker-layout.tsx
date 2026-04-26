@@ -1,11 +1,12 @@
 import { type ReactNode } from 'react'
 import { NavLink, useNavigate, Navigate } from 'react-router-dom'
-import { LayoutDashboard, Mic, Wallet, CheckSquare, Mail, User, LogOut, Loader2, Bell } from 'lucide-react'
+import { LayoutDashboard, Mic, Wallet, CheckSquare, Mail, User, LogOut, Loader2, Bell, Headphones } from 'lucide-react'
 import { useAuth } from '../../hooks/use-auth'
 import { useSpeakerProfile } from '../../hooks/use-speaker-profile'
 import { useSpeakerGuard } from '../../hooks/use-speaker-guard'
 import { useNotifications } from '../../hooks/use-notifications'
 import { Logo } from '../ui/logo'
+import { FeedbackButton } from '../feedback-button'
 
 interface SpeakerLayoutProps {
   children: ReactNode
@@ -14,6 +15,7 @@ interface SpeakerLayoutProps {
 const navItems = [
   { to: '/speaker/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/speaker/projects', icon: Mic, label: 'Projets' },
+  { to: '/speaker/recordings', icon: Headphones, label: 'Mes enregistrements' },
   { to: '/speaker/invitations', icon: Mail, label: 'Invitations' },
   { to: '/speaker/validate', icon: CheckSquare, label: 'Valider' },
   { to: '/speaker/wallet', icon: Wallet, label: 'Mes gains' },
@@ -213,6 +215,8 @@ export function SpeakerLayout({ children }: SpeakerLayoutProps) {
           <div className="animate-fade-in-up">{children}</div>
         </div>
       </main>
+
+      <FeedbackButton />
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[rgba(8,9,10,0.9)] backdrop-blur-lg border-t border-[rgba(255,255,255,0.05)]">

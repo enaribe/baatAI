@@ -9,6 +9,7 @@ import { useRecorder } from '../hooks/use-recorder'
 import { getRejectionInfo } from '../lib/qc-translations'
 import { Waveform } from '../components/ui/waveform'
 import { Logo } from '../components/ui/logo'
+import { RecordingTipsModal } from '../components/recording-tips-modal'
 import type { Phrase } from '../types/database'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
@@ -25,7 +26,14 @@ interface PhraseStatus {
 }
 
 interface SessionData {
-  session: { id: string; project_id: string; speaker_name: string | null; status: string }
+  session: {
+    id: string
+    project_id: string
+    speaker_name: string | null
+    status: string
+    usage_type: 'asr' | 'tts' | 'both' | null
+    project_name: string | null
+  }
   phrases: Phrase[]
   recorded_phrase_ids: string[]
   upload_url: string
@@ -42,6 +50,9 @@ export function RecordPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const sessionDataRef = useRef<SessionData | null>(null)
+  // Tips modal : affichée au premier load, dismiss persisté en localStorage par token
+  // pour ne pas re-afficher à chaque rechargement de la page record.
+  const [showTips, setShowTips] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phraseStatuses, setPhraseStatuses] = useState<Record<string, PhraseStatus>>({})
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -63,6 +74,17 @@ export function RecordPage() {
         const data: SessionData = json.data
         sessionDataRef.current = data
         setSessionData(data)
+
+        // Affiche les conseils si pas encore vus pour cette session
+        try {
+          const dismissedKey = `tips-dismissed:${token}`
+          if (localStorage.getItem(dismissedKey) !== 'true') {
+            setShowTips(true)
+          }
+        } catch {
+          // localStorage indispo (mode privé) → on affiche quand même
+          setShowTips(true)
+        }
 
         const statuses: Record<string, PhraseStatus> = {}
         for (const phrase of data.phrases) {
@@ -434,6 +456,20 @@ export function RecordPage() {
 
   return (
     <div className="h-dvh flex flex-col bg-[#08090a] text-[#f7f8f8] overflow-hidden select-none">
+      <RecordingTipsModal
+        open={showTips}
+        usageType={sessionData?.session.usage_type ?? null}
+        projectName={sessionData?.session.project_name ?? null}
+        onContinue={() => {
+          setShowTips(false)
+          try {
+            if (token) localStorage.setItem(`tips-dismissed:${token}`, 'true')
+          } catch {
+            // ignore
+          }
+        }}
+      />
+
       {/* Top bar — sans back (anonyme) */}
       <header className="flex items-center gap-3 h-[52px] px-5 border-b border-[rgba(255,255,255,0.05)] shrink-0">
         <Logo size={18} />

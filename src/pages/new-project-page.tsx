@@ -25,7 +25,6 @@ const LANGUAGES = [
 const USAGE_OPTIONS: { value: ProjectUsageType; label: string; desc: string }[] = [
   { value: 'asr', label: 'ASR', desc: 'Reconnaissance vocale' },
   { value: 'tts', label: 'TTS', desc: 'Synthèse vocale' },
-  { value: 'both', label: 'ASR + TTS', desc: 'Les deux' },
 ]
 
 const ACCEPTED_EXTENSIONS = ['.txt', '.pdf', '.docx']
@@ -428,7 +427,7 @@ export function NewProjectPage() {
                   </div>
                 </FieldBlock>
                 <FieldBlock label="Type d'utilisation">
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {USAGE_OPTIONS.map((u) => {
                       const on = usageType === u.value
                       return (
