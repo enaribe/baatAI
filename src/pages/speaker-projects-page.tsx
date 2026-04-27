@@ -77,7 +77,7 @@ export function SpeakerProjectsPage() {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[13px] text-[#8a8f98]" style={sans}>Chargement du profil…</p>
+        <p className="text-[13px] text-[var(--t-fg-3)]" style={sans}>Chargement du profil…</p>
       </div>
     )
   }
@@ -85,12 +85,12 @@ export function SpeakerProjectsPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <Compass className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <Compass className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Projets disponibles
         </span>
-        <span className="text-[11px] text-[#62666d] ml-1" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)] ml-1" style={mono}>
           {projects.length}
         </span>
 
@@ -100,15 +100,15 @@ export function SpeakerProjectsPage() {
       </header>
 
       {/* Filter bar */}
-      <div className="flex items-center gap-2 px-5 lg:px-8 py-3 border-b border-[rgba(255,255,255,0.05)] flex-wrap">
+      <div className="flex items-center gap-2 px-5 lg:px-8 py-3 border-b border-[var(--t-surface-active)] flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-[13px] h-[13px] text-[#62666d] pointer-events-none" strokeWidth={1.75} />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-[13px] h-[13px] text-[var(--t-fg-4)] pointer-events-none" strokeWidth={1.75} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un projet…"
-            className="w-full h-[28px] pl-8 pr-3 text-[12px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.2)]"
+            className="w-full h-[28px] pl-8 pr-3 text-[12px] text-[var(--t-fg)] placeholder:text-[var(--t-fg-4)] rounded-md bg-[var(--t-surface)] border border-[var(--t-border)] focus:outline-none focus:border-[var(--t-border-strong)]"
             style={sans}
           />
         </div>
@@ -124,7 +124,7 @@ export function SpeakerProjectsPage() {
             </LangPill>
           ))}
         </div>
-        <button className="ml-auto w-[28px] h-[28px] flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors">
+        <button className="ml-auto w-[28px] h-[28px] flex items-center justify-center rounded-md text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors">
           <Filter className="w-[13px] h-[13px]" strokeWidth={1.75} />
         </button>
       </div>
@@ -137,8 +137,8 @@ export function SpeakerProjectsPage() {
                 key={i}
                 className="h-[180px] rounded-[10px] animate-pulse"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--t-surface)',
+                  border: '1px solid var(--t-surface-2-hover)',
                 }}
               />
             ))}
@@ -146,7 +146,7 @@ export function SpeakerProjectsPage() {
         ) : (
           <div className="p-5 lg:px-8">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-[44px] mb-1 rounded-sm animate-pulse bg-[rgba(255,255,255,0.02)]" />
+              <div key={i} className="h-[44px] mb-1 rounded-sm animate-pulse bg-[var(--t-surface)]" />
             ))}
           </div>
         )
@@ -248,8 +248,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
     <div
       className="inline-flex items-center rounded-md"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
       }}
     >
       <button
@@ -257,8 +257,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
         title="Vue grille"
         className="w-[26px] h-[26px] flex items-center justify-center rounded-md transition-colors"
         style={{
-          color: mode === 'grid' ? '#f7f8f8' : '#8a8f98',
-          background: mode === 'grid' ? 'rgba(255,255,255,0.06)' : 'transparent',
+          color: mode === 'grid' ? 'var(--t-fg)' : 'var(--t-fg-3)',
+          background: mode === 'grid' ? 'var(--t-surface-2-hover)' : 'transparent',
         }}
       >
         <LayoutGrid className="w-[13px] h-[13px]" strokeWidth={1.75} />
@@ -268,8 +268,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
         title="Vue liste"
         className="w-[26px] h-[26px] flex items-center justify-center rounded-md transition-colors"
         style={{
-          color: mode === 'list' ? '#f7f8f8' : '#8a8f98',
-          background: mode === 'list' ? 'rgba(255,255,255,0.06)' : 'transparent',
+          color: mode === 'list' ? 'var(--t-fg)' : 'var(--t-fg-3)',
+          background: mode === 'list' ? 'var(--t-surface-2-hover)' : 'transparent',
         }}
       >
         <ListIcon className="w-[13px] h-[13px]" strokeWidth={1.75} />
@@ -292,13 +292,13 @@ function GridSection({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
-        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[var(--t-surface-active)] bg-[var(--t-bg-subtle)]">
+        <ChevronDown className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />
         {icon}
-        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+        <span className="text-[12px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           {title}
         </span>
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {count}
         </span>
       </div>
@@ -337,16 +337,16 @@ function ProjectCard({
     <div
       className="group flex flex-col rounded-[10px] overflow-hidden transition-all"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.035)'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+        e.currentTarget.style.background = 'var(--t-surface-hover)'
+        e.currentTarget.style.borderColor = 'var(--t-border-strong)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+        e.currentTarget.style.background = 'var(--t-surface)'
+        e.currentTarget.style.borderColor = 'var(--t-border)'
       }}
     >
       {/* Preview zone */}
@@ -354,8 +354,8 @@ function ProjectCard({
         className="relative aspect-[5/2] overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+            'linear-gradient(180deg, var(--t-surface-hover) 0%, rgba(255,255,255,0) 100%)',
+          borderBottom: '1px solid var(--t-surface-2-hover)',
         }}
       >
         <StaticWaveform seed={project.project_id} />
@@ -367,9 +367,9 @@ function ProjectCard({
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#10b981',
-              background: 'rgba(8,9,10,0.7)',
-              border: '1px solid rgba(16,185,129,0.35)',
+              color: 'var(--t-success)',
+              background: 'var(--t-success-muted-bg)',
+              border: '1px solid var(--t-success-muted-border)',
               backdropFilter: 'blur(8px)',
             }}
           >
@@ -383,9 +383,9 @@ function ProjectCard({
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#fbbf24',
-              background: 'rgba(8,9,10,0.7)',
-              border: '1px solid rgba(245,158,11,0.35)',
+              color: 'var(--t-warning)',
+              background: 'var(--t-warning-muted-bg)',
+              border: '1px solid var(--t-warning-muted-border)',
               backdropFilter: 'blur(8px)',
             }}
           >
@@ -399,9 +399,9 @@ function ProjectCard({
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#7170ff',
-              background: 'rgba(8,9,10,0.7)',
-              border: '1px solid rgba(113,112,255,0.35)',
+              color: 'var(--t-accent-text)',
+              background: 'var(--t-accent-muted-bg)',
+              border: '1px solid var(--t-accent-muted-border)',
               backdropFilter: 'blur(8px)',
             }}
           >
@@ -416,9 +416,9 @@ function ProjectCard({
           style={{
             ...sans,
             fontWeight: 510,
-            color: project.rate_per_hour_fcfa > 0 ? '#f7f8f8' : '#8a8f98',
-            background: 'rgba(8,9,10,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            color: project.rate_per_hour_fcfa > 0 ? 'var(--t-fg)' : 'var(--t-fg-3)',
+            background: 'var(--t-surface-active)',
+            border: '1px solid var(--t-border)',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -427,7 +427,7 @@ function ProjectCard({
 
         {/* Code en bas-gauche */}
         <span
-          className="absolute bottom-2 left-3 text-[10px] text-[#62666d]"
+          className="absolute bottom-2 left-3 text-[10px] text-[var(--t-fg-4)]"
           style={mono}
         >
           {code}
@@ -437,16 +437,16 @@ function ProjectCard({
       {/* Contenu */}
       <div className="flex flex-col gap-2.5 p-3.5">
         <p
-          className="text-[13px] text-[#f7f8f8] truncate group-hover:text-white transition-colors"
+          className="text-[13px] text-[var(--t-fg)] truncate transition-colors"
           style={{ ...sans, fontWeight: 510, letterSpacing: '-0.1px' }}
           title={project.project_name}
         >
           {project.project_name}
         </p>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-[#8a8f98]" style={sans}>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--t-fg-3)]" style={sans}>
           <span>{project.language_label ?? project.target_language}</span>
-          <span className="text-[#3e3e44]">·</span>
+          <span className="text-[var(--t-fg-5)]">·</span>
           <span style={mono}>{project.phrase_count} phrases</span>
         </div>
 
@@ -475,7 +475,7 @@ function ProjectCard({
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: 'var(--t-fg)',
                 background: 'rgba(113,112,255,0.12)',
                 border: '1px solid rgba(113,112,255,0.3)',
               }}
@@ -509,13 +509,13 @@ function ListSection({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
-        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[var(--t-surface-active)] bg-[var(--t-bg-subtle)]">
+        <ChevronDown className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />
         {icon}
-        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+        <span className="text-[12px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           {title}
         </span>
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {count}
         </span>
       </div>
@@ -541,24 +541,24 @@ function ProjectRow({
   const isPending = project.invitation_status === 'pending'
 
   return (
-    <div className="group flex items-center gap-3 h-[44px] px-5 lg:px-8 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors">
-      <span className="text-[11px] text-[#62666d] w-[70px] shrink-0" style={mono}>
+    <div className="group flex items-center gap-3 h-[44px] px-5 lg:px-8 border-b border-[var(--t-surface-2)] hover:bg-[var(--t-surface)] transition-colors">
+      <span className="text-[11px] text-[var(--t-fg-4)] w-[70px] shrink-0" style={mono}>
         {code}
       </span>
       <Circle className="w-3.5 h-3.5 text-[#7170ff] shrink-0" strokeWidth={2} />
       <span
-        className="flex-1 min-w-0 truncate text-[13px] text-[#f7f8f8]"
+        className="flex-1 min-w-0 truncate text-[13px] text-[var(--t-fg)]"
         style={{ ...sans, fontWeight: 510 }}
       >
         {project.project_name}
       </span>
-      <span className="text-[11px] text-[#8a8f98] hidden md:inline" style={sans}>
+      <span className="text-[11px] text-[var(--t-fg-3)] hidden md:inline" style={sans}>
         {project.language_label ?? project.target_language}
       </span>
-      <span className="text-[11px] text-[#62666d] tabular-nums hidden sm:inline" style={mono}>
+      <span className="text-[11px] text-[var(--t-fg-4)] tabular-nums hidden sm:inline" style={mono}>
         {project.phrase_count} phrases
       </span>
-      <span className="text-[11px] text-[#d0d6e0] tabular-nums" style={mono}>
+      <span className="text-[11px] text-[var(--t-fg-2)] tabular-nums" style={mono}>
         {rateDisplay}
       </span>
       {isPending ? (
@@ -584,7 +584,7 @@ function ProjectRow({
           style={{
             ...sans,
             fontWeight: 510,
-            color: '#f7f8f8',
+            color: 'var(--t-fg)',
             background: 'rgba(113,112,255,0.1)',
             border: '1px solid rgba(113,112,255,0.25)',
           }}
@@ -620,9 +620,9 @@ function LangPill({
       style={{
         ...sans,
         fontWeight: 510,
-        color: active ? '#f7f8f8' : '#8a8f98',
-        background: active ? 'rgba(255,255,255,0.05)' : 'transparent',
-        border: `1px solid ${active ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
+        color: active ? 'var(--t-fg)' : 'var(--t-fg-3)',
+        background: active ? 'var(--t-surface-active)' : 'transparent',
+        border: `1px solid ${active ? 'var(--t-border)' : 'transparent'}`,
       }}
     >
       {children}
@@ -636,16 +636,16 @@ function EmptyState() {
       <div
         className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+          border: '1px solid var(--t-border)',
         }}
       >
-        <Mic className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+        <Mic className="w-5 h-5 text-[var(--t-fg-3)]" strokeWidth={1.5} />
       </div>
-      <h3 className="text-[16px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+      <h3 className="text-[16px] text-[var(--t-fg)] m-0" style={{ ...sans, fontWeight: 590 }}>
         Aucun projet trouvé
       </h3>
-      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+      <p className="text-[13px] text-[var(--t-fg-3)] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
         Essayez de modifier vos filtres ou ajoutez des langues à votre profil.
       </p>
     </div>

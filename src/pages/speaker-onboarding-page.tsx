@@ -51,8 +51,8 @@ export function SpeakerOnboardingPage() {
 
   if (guard.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#08090a]">
-        <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--t-bg)]">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
       </div>
     )
   }
@@ -129,14 +129,14 @@ export function SpeakerOnboardingPage() {
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as Step)}
-              className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+              className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
               style={sans}
             >
               <ArrowLeft className="w-[13px] h-[13px]" strokeWidth={1.75} />
               Retour
             </button>
           ) : <span />}
-          <span className="text-[11px] text-[#62666d]" style={mono}>
+          <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
             /speaker/onboarding
           </span>
         </div>
@@ -163,10 +163,10 @@ export function SpeakerOnboardingPage() {
             <div className="flex flex-col gap-4 mt-6">
               <div>
                 <div
-                  className="text-[12px] text-[#d0d6e0] mb-2"
+                  className="text-[12px] text-[var(--t-fg-2)] mb-2"
                   style={{ ...sans, fontWeight: 510 }}
                 >
-                  Genre <span className="text-[#62666d]">*</span>
+                  Genre <span className="text-[var(--t-fg-4)]">*</span>
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
                   {GENDER_OPTIONS.map((g) => {
@@ -180,9 +180,9 @@ export function SpeakerOnboardingPage() {
                         style={{
                           ...sans,
                           fontWeight: 510,
-                          color: on ? '#f7f8f8' : '#d0d6e0',
-                          background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
-                          border: `1px solid ${on ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                          color: on ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                          background: on ? 'var(--t-border)' : 'var(--t-surface)',
+                          border: `1px solid ${on ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                         }}
                       >
                         {g.label}
@@ -234,8 +234,8 @@ export function SpeakerOnboardingPage() {
                     key={code}
                     className="rounded-lg p-3"
                     style={{
-                      background: active ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                      background: active ? 'var(--t-surface-2)' : 'var(--t-surface)',
+                      border: `1px solid ${active ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                     }}
                   >
                     <button
@@ -246,19 +246,19 @@ export function SpeakerOnboardingPage() {
                       <span
                         className="w-[18px] h-[18px] rounded-sm flex items-center justify-center shrink-0"
                         style={{
-                          border: `1.5px solid ${active ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
-                          background: active ? '#f7f8f8' : 'transparent',
+                          border: `1.5px solid ${active ? 'var(--t-fg)' : 'var(--t-border-strong)'}`,
+                          background: active ? 'var(--t-fg)' : 'transparent',
                         }}
                       >
-                        {active && <Check className="w-3 h-3" strokeWidth={3} style={{ color: '#08090a' }} />}
+                        {active && <Check className="w-3 h-3" strokeWidth={3} style={{ color: 'var(--t-bg)' }} />}
                       </span>
                       <span
-                        className="text-[14px] text-[#f7f8f8]"
+                        className="text-[14px] text-[var(--t-fg)]"
                         style={{ ...sans, fontWeight: 510 }}
                       >
                         {lang.label}
                       </span>
-                      <span className="ml-auto text-[11px] text-[#62666d]" style={mono}>
+                      <span className="ml-auto text-[11px] text-[var(--t-fg-4)]" style={mono}>
                         {active ? `${selectedD.length}/${lang.dialects.length}` : ''}
                       </span>
                     </button>
@@ -276,9 +276,9 @@ export function SpeakerOnboardingPage() {
                               style={{
                                 ...sans,
                                 fontWeight: 510,
-                                color: on ? '#f7f8f8' : '#d0d6e0',
-                                background: on ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
-                                border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                                color: on ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                                background: on ? 'var(--t-border)' : 'var(--t-surface)',
+                                border: `1px solid ${on ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                               }}
                             >
                               {d}
@@ -304,19 +304,19 @@ export function SpeakerOnboardingPage() {
               <div
                 className="rounded-md px-3 py-2.5"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--t-surface)',
+                  border: '1px solid var(--t-border)',
                 }}
               >
                 <textarea
                   value={form.bio}
                   onChange={(e) => update('bio', e.target.value.slice(0, 400))}
                   placeholder="Ex : Journaliste radio à Dakar, locuteur natif wolof, 12 ans d'expérience en voix-off."
-                  className="w-full bg-transparent border-0 outline-none text-[#f7f8f8] text-[14px] resize-y"
+                  className="w-full bg-transparent border-0 outline-none text-[var(--t-fg)] text-[14px] resize-y"
                   style={{ ...sans, lineHeight: 1.5, minHeight: 120 }}
                 />
               </div>
-              <div className="text-[11px] text-[#62666d] mt-1.5 text-right tabular-nums" style={mono}>
+              <div className="text-[11px] text-[var(--t-fg-4)] mt-1.5 text-right tabular-nums" style={mono}>
                 {form.bio.length}/400
               </div>
             </div>
@@ -329,8 +329,8 @@ export function SpeakerOnboardingPage() {
             <div
               className="mt-6 p-5 rounded-[10px] flex flex-col gap-3"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
               }}
             >
               <SummaryLine label="Genre" value={GENDER_OPTIONS.find((g) => g.value === form.gender)?.label ?? '—'} />
@@ -393,12 +393,12 @@ function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <>
       <h1
-        className="text-[24px] sm:text-[28px] text-[#f7f8f8] m-0"
+        className="text-[24px] sm:text-[28px] text-[var(--t-fg)] m-0"
         style={{ ...sans, fontWeight: 510, lineHeight: 1.1, letterSpacing: '-0.5px' }}
       >
         {title}
       </h1>
-      <p className="text-[14px] text-[#8a8f98] mt-2" style={sans}>
+      <p className="text-[14px] text-[var(--t-fg-3)] mt-2" style={sans}>
         {subtitle}
       </p>
     </>
@@ -416,13 +416,13 @@ function SummaryLine({
   return (
     <div className={`grid grid-cols-[100px_1fr] gap-3 ${multiline ? 'items-start' : 'items-center'}`}>
       <span
-        className="text-[11px] text-[#62666d] uppercase"
+        className="text-[11px] text-[var(--t-fg-4)] uppercase"
         style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
       >
         {label}
       </span>
       <span
-        className={`text-[13px] text-[#f7f8f8] ${multiline ? 'leading-relaxed' : 'truncate'}`}
+        className={`text-[13px] text-[var(--t-fg)] ${multiline ? 'leading-relaxed' : 'truncate'}`}
         style={isMono ? mono : { ...sans, fontWeight: 510 }}
       >
         {value}

@@ -24,7 +24,7 @@ export function SpeakerDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
       </div>
     )
   }
@@ -34,7 +34,7 @@ export function SpeakerDetailPage() {
       <div className="min-h-screen px-5 lg:px-8 py-10">
         <Link
           to="/speakers"
-          className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors mb-6"
           style={sans}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -66,20 +66,20 @@ export function SpeakerDetailPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
         <Link
           to="/speakers"
-          className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
           style={sans}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
           Locuteurs
         </Link>
-        <span className="text-[#3e3e44]">/</span>
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="text-[var(--t-fg-5)]">/</span>
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {code}
         </span>
-        <span className="text-[13px] text-[#f7f8f8] truncate" style={{ ...sans, fontWeight: 510 }}>
+        <span className="text-[13px] text-[var(--t-fg)] truncate" style={{ ...sans, fontWeight: 510 }}>
           {fullName}
         </span>
 
@@ -92,7 +92,7 @@ export function SpeakerDetailPage() {
               fontWeight: 510,
               color: speaker.is_favorite ? 'var(--t-danger-text)' : 'var(--t-fg-2)',
               background: speaker.is_favorite ? 'var(--t-danger-muted-bg)' : 'var(--t-surface)',
-              border: `1px solid ${speaker.is_favorite ? 'var(--t-danger-muted-border)' : 'rgba(255,255,255,0.08)'}`,
+              border: `1px solid ${speaker.is_favorite ? 'var(--t-danger-muted-border)' : 'var(--t-border)'}`,
             }}
           >
             <Heart
@@ -127,9 +127,9 @@ export function SpeakerDetailPage() {
           data-theme="dark"
           className="relative rounded-[12px] overflow-hidden mb-6"
           style={{
-            background: '#0f1011',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: '#f7f8f8',
+            background: 'var(--t-bg-panel)',
+            border: '1px solid var(--t-border)',
+            color: 'var(--t-fg)',
           }}
         >
           <div
@@ -137,7 +137,7 @@ export function SpeakerDetailPage() {
             style={{
               background:
                 'linear-gradient(180deg, rgba(113,112,255,0.06) 0%, rgba(255,255,255,0) 100%)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              borderBottom: '1px solid var(--t-surface-2-hover)',
             }}
           >
             <StaticWaveform seed={speaker.speaker_id} bars={96} maxOpacity={0.45} />
@@ -148,9 +148,9 @@ export function SpeakerDetailPage() {
             <div
               className="w-[72px] h-[72px] rounded-[14px] flex items-center justify-center text-[24px] shrink-0"
               style={{
-                background: '#3e3e44',
-                color: '#f7f8f8',
-                border: '3px solid #0f1011',
+                background: 'var(--t-fg-5)',
+                color: 'var(--t-fg)',
+                border: '3px solid var(--t-bg-panel)',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                 ...sans,
                 fontWeight: 590,
@@ -164,7 +164,7 @@ export function SpeakerDetailPage() {
             <div className="flex-1 min-w-0 mt-3 sm:mt-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1
-                  className="text-[24px] text-[#f7f8f8] m-0"
+                  className="text-[24px] text-[var(--t-fg)] m-0"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '-0.3px', lineHeight: 1.2 }}
                 >
                   {fullName}
@@ -186,18 +186,18 @@ export function SpeakerDetailPage() {
                 )}
               </div>
 
-              <div className="mt-1.5 flex items-center gap-2 text-[13px] text-[#8a8f98] flex-wrap" style={sans}>
+              <div className="mt-1.5 flex items-center gap-2 text-[13px] text-[var(--t-fg-3)] flex-wrap" style={sans}>
                 {speaker.city && (
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="w-3 h-3" strokeWidth={1.75} />
                     {speaker.city}
                   </span>
                 )}
-                {speaker.city && <span className="text-[#3e3e44]">·</span>}
+                {speaker.city && <span className="text-[var(--t-fg-5)]">·</span>}
                 <span>{genderLabel}</span>
                 {age != null && (
                   <>
-                    <span className="text-[#3e3e44]">·</span>
+                    <span className="text-[var(--t-fg-5)]">·</span>
                     <span style={mono}>{age} ans</span>
                   </>
                 )}
@@ -220,11 +220,11 @@ export function SpeakerDetailPage() {
             className="mb-6 flex items-center gap-3 px-4 py-3 rounded-[10px]"
             style={{
               background: 'var(--t-surface)',
-              border: '1px dashed rgba(255,255,255,0.12)',
+              border: '1px dashed var(--t-border-strong)',
             }}
           >
-            <Volume2 className="w-3.5 h-3.5 text-[#62666d]" strokeWidth={1.75} />
-            <span className="text-[12px] text-[#8a8f98]" style={sans}>
+            <Volume2 className="w-3.5 h-3.5 text-[var(--t-fg-4)]" strokeWidth={1.75} />
+            <span className="text-[12px] text-[var(--t-fg-3)]" style={sans}>
               Ce locuteur n'a pas encore publié d'échantillon de voix.
             </span>
           </div>
@@ -259,12 +259,12 @@ export function SpeakerDetailPage() {
             {speaker.bio && (
               <section className="mb-6">
                 <div
-                  className="text-[11px] text-[#62666d] uppercase mb-2"
+                  className="text-[11px] text-[var(--t-fg-4)] uppercase mb-2"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
                 >
                   Présentation
                 </div>
-                <p className="text-[14px] text-[#d0d6e0] leading-relaxed" style={sans}>
+                <p className="text-[14px] text-[var(--t-fg-2)] leading-relaxed" style={sans}>
                   {speaker.bio}
                 </p>
               </section>
@@ -273,7 +273,7 @@ export function SpeakerDetailPage() {
             {/* Langues + dialectes */}
             <section>
               <div
-                className="text-[11px] text-[#62666d] uppercase mb-2"
+                className="text-[11px] text-[var(--t-fg-4)] uppercase mb-2"
                 style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
               >
                 Langues et dialectes
@@ -288,17 +288,17 @@ export function SpeakerDetailPage() {
                       className="rounded-md p-3"
                       style={{
                         background: 'var(--t-surface)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        border: '1px solid var(--t-border)',
                       }}
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          className="text-[13px] text-[#f7f8f8]"
+                          className="text-[13px] text-[var(--t-fg)]"
                           style={{ ...sans, fontWeight: 510 }}
                         >
                           {lang?.label ?? code}
                         </span>
-                        <span className="text-[11px] text-[#62666d]" style={mono}>
+                        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
                           {dialects.length}/{lang?.dialects.length ?? 0} dialectes
                         </span>
                       </div>
@@ -307,12 +307,12 @@ export function SpeakerDetailPage() {
                           {dialects.map((d) => (
                             <span
                               key={d}
-                              className="inline-flex items-center px-2 h-[20px] rounded-full text-[10px] text-[#d0d6e0]"
+                              className="inline-flex items-center px-2 h-[20px] rounded-full text-[10px] text-[var(--t-fg-2)]"
                               style={{
                                 ...sans,
                                 fontWeight: 510,
                                 background: 'var(--t-surface-hover)',
-                                border: '1px solid rgba(255,255,255,0.05)',
+                                border: '1px solid var(--t-surface-active)',
                               }}
                             >
                               {d}
@@ -324,7 +324,7 @@ export function SpeakerDetailPage() {
                   )
                 })}
                 {speaker.languages.length === 0 && (
-                  <p className="text-[13px] text-[#62666d]" style={sans}>
+                  <p className="text-[13px] text-[var(--t-fg-4)]" style={sans}>
                     Aucune langue renseignée.
                   </p>
                 )}
@@ -338,7 +338,7 @@ export function SpeakerDetailPage() {
               className="rounded-[10px]"
               style={{
                 background: 'var(--t-surface)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--t-border)',
               }}
             >
               <MetaRow label="Code" value={code} mono />
@@ -377,8 +377,8 @@ export function SpeakerDetailPage() {
                     Déjà collaboré
                   </span>
                 </div>
-                <p className="text-[12px] text-[#d0d6e0]" style={sans}>
-                  Ce locuteur a participé à <span className="text-[#f7f8f8]" style={{ fontWeight: 510 }}>{speaker.shared_projects_count}</span> de vos projets.
+                <p className="text-[12px] text-[var(--t-fg-2)]" style={sans}>
+                  Ce locuteur a participé à <span className="text-[var(--t-fg)]" style={{ fontWeight: 510 }}>{speaker.shared_projects_count}</span> de vos projets.
                 </p>
               </div>
             )}
@@ -414,11 +414,11 @@ function StatCard({
       className="rounded-[10px] p-3.5"
       style={{
         background: 'var(--t-surface)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--t-border)',
       }}
     >
       <p
-        className="text-[10px] text-[#62666d] uppercase mb-1.5"
+        className="text-[10px] text-[var(--t-fg-4)] uppercase mb-1.5"
         style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
       >
         {label}
@@ -454,20 +454,20 @@ function MetaRow({
   return (
     <div className="flex items-center justify-between px-4 py-2.5 gap-3">
       <span
-        className="text-[11px] text-[#62666d] uppercase shrink-0"
+        className="text-[11px] text-[var(--t-fg-4)] uppercase shrink-0"
         style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
       >
         {label}
       </span>
       <div className="text-right min-w-0">
         <span
-          className="text-[13px] text-[#f7f8f8] truncate block"
+          className="text-[13px] text-[var(--t-fg)] truncate block"
           style={isMono ? mono : { ...sans, fontWeight: 510 }}
         >
           {value}
         </span>
         {hint && (
-          <span className="text-[10px] text-[#62666d]" style={sans}>
+          <span className="text-[10px] text-[var(--t-fg-4)]" style={sans}>
             {hint}
           </span>
         )}
@@ -538,25 +538,25 @@ function InviteToProjectModal({
         className="rounded-[12px] w-full max-w-[480px] max-h-[80vh] flex flex-col"
         style={{
           background: 'var(--t-modal-bg)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--t-border)',
           boxShadow: '0 40px 80px -20px rgba(0,0,0,0.8)',
         }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(255,255,255,0.05)]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--t-surface-active)]">
           <div>
             <h2
-              className="text-[15px] text-[#f7f8f8] m-0"
+              className="text-[15px] text-[var(--t-fg)] m-0"
               style={{ ...sans, fontWeight: 590 }}
             >
               Inviter {speakerName}
             </h2>
-            <p className="text-[12px] text-[#8a8f98] mt-0.5" style={sans}>
+            <p className="text-[12px] text-[var(--t-fg-3)] mt-0.5" style={sans}>
               Sélectionnez un projet
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors"
           >
             <X className="w-3.5 h-3.5" strokeWidth={1.75} />
           </button>
@@ -565,12 +565,12 @@ function InviteToProjectModal({
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-4 h-4 animate-spin text-[#8a8f98]" />
+              <Loader2 className="w-4 h-4 animate-spin text-[var(--t-fg-3)]" />
             </div>
           ) : activeProjects.length === 0 ? (
             <div className="px-5 py-8 text-center">
-              <Mic className="w-6 h-6 text-[#8a8f98] mx-auto mb-2" strokeWidth={1.5} />
-              <p className="text-[13px] text-[#8a8f98] mb-4" style={sans}>
+              <Mic className="w-6 h-6 text-[var(--t-fg-3)] mx-auto mb-2" strokeWidth={1.5} />
+              <p className="text-[13px] text-[var(--t-fg-3)] mb-4" style={sans}>
                 Aucun projet actif. Créez-en un d'abord.
               </p>
               <Link
@@ -596,26 +596,26 @@ function InviteToProjectModal({
                     key={p.id}
                     onClick={() => handleInvite(p.id)}
                     disabled={sendingId === p.id}
-                    className="w-full flex items-center gap-3 px-5 py-3 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors text-left disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-5 py-3 border-b border-[var(--t-surface-2)] hover:bg-[var(--t-surface)] transition-colors text-left disabled:opacity-50"
                   >
-                    <span className="text-[11px] text-[#62666d] w-[70px] shrink-0" style={mono}>
+                    <span className="text-[11px] text-[var(--t-fg-4)] w-[70px] shrink-0" style={mono}>
                       {code}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p
-                        className="text-[13px] text-[#f7f8f8] truncate"
+                        className="text-[13px] text-[var(--t-fg)] truncate"
                         style={{ ...sans, fontWeight: 510 }}
                       >
                         {p.name}
                       </p>
-                      <p className="text-[11px] text-[#8a8f98]" style={sans}>
+                      <p className="text-[11px] text-[var(--t-fg-3)]" style={sans}>
                         {p.language_label ?? p.target_language}
                       </p>
                     </div>
                     {sendingId === p.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#8a8f98]" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--t-fg-3)]" />
                     ) : (
-                      <Check className="w-3.5 h-3.5 text-[#62666d] opacity-0 group-hover:opacity-100" strokeWidth={2} />
+                      <Check className="w-3.5 h-3.5 text-[var(--t-fg-4)] opacity-0 group-hover:opacity-100" strokeWidth={2} />
                     )}
                   </button>
                 )

@@ -32,7 +32,7 @@ export function SpeakerInvitationDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
       </div>
     )
   }
@@ -42,7 +42,7 @@ export function SpeakerInvitationDetailPage() {
       <div className="max-w-[720px] mx-auto px-5 lg:px-8 py-10">
         <Link
           to="/speaker/invitations"
-          className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors mb-6"
           style={sans}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -124,17 +124,17 @@ export function SpeakerInvitationDetailPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
         <Link
           to="/speaker/invitations"
-          className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
           style={sans}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
           Invitations
         </Link>
-        <span className="w-px h-3 bg-[rgba(255,255,255,0.1)]" />
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="w-px h-3 bg-[var(--t-border)]" />
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {code}
         </span>
       </header>
@@ -146,27 +146,27 @@ export function SpeakerInvitationDetailPage() {
             {/* Header */}
             <div className="flex items-start gap-3">
               <div
-                className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 text-[#f7f8f8]"
+                className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 text-[var(--t-fg)]"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+                  border: '1px solid var(--t-border)',
                 }}
               >
                 <Mic className="w-4 h-4" strokeWidth={1.75} />
               </div>
               <div className="flex-1 min-w-0">
                 <h1
-                  className="text-[24px] text-[#f7f8f8] m-0"
+                  className="text-[24px] text-[var(--t-fg)] m-0"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '-0.3px', lineHeight: 1.2 }}
                 >
                   {project?.name ?? 'Projet'}
                 </h1>
-                <p className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+                <p className="text-[13px] text-[var(--t-fg-3)] mt-1" style={sans}>
                   {project?.language_label ?? getLanguageLabel(project?.target_language ?? '')}
                   {project?.funding_source && (
                     <>
-                      <span className="mx-2 text-[#3e3e44]">·</span>
-                      <span className="text-[#d0d6e0]">{project.funding_source}</span>
+                      <span className="mx-2 text-[var(--t-fg-5)]">·</span>
+                      <span className="text-[var(--t-fg-2)]">{project.funding_source}</span>
                     </>
                   )}
                 </p>
@@ -193,9 +193,9 @@ export function SpeakerInvitationDetailPage() {
                 className="mt-6 flex items-center gap-2 px-3 py-2 rounded-md text-[12px]"
                 style={{
                   ...sans,
-                  color: '#8a8f98',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'var(--t-fg-3)',
+                  background: 'var(--t-surface-hover)',
+                  border: '1px solid var(--t-border)',
                 }}
               >
                 <Clock className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
@@ -207,12 +207,12 @@ export function SpeakerInvitationDetailPage() {
             {project?.description && (
               <section className="mt-8">
                 <div
-                  className="text-[11px] text-[#62666d] uppercase mb-2"
+                  className="text-[11px] text-[var(--t-fg-4)] uppercase mb-2"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
                 >
                   Description
                 </div>
-                <p className="text-[14px] text-[#d0d6e0] leading-relaxed" style={sans}>
+                <p className="text-[14px] text-[var(--t-fg-2)] leading-relaxed" style={sans}>
                   {project.description}
                 </p>
               </section>
@@ -222,15 +222,15 @@ export function SpeakerInvitationDetailPage() {
             {message && (
               <section
                 className="mt-8 pl-4"
-                style={{ borderLeft: '2px solid rgba(255,255,255,0.15)' }}
+                style={{ borderLeft: '2px solid var(--t-border-strong)' }}
               >
                 <div
-                  className="text-[11px] text-[#62666d] uppercase mb-2"
+                  className="text-[11px] text-[var(--t-fg-4)] uppercase mb-2"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
                 >
                   Message du client
                 </div>
-                <p className="text-[14px] text-[#d0d6e0] leading-relaxed italic" style={sans}>
+                <p className="text-[14px] text-[var(--t-fg-2)] leading-relaxed italic" style={sans}>
                   « {message} »
                 </p>
               </section>
@@ -240,7 +240,7 @@ export function SpeakerInvitationDetailPage() {
             {preview_phrases.length > 0 && (
               <section className="mt-8">
                 <div
-                  className="text-[11px] text-[#62666d] uppercase mb-3"
+                  className="text-[11px] text-[var(--t-fg-4)] uppercase mb-3"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
                 >
                   Aperçu des phrases ({preview_phrases.length})
@@ -248,20 +248,20 @@ export function SpeakerInvitationDetailPage() {
                 <div
                   className="rounded-[8px] p-4 max-h-[320px] overflow-y-auto relative"
                   style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--t-surface)',
+                    border: '1px solid var(--t-border)',
                   }}
                 >
                   <div className="flex flex-col gap-2">
                     {preview_phrases.map((p, i) => (
                       <div key={p.id} className="flex gap-3 items-start">
                         <span
-                          className="text-[10px] text-[#62666d] tabular-nums mt-0.5 shrink-0 w-6"
+                          className="text-[10px] text-[var(--t-fg-4)] tabular-nums mt-0.5 shrink-0 w-6"
                           style={mono}
                         >
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        <p className="text-[13px] text-[#d0d6e0] leading-relaxed flex-1" style={sans}>
+                        <p className="text-[13px] text-[var(--t-fg-2)] leading-relaxed flex-1" style={sans}>
                           {p.content}
                         </p>
                       </div>
@@ -292,9 +292,9 @@ export function SpeakerInvitationDetailPage() {
                   style={{
                     ...sans,
                     fontWeight: 510,
-                    color: '#d0d6e0',
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'var(--t-fg-2)',
+                    background: 'var(--t-surface)',
+                    border: '1px solid var(--t-border)',
                   }}
                 >
                   {action === 'declining' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" strokeWidth={1.75} />}
@@ -307,9 +307,9 @@ export function SpeakerInvitationDetailPage() {
                   style={{
                     ...sans,
                     fontWeight: 510,
-                    color: '#f7f8f8',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'var(--t-fg)',
+                    background: 'var(--t-surface-2)',
+                    border: '1px solid var(--t-border)',
                   }}
                 >
                   {action === 'accepting' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={1.75} />}
@@ -322,7 +322,7 @@ export function SpeakerInvitationDetailPage() {
                   style={{
                     ...sans,
                     fontWeight: 510,
-                    color: '#f7f8f8',
+                    color: 'var(--t-fg)',
                     background: '#5e6ad2',
                   }}
                 >
@@ -348,7 +348,7 @@ export function SpeakerInvitationDetailPage() {
                   style={{
                     ...sans,
                     fontWeight: 510,
-                    color: '#f7f8f8',
+                    color: 'var(--t-fg)',
                     background: '#5e6ad2',
                   }}
                 >
@@ -365,12 +365,12 @@ export function SpeakerInvitationDetailPage() {
             )}
 
             {status === 'declined' && (
-              <p className="mt-8 text-[13px] text-[#8a8f98]" style={sans}>
+              <p className="mt-8 text-[13px] text-[var(--t-fg-3)]" style={sans}>
                 Vous avez décliné cette invitation.
               </p>
             )}
             {status === 'cancelled' && (
-              <p className="mt-8 text-[13px] text-[#8a8f98]" style={sans}>
+              <p className="mt-8 text-[13px] text-[var(--t-fg-3)]" style={sans}>
                 Cette invitation a été annulée par le client.
               </p>
             )}
@@ -381,8 +381,8 @@ export function SpeakerInvitationDetailPage() {
             <div
               className="rounded-[10px]"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
               }}
             >
               <MetaRow label="Statut">
@@ -421,7 +421,7 @@ export function SpeakerInvitationDetailPage() {
             {project?.required_languages && project.required_languages.length > 0 && (
               <div className="mt-4">
                 <div
-                  className="text-[11px] text-[#62666d] uppercase mb-2"
+                  className="text-[11px] text-[var(--t-fg-4)] uppercase mb-2"
                   style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
                 >
                   Langues requises
@@ -434,9 +434,9 @@ export function SpeakerInvitationDetailPage() {
                       style={{
                         ...sans,
                         fontWeight: 510,
-                        color: '#d0d6e0',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'var(--t-fg-2)',
+                        background: 'var(--t-surface-hover)',
+                        border: '1px solid var(--t-border)',
                       }}
                     >
                       {getLanguageLabel(lang)}
@@ -465,7 +465,7 @@ function MetaRow({
   return (
     <div className="flex items-center justify-between px-4 py-2.5">
       <span
-        className="text-[11px] text-[#62666d] uppercase"
+        className="text-[11px] text-[var(--t-fg-4)] uppercase"
         style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
       >
         {label}
@@ -474,7 +474,7 @@ function MetaRow({
         children
       ) : (
         <span
-          className="text-[13px] text-[#f7f8f8]"
+          className="text-[13px] text-[var(--t-fg)]"
           style={isMono ? mono : { ...sans, fontWeight: 510 }}
         >
           {value}
@@ -485,16 +485,16 @@ function MetaRow({
 }
 
 function MetaDivider() {
-  return <div className="h-px mx-4" style={{ background: 'rgba(255,255,255,0.05)' }} />
+  return <div className="h-px mx-4" style={{ background: 'var(--t-surface-active)' }} />
 }
 
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
     pending: { label: 'En attente', color: '#fbbf24', bg: 'rgba(245,158,11,0.1)' },
     accepted: { label: 'Acceptée', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    declined: { label: 'Déclinée', color: '#8a8f98', bg: 'rgba(255,255,255,0.04)' },
-    expired: { label: 'Expirée', color: '#8a8f98', bg: 'rgba(255,255,255,0.04)' },
-    cancelled: { label: 'Annulée', color: '#8a8f98', bg: 'rgba(255,255,255,0.04)' },
+    declined: { label: 'Déclinée', color: 'var(--t-fg-3)', bg: 'var(--t-surface-2)' },
+    expired: { label: 'Expirée', color: 'var(--t-fg-3)', bg: 'var(--t-surface-2)' },
+    cancelled: { label: 'Annulée', color: 'var(--t-fg-3)', bg: 'var(--t-surface-2)' },
   }
   const s = map[status] ?? map.pending!
   return (

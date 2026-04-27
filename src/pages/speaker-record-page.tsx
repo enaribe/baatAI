@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   Square, Check, Loader2, AlertCircle, RotateCcw, Mic,
   AlertTriangle, List, ArrowLeft, ArrowRight, Clock, ChevronRight,
-  CheckCircle2,
+  CheckCircle2, Headphones,
 } from 'lucide-react'
 import { useRecorder } from '../hooks/use-recorder'
 import { useAuth } from '../hooks/use-auth'
@@ -11,6 +11,7 @@ import { useWallet } from '../hooks/use-wallet'
 import { getRejectionInfo } from '../lib/qc-translations'
 import { supabase } from '../lib/supabase'
 import { Waveform } from '../components/ui/waveform'
+import { SpeakerRecordingDetailModal } from '../components/speaker-recording-detail-modal'
 import type { Phrase } from '../types/database'
 
 const sans = { fontFamily: 'var(--font-body)', fontFeatureSettings: "'cv01','ss03'" }
@@ -27,6 +28,7 @@ interface PhraseStatus {
   /** Timestamp de soumission, pour détecter les recordings stuck */
   submittedAt?: number
 }
+
 
 interface SessionData {
   session: { id: string; project_id: string; speaker_name: string | null; status: string }
@@ -57,6 +59,7 @@ export function SpeakerRecordPage() {
   const [uploadError, setUploadError] = useState('')
   const [unseenRejections, setUnseenRejections] = useState(0)
   const [todayEarnings, setTodayEarnings] = useState(0)
+  const [detailModal, setDetailModal] = useState<{ phrase: Phrase; recordingId: string } | null>(null)
 
   const pendingChecks = useRef<{ recordingId: string; phraseId: string }[]>([])
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -67,7 +70,13 @@ export function SpeakerRecordPage() {
     const load = async () => {
       try {
         type SessionRow = { id: string; project_id: string; speaker_name: string | null; status: string; speaker_id: string | null }
-        type RecordingRow = { phrase_id: string }
+        type RecordingRow = {
+          id: string
+          phrase_id: string
+          processing_status: string
+          is_valid: boolean | null
+          rejection_reasons: string[] | null
+        }
         type ProjectRow = { name: string; rate_per_hour_fcfa: number; language_label: string | null }
 
         const { data: session, error: sErr } = await (supabase
@@ -81,7 +90,9 @@ export function SpeakerRecordPage() {
 
         const [{ data: phrases }, { data: recordings }, { data: project }] = await Promise.all([
           supabase.from('phrases').select('*').eq('project_id', session.project_id).order('position'),
-          supabase.from('recordings').select('phrase_id').eq('session_id', sessionId) as unknown as Promise<{ data: RecordingRow[] | null; error: unknown }>,
+          supabase.from('recordings')
+            .select('id, phrase_id, processing_status, is_valid, rejection_reasons')
+            .eq('session_id', sessionId) as unknown as Promise<{ data: RecordingRow[] | null; error: unknown }>,
           supabase.from('projects').select('name, rate_per_hour_fcfa, language_label').eq('id', session.project_id).single() as unknown as Promise<{ data: ProjectRow | null; error: unknown }>,
         ])
 
@@ -96,12 +107,22 @@ export function SpeakerRecordPage() {
         sessionDataRef.current = data
         setSessionData(data)
 
+        // Index des recordings par phrase_id pour récupérer ID + statut QC déjà connu
+        const recByPhrase = new Map<string, RecordingRow>()
+        for (const r of recordings ?? []) recByPhrase.set(r.phrase_id, r)
+
         const statuses: Record<string, PhraseStatus> = {}
         for (const phrase of data.phrases) {
-          statuses[phrase.id] = {
-            recorded: data.recorded_phrase_ids.includes(phrase.id),
-            recordingId: null, qcStatus: null, isValid: null, reasons: [],
-          }
+          const existing = recByPhrase.get(phrase.id)
+          statuses[phrase.id] = existing
+            ? {
+                recorded: true,
+                recordingId: existing.id,
+                qcStatus: existing.processing_status as PhraseStatus['qcStatus'],
+                isValid: existing.is_valid,
+                reasons: existing.rejection_reasons ?? [],
+              }
+            : { recorded: false, recordingId: null, qcStatus: null, isValid: null, reasons: [] }
         }
         setPhraseStatuses(statuses)
 
@@ -345,20 +366,20 @@ export function SpeakerRecordPage() {
   /* ---------- LOADING ---------- */
   if (view === 'loading') {
     return (
-      <div className="h-dvh flex flex-col items-center justify-center bg-[#08090a] gap-4">
+      <div className="h-dvh flex flex-col items-center justify-center bg-[var(--t-bg)] gap-4">
         <div
           className="w-12 h-12 rounded-md flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+            border: '1px solid var(--t-border)',
           }}
         >
-          <Mic className="w-5 h-5 text-[#d0d6e0]" strokeWidth={1.75} />
+          <Mic className="w-5 h-5 text-[var(--t-fg-2)]" strokeWidth={1.75} />
         </div>
-        <p className="text-[13px] text-[#8a8f98]" style={sans}>
+        <p className="text-[13px] text-[var(--t-fg-3)]" style={sans}>
           Chargement de la session…
         </p>
-        <Loader2 className="w-4 h-4 animate-spin text-[#62666d]" />
+        <Loader2 className="w-4 h-4 animate-spin text-[var(--t-fg-4)]" />
       </div>
     )
   }
@@ -366,7 +387,7 @@ export function SpeakerRecordPage() {
   /* ---------- ERROR ---------- */
   if (view === 'error') {
     return (
-      <div className="h-dvh flex flex-col items-center justify-center bg-[#08090a] px-6">
+      <div className="h-dvh flex flex-col items-center justify-center bg-[var(--t-bg)] px-6">
         <div
           className="w-12 h-12 rounded-md flex items-center justify-center mb-5"
           style={{
@@ -376,15 +397,15 @@ export function SpeakerRecordPage() {
         >
           <AlertCircle className="w-5 h-5 text-[#fca5a5]" strokeWidth={1.75} />
         </div>
-        <h1 className="text-[18px] text-[#f7f8f8] mb-2" style={{ ...sans, fontWeight: 590 }}>
+        <h1 className="text-[18px] text-[var(--t-fg)] mb-2" style={{ ...sans, fontWeight: 590 }}>
           Session inaccessible
         </h1>
-        <p className="text-[13px] text-[#8a8f98] text-center max-w-[28rem] leading-relaxed mb-5" style={sans}>
+        <p className="text-[13px] text-[var(--t-fg-3)] text-center max-w-[28rem] leading-relaxed mb-5" style={sans}>
           {errorMessage}
         </p>
         <button
           onClick={() => navigate('/speaker/dashboard')}
-          className="inline-flex items-center gap-1.5 h-[32px] px-3.5 text-[13px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+          className="inline-flex items-center gap-1.5 h-[32px] px-3.5 text-[13px] rounded-md text-[var(--t-fg-2)] hover:bg-[var(--t-surface-2)] transition-colors"
           style={{ ...sans, fontWeight: 510 }}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -397,7 +418,7 @@ export function SpeakerRecordPage() {
   /* ---------- DONE ---------- */
   if (view === 'done') {
     return (
-      <div className="h-dvh flex flex-col items-center justify-center bg-[#08090a] px-6 overflow-y-auto">
+      <div className="h-dvh flex flex-col items-center justify-center bg-[var(--t-bg)] px-6 overflow-y-auto">
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
           style={{
@@ -408,13 +429,13 @@ export function SpeakerRecordPage() {
           <CheckCircle2 className="w-7 h-7 text-[#10b981]" strokeWidth={1.75} />
         </div>
         <h1
-          className="text-[28px] text-[#f7f8f8] m-0 text-center"
+          className="text-[28px] text-[var(--t-fg)] m-0 text-center"
           style={{ ...sans, fontWeight: 510, letterSpacing: '-0.5px' }}
         >
           Session terminée
         </h1>
-        <p className="text-[14px] text-[#8a8f98] mt-2 text-center" style={sans}>
-          <span className="text-[#f7f8f8]" style={{ fontWeight: 510 }}>{totalPhrases} phrases</span> enregistrées.
+        <p className="text-[14px] text-[var(--t-fg-3)] mt-2 text-center" style={sans}>
+          <span className="text-[var(--t-fg)]" style={{ fontWeight: 510 }}>{totalPhrases} phrases</span> enregistrées.
         </p>
 
         {todayEarnings > 0 && (
@@ -452,13 +473,13 @@ export function SpeakerRecordPage() {
                 onClick={() => goTo(phrases.findIndex((ph) => ph.id === p.id))}
                 className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-[rgba(245,158,11,0.06)] transition-colors"
               >
-                <span className="text-[11px] text-[#62666d] w-8 shrink-0" style={mono}>
+                <span className="text-[11px] text-[var(--t-fg-4)] w-8 shrink-0" style={mono}>
                   #{p.position}
                 </span>
-                <span className="text-[12px] text-[#d0d6e0] truncate flex-1" style={sans}>
+                <span className="text-[12px] text-[var(--t-fg-2)] truncate flex-1" style={sans}>
                   {p.content}
                 </span>
-                <RotateCcw className="w-3 h-3 text-[#8a8f98] shrink-0" strokeWidth={1.75} />
+                <RotateCcw className="w-3 h-3 text-[var(--t-fg-3)] shrink-0" strokeWidth={1.75} />
               </button>
             ))}
           </div>
@@ -467,12 +488,12 @@ export function SpeakerRecordPage() {
         <div className="flex gap-2 mt-8">
           <button
             onClick={() => setView('list')}
-            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-[13px] rounded-md text-[#d0d6e0] transition-colors"
+            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-[13px] rounded-md text-[var(--t-fg-2)] transition-colors"
             style={{
               ...sans,
               fontWeight: 510,
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
             }}
           >
             <List className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -480,7 +501,7 @@ export function SpeakerRecordPage() {
           </button>
           <button
             onClick={() => navigate('/speaker/dashboard')}
-            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-[13px] rounded-md text-[#f7f8f8] transition-colors"
+            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-[13px] rounded-md text-[var(--t-fg)] transition-colors"
             style={{ ...sans, fontWeight: 510, background: '#5e6ad2' }}
           >
             Mon dashboard
@@ -494,21 +515,21 @@ export function SpeakerRecordPage() {
   /* ---------- LIST ---------- */
   if (view === 'list') {
     return (
-      <div className="h-dvh flex flex-col bg-[#08090a]">
-        <header className="flex items-center gap-3 h-[52px] px-5 border-b border-[rgba(255,255,255,0.05)] shrink-0">
+      <div className="h-dvh flex flex-col bg-[var(--t-bg)]">
+        <header className="flex items-center gap-3 h-[52px] px-5 border-b border-[var(--t-surface-active)] shrink-0">
           <button
             onClick={() => setView(totalRecorded >= totalPhrases ? 'done' : 'record')}
-            className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
             style={{ ...sans, fontWeight: 510 }}
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
             Retour
           </button>
-          <span className="text-[#3e3e44]">/</span>
-          <span className="text-[13px] text-[#f7f8f8] truncate flex-1" style={{ ...sans, fontWeight: 510 }}>
+          <span className="text-[var(--t-fg-5)]">/</span>
+          <span className="text-[13px] text-[var(--t-fg)] truncate flex-1" style={{ ...sans, fontWeight: 510 }}>
             {sessionData?.project.name}
           </span>
-          <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
+          <span className="text-[11px] text-[var(--t-fg-4)] tabular-nums" style={mono}>
             {totalRecorded}/{totalPhrases}
           </span>
         </header>
@@ -521,47 +542,71 @@ export function SpeakerRecordPage() {
             const isCurrent = idx === currentIndex
 
             let statusIcon: React.ReactNode
-            let statusColor = '#62666d'
+            let statusColor = 'var(--t-fg-4)'
             if (isRejected) { statusIcon = <AlertTriangle className="w-3 h-3" strokeWidth={2} />; statusColor = '#fbbf24' }
             else if (isValid) { statusIcon = <Check className="w-3 h-3" strokeWidth={2.5} />; statusColor = '#10b981' }
-            else if (isPending) { statusIcon = <Clock className="w-3 h-3" strokeWidth={2} />; statusColor = '#8a8f98' }
-            else if (status?.recorded) { statusIcon = <Check className="w-3 h-3" strokeWidth={2} />; statusColor = '#8a8f98' }
-            else { statusIcon = <span className="w-3 h-3 rounded-full border border-current" />; statusColor = '#62666d' }
+            else if (isPending) { statusIcon = <Clock className="w-3 h-3" strokeWidth={2} />; statusColor = 'var(--t-fg-3)' }
+            else if (status?.recorded) { statusIcon = <Check className="w-3 h-3" strokeWidth={2} />; statusColor = 'var(--t-fg-3)' }
+            else { statusIcon = <span className="w-3 h-3 rounded-full border border-current" />; statusColor = 'var(--t-fg-4)' }
 
+            const recordingId = status?.recordingId ?? null
             return (
-              <button
+              <div
                 key={phrase.id}
-                onClick={() => goTo(idx)}
-                className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-[rgba(255,255,255,0.025)] border-b border-[rgba(255,255,255,0.04)] transition-colors"
+                className="w-full flex items-center gap-3 px-5 py-3 text-left border-b border-[var(--t-surface-2)] transition-colors"
                 style={{ background: isCurrent ? 'rgba(113,112,255,0.06)' : 'transparent' }}
               >
-                <span className="text-[11px] text-[#62666d] w-10 shrink-0 tabular-nums" style={mono}>
-                  #{idx + 1}
-                </span>
-                <span style={{ color: statusColor }}>{statusIcon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[#f7f8f8] truncate" style={sans}>
-                    {phrase.content}
-                  </p>
-                  {isRejected && status?.reasons.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {status.reasons.map((code) => (
-                        <span
-                          key={code}
-                          className="text-[10px] text-[#fbbf24]"
-                          style={{ ...sans, fontWeight: 510 }}
-                        >
-                          {getRejectionInfo(code)?.label ?? code}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={1.75} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => goTo(idx)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-[11px] text-[var(--t-fg-4)] w-10 shrink-0 tabular-nums" style={mono}>
+                    #{idx + 1}
+                  </span>
+                  <span style={{ color: statusColor }}>{statusIcon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] text-[var(--t-fg)] truncate" style={sans}>
+                      {phrase.content}
+                    </p>
+                    {isRejected && status?.reasons.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {status.reasons.map((code) => (
+                          <span
+                            key={code}
+                            className="text-[10px] text-[#fbbf24]"
+                            style={{ ...sans, fontWeight: 510 }}
+                          >
+                            {getRejectionInfo(code)?.label ?? code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </button>
+                {recordingId ? (
+                  <button
+                    type="button"
+                    onClick={() => setDetailModal({ phrase, recordingId })}
+                    className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors shrink-0"
+                    title="Réécouter et voir le détail"
+                  >
+                    <Headphones className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </button>
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--t-fg-4)] shrink-0" strokeWidth={1.75} />
+                )}
+              </div>
             )
           })}
         </div>
+
+        <SpeakerRecordingDetailModal
+          open={detailModal !== null}
+          phrase={detailModal?.phrase ?? null}
+          recordingId={detailModal?.recordingId ?? null}
+          onClose={() => setDetailModal(null)}
+        />
       </div>
     )
   }
@@ -572,22 +617,22 @@ export function SpeakerRecordPage() {
   const isCurrentValid = currentStatus?.isValid === true
 
   return (
-    <div className="h-dvh flex flex-col bg-[#08090a] text-[#f7f8f8] overflow-hidden select-none">
+    <div className="h-dvh flex flex-col bg-[var(--t-bg)] text-[var(--t-fg)] overflow-hidden select-none">
       {/* Top bar */}
-      <header className="flex items-center gap-3 h-[52px] px-5 border-b border-[rgba(255,255,255,0.05)] shrink-0">
+      <header className="flex items-center gap-3 h-[52px] px-5 border-b border-[var(--t-surface-active)] shrink-0">
         <button
           onClick={() => navigate('/speaker/dashboard')}
-          className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
           style={{ ...sans, fontWeight: 510 }}
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
           Quitter
         </button>
-        <span className="text-[#3e3e44]">/</span>
-        <span className="text-[13px] text-[#f7f8f8] truncate" style={{ ...sans, fontWeight: 510 }}>
+        <span className="text-[var(--t-fg-5)]">/</span>
+        <span className="text-[13px] text-[var(--t-fg)] truncate" style={{ ...sans, fontWeight: 510 }}>
           {sessionData?.project.name}
         </span>
-        <span className="text-[11px] text-[#62666d] hidden sm:inline" style={sans}>
+        <span className="text-[11px] text-[var(--t-fg-4)] hidden sm:inline" style={sans}>
           {sessionData?.project.language_label ?? ''}
         </span>
 
@@ -607,7 +652,7 @@ export function SpeakerRecordPage() {
             </span>
           )}
           {sessionData?.project.rate_per_hour_fcfa != null && sessionData.project.rate_per_hour_fcfa > 0 && (
-            <span className="text-[11px] text-[#62666d] hidden sm:inline tabular-nums" style={mono}>
+            <span className="text-[11px] text-[var(--t-fg-4)] hidden sm:inline tabular-nums" style={mono}>
               {new Intl.NumberFormat('fr-SN').format(sessionData.project.rate_per_hour_fcfa)} FCFA/h
             </span>
           )}
@@ -617,9 +662,9 @@ export function SpeakerRecordPage() {
             style={{
               ...sans,
               fontWeight: 510,
-              color: '#d0d6e0',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'var(--t-fg-2)',
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
             }}
           >
             <List className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -627,7 +672,7 @@ export function SpeakerRecordPage() {
             {unseenRejections > 0 && (
               <span
                 className="min-w-[16px] h-[16px] px-1 rounded-full text-white text-[9px] tabular-nums flex items-center justify-center"
-                style={{ ...sans, fontWeight: 590, background: '#fbbf24', color: '#08090a' }}
+                style={{ ...sans, fontWeight: 590, background: '#fbbf24', color: 'var(--t-bg)' }}
               >
                 {unseenRejections}
               </span>
@@ -637,29 +682,29 @@ export function SpeakerRecordPage() {
       </header>
 
       {/* Progress bar pleine largeur */}
-      <div className="h-[3px] bg-[rgba(255,255,255,0.04)] shrink-0">
+      <div className="h-[3px] bg-[var(--t-surface-2)] shrink-0">
         <div
-          className="h-full bg-[#f7f8f8] transition-all duration-500 ease-out"
+          className="h-full bg-[var(--t-fg)] transition-all duration-500 ease-out"
           style={{ width: `${progressPct}%` }}
         />
       </div>
 
       {/* Meta row (compteur + pagination) */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(255,255,255,0.05)] shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--t-surface-active)] shrink-0">
         <div className="flex items-center gap-3">
           <span
-            className="text-[11px] text-[#62666d] uppercase"
+            className="text-[11px] text-[var(--t-fg-4)] uppercase"
             style={{ ...sans, fontWeight: 510, letterSpacing: '0.08em' }}
           >
             Phrase
           </span>
-          <span className="text-[13px] text-[#f7f8f8] tabular-nums" style={{ ...mono, fontWeight: 510 }}>
+          <span className="text-[13px] text-[var(--t-fg)] tabular-nums" style={{ ...mono, fontWeight: 510 }}>
             {currentIndex + 1}
           </span>
-          <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
+          <span className="text-[11px] text-[var(--t-fg-4)] tabular-nums" style={mono}>
             / {totalPhrases}
           </span>
-          <span className="text-[#3e3e44]">·</span>
+          <span className="text-[var(--t-fg-5)]">·</span>
           <span className="text-[11px] text-[#10b981] tabular-nums" style={mono}>
             {totalRecorded} enregistrées
           </span>
@@ -669,7 +714,7 @@ export function SpeakerRecordPage() {
           <button
             onClick={() => goTo(currentIndex - 1)}
             disabled={currentIndex === 0 || isRecording || isUploading}
-            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#8a8f98]"
+            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[var(--t-fg-3)]"
             aria-label="Précédente"
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -677,7 +722,7 @@ export function SpeakerRecordPage() {
           <button
             onClick={() => goTo(currentIndex + 1)}
             disabled={currentIndex >= totalPhrases - 1 || isRecording || isUploading}
-            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#8a8f98]"
+            className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[var(--t-fg-3)]"
             aria-label="Suivante"
           >
             <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -728,9 +773,9 @@ export function SpeakerRecordPage() {
                     style={{
                       ...sans,
                       fontWeight: 510,
-                      color: isStuck ? '#fbbf24' : '#8a8f98',
-                      background: isStuck ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${isStuck ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                      color: isStuck ? '#fbbf24' : 'var(--t-fg-3)',
+                      background: isStuck ? 'rgba(245,158,11,0.08)' : 'var(--t-surface-hover)',
+                      border: `1px solid ${isStuck ? 'rgba(245,158,11,0.22)' : 'var(--t-border)'}`,
                     }}
                   >
                     <Clock className="w-3 h-3" strokeWidth={2} />
@@ -744,9 +789,9 @@ export function SpeakerRecordPage() {
                         style={{
                           ...sans,
                           fontWeight: 510,
-                          color: '#d0d6e0',
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: 'var(--t-fg-2)',
+                          background: 'var(--t-surface-2)',
+                          border: '1px solid var(--t-border)',
                         }}
                       >
                         Relancer
@@ -774,7 +819,7 @@ export function SpeakerRecordPage() {
 
         {/* Phrase */}
         <p
-          className="max-w-[760px] text-center text-[#f7f8f8] leading-[1.2]"
+          className="max-w-[760px] text-center text-[var(--t-fg)] leading-[1.2]"
           style={{
             ...sans,
             fontSize: 'clamp(28px, 5vw, 42px)',
@@ -802,7 +847,7 @@ export function SpeakerRecordPage() {
       </div>
 
       {/* Zone basse : waveform + controls */}
-      <div className="border-t border-[rgba(255,255,255,0.05)] shrink-0">
+      <div className="border-t border-[var(--t-surface-active)] shrink-0">
         {/* Waveform (visible en enregistrement) */}
         {isRecording && (
           <div className="px-5 pt-4 pb-2">
@@ -814,14 +859,14 @@ export function SpeakerRecordPage() {
         {isUploading && (
           <div className="px-5 pt-3">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-[#8a8f98]" style={sans}>
+              <span className="text-[11px] text-[var(--t-fg-3)]" style={sans}>
                 Envoi en cours…
               </span>
-              <span className="text-[11px] text-[#d0d6e0] tabular-nums" style={mono}>
+              <span className="text-[11px] text-[var(--t-fg-2)] tabular-nums" style={mono}>
                 {uploadProgress}%
               </span>
             </div>
-            <div className="h-[3px] bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
+            <div className="h-[3px] bg-[var(--t-surface-2)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#7170ff] rounded-full transition-all"
                 style={{ width: `${uploadProgress}%` }}
@@ -837,7 +882,7 @@ export function SpeakerRecordPage() {
               <>
                 <span className="w-2 h-2 rounded-full bg-[#ef4444] animate-pulse" />
                 <span
-                  className="text-[15px] text-[#f7f8f8] tabular-nums"
+                  className="text-[15px] text-[var(--t-fg)] tabular-nums"
                   style={{ ...mono, fontWeight: 510 }}
                 >
                   {formatDuration(recorder.duration)}
@@ -845,7 +890,7 @@ export function SpeakerRecordPage() {
               </>
             )}
             {!isRecording && !isUploading && (
-              <span className="text-[11px] text-[#62666d]" style={mono}>
+              <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
                 {isCurrentRecorded ? '● enregistrée' : '○ prête'}
               </span>
             )}
@@ -857,8 +902,8 @@ export function SpeakerRecordPage() {
             {isCurrentRecorded && !isRecording && !isUploading && (
               <button
                 onClick={handleStart}
-                className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-[var(--t-fg-2)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors"
+                style={{ border: '1px solid var(--t-border)' }}
                 aria-label="Refaire"
                 title="Refaire"
               >
@@ -872,11 +917,11 @@ export function SpeakerRecordPage() {
               disabled={isUploading}
               className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
               style={{
-                background: isRecording ? '#ef4444' : '#f7f8f8',
-                color: isRecording ? '#f7f8f8' : '#08090a',
+                background: isRecording ? '#ef4444' : 'var(--t-fg)',
+                color: isRecording ? 'var(--t-fg)' : 'var(--t-bg)',
                 boxShadow: isRecording
                   ? '0 0 0 6px rgba(239,68,68,0.12), 0 0 0 12px rgba(239,68,68,0.06)'
-                  : '0 4px 16px -4px rgba(255,255,255,0.15)',
+                  : '0 4px 16px -4px var(--t-border-strong)',
               }}
               aria-label={isRecording ? "Arrêter l'enregistrement" : 'Commencer à enregistrer'}
             >
@@ -893,8 +938,8 @@ export function SpeakerRecordPage() {
             {isCurrentRecorded && !isCurrentRejected && !isRecording && !isUploading && currentIndex < totalPhrases - 1 && (
               <button
                 onClick={() => goTo(currentIndex + 1)}
-                className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-[#d0d6e0] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-[var(--t-fg-2)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)] transition-colors"
+                style={{ border: '1px solid var(--t-border)' }}
                 aria-label="Suivante"
                 title="Suivante"
               >
@@ -906,16 +951,16 @@ export function SpeakerRecordPage() {
           {/* Right : hint clavier */}
           <div className="w-[120px] text-right">
             <span
-              className="inline-flex items-center gap-1 text-[10px] text-[#62666d]"
+              className="inline-flex items-center gap-1 text-[10px] text-[var(--t-fg-4)]"
               style={{ ...sans, fontWeight: 510 }}
             >
               <kbd
                 className="inline-flex items-center justify-center min-w-[20px] h-[18px] px-1.5 rounded-sm text-[10px]"
                 style={{
                   ...mono,
-                  color: '#d0d6e0',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'var(--t-fg-2)',
+                  background: 'var(--t-surface-2)',
+                  border: '1px solid var(--t-border)',
                 }}
               >
                 Space

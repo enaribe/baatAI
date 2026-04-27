@@ -36,12 +36,12 @@ export function SpeakerInvitationsPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <Mail className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <Mail className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Invitations
         </span>
-        <span className="text-[11px] text-[#62666d] ml-1" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)] ml-1" style={mono}>
           {invitations.length}
         </span>
 
@@ -54,9 +54,9 @@ export function SpeakerInvitationsPage() {
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: filter === k ? '#f7f8f8' : '#8a8f98',
-                background: filter === k ? 'rgba(255,255,255,0.05)' : 'transparent',
-                border: `1px solid ${filter === k ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
+                color: filter === k ? 'var(--t-fg)' : 'var(--t-fg-3)',
+                background: filter === k ? 'var(--t-surface-active)' : 'transparent',
+                border: `1px solid ${filter === k ? 'var(--t-border)' : 'transparent'}`,
               }}
             >
               {k === 'all' ? 'Toutes' : k === 'pending' ? `En attente${pendingCount > 0 ? ` ${pendingCount}` : ''}` : k === 'accepted' ? 'Acceptées' : 'Terminées'}
@@ -68,31 +68,31 @@ export function SpeakerInvitationsPage() {
       {/* Subtitle */}
       <div className="px-5 lg:px-8 py-5">
         {pendingCount > 0 ? (
-          <p className="text-[13px] text-[#8a8f98]" style={sans}>
-            <span className="text-[#f7f8f8]" style={{ fontWeight: 510 }}>{pendingCount}</span>{' '}
+          <p className="text-[13px] text-[var(--t-fg-3)]" style={sans}>
+            <span className="text-[var(--t-fg)]" style={{ fontWeight: 510 }}>{pendingCount}</span>{' '}
             invitation{pendingCount > 1 ? 's' : ''} en attente de votre réponse
           </p>
         ) : (
-          <p className="text-[13px] text-[#8a8f98]" style={sans}>
+          <p className="text-[13px] text-[var(--t-fg-3)]" style={sans}>
             Toutes vos invitations reçues, triées par date
           </p>
         )}
       </div>
 
       {/* Section header */}
-      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
-        <ChevronDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
-        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[var(--t-surface-active)] bg-[var(--t-bg-subtle)]">
+        <ChevronDown className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />
+        <span className="text-[12px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           {filter === 'pending' ? 'En attente' : filter === 'accepted' ? 'Acceptées' : filter === 'done' ? 'Terminées' : 'Toutes'}
         </span>
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {filtered.length}
         </span>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+          <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState />
@@ -120,20 +120,20 @@ function InvitationRow({ inv }: { inv: Inv }) {
   return (
     <Link
       to={`/speaker/invitations/${inv.id}`}
-      className="group flex items-center gap-3 h-[48px] px-5 lg:px-8 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+      className="group flex items-center gap-3 h-[48px] px-5 lg:px-8 border-b border-[var(--t-surface-2)] hover:bg-[var(--t-surface)] transition-colors"
     >
       <StatusIcon status={status} />
       <span
-        className="flex-1 min-w-0 truncate text-[13px] text-[#f7f8f8]"
+        className="flex-1 min-w-0 truncate text-[13px] text-[var(--t-fg)]"
         style={{ ...sans, fontWeight: 510 }}
       >
         {inv.project?.name ?? '—'}
       </span>
-      <span className="text-[11px] text-[#8a8f98] hidden md:inline" style={sans}>
+      <span className="text-[11px] text-[var(--t-fg-3)] hidden md:inline" style={sans}>
         {inv.project?.language_label ?? '—'}
       </span>
       {rate > 0 && (
-        <span className="text-[11px] text-[#d0d6e0] tabular-nums" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-2)] tabular-nums" style={mono}>
           {new Intl.NumberFormat('fr-SN').format(rate)} FCFA/h
         </span>
       )}
@@ -152,13 +152,13 @@ function InvitationRow({ inv }: { inv: Inv }) {
           {days}j
         </span>
       )}
-      <span className="text-[11px] text-[#62666d] w-[56px] text-right hidden sm:inline" style={mono}>
+      <span className="text-[11px] text-[var(--t-fg-4)] w-[56px] text-right hidden sm:inline" style={mono}>
         {new Date(status === 'pending' ? inv.expires_at : inv.created_at).toLocaleDateString('fr-FR', {
           day: 'numeric',
           month: 'short',
         })}
       </span>
-      <ChevronRight className="w-3.5 h-3.5 text-[#62666d] group-hover:text-[#f7f8f8] group-hover:translate-x-0.5 transition-all" strokeWidth={1.75} />
+      <ChevronRight className="w-3.5 h-3.5 text-[var(--t-fg-4)] group-hover:text-[var(--t-fg)] group-hover:translate-x-0.5 transition-all" strokeWidth={1.75} />
     </Link>
   )
 }
@@ -166,8 +166,8 @@ function InvitationRow({ inv }: { inv: Inv }) {
 function StatusIcon({ status }: { status: InvitationStatus }) {
   if (status === 'pending') return <Circle className="w-3.5 h-3.5 text-[#fbbf24] shrink-0" strokeWidth={2} />
   if (status === 'accepted') return <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981] shrink-0" strokeWidth={2} />
-  if (status === 'declined') return <XCircle className="w-3.5 h-3.5 text-[#8a8f98] shrink-0" strokeWidth={2} />
-  return <Circle className="w-3.5 h-3.5 text-[#62666d] shrink-0" strokeWidth={2} />
+  if (status === 'declined') return <XCircle className="w-3.5 h-3.5 text-[var(--t-fg-3)] shrink-0" strokeWidth={2} />
+  return <Circle className="w-3.5 h-3.5 text-[var(--t-fg-4)] shrink-0" strokeWidth={2} />
 }
 
 function EmptyState() {
@@ -176,16 +176,16 @@ function EmptyState() {
       <div
         className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+          border: '1px solid var(--t-border)',
         }}
       >
-        <Mail className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+        <Mail className="w-5 h-5 text-[var(--t-fg-3)]" strokeWidth={1.5} />
       </div>
-      <h3 className="text-[16px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+      <h3 className="text-[16px] text-[var(--t-fg)] m-0" style={{ ...sans, fontWeight: 590 }}>
         Aucune invitation pour l'instant
       </h3>
-      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+      <p className="text-[13px] text-[var(--t-fg-3)] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
         Les clients peuvent vous inviter sur leurs projets. Complétez votre profil pour augmenter vos chances.
       </p>
     </div>

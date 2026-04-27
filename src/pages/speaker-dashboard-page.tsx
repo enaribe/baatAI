@@ -41,21 +41,21 @@ export function SpeakerDashboardPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <Mic className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <Mic className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Accueil
         </span>
       </header>
 
       <div className="px-5 lg:px-8 py-7">
         <h1
-          className="text-[24px] text-[#f7f8f8] m-0"
+          className="text-[24px] text-[var(--t-fg)] m-0"
           style={{ ...sans, fontWeight: 510, letterSpacing: '-0.3px' }}
         >
           Bonjour, {firstName}
         </h1>
-        <p className="text-[13px] text-[#8a8f98] mt-1" style={sans}>
+        <p className="text-[13px] text-[var(--t-fg-3)] mt-1" style={sans}>
           Prêt à enregistrer aujourd'hui ?
         </p>
 
@@ -92,13 +92,13 @@ export function SpeakerDashboardPage() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Inbox className="w-3.5 h-3.5 text-[#fbbf24]" strokeWidth={1.75} />
-                <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+                <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
                   {pendingInvitations.length} invitation{pendingInvitations.length > 1 ? 's' : ''} en attente
                 </span>
               </div>
               <Link
                 to="/speaker/invitations"
-                className="inline-flex items-center gap-1 text-[12px] text-[#d0d6e0] hover:text-[#f7f8f8] transition-colors"
+                className="inline-flex items-center gap-1 text-[12px] text-[var(--t-fg-2)] hover:text-[var(--t-fg)] transition-colors"
                 style={sans}
               >
                 Voir tout
@@ -112,14 +112,14 @@ export function SpeakerDashboardPage() {
                   className="flex items-center gap-3 py-1.5 text-[12px]"
                   style={sans}
                 >
-                  <span className="text-[#d0d6e0] truncate flex-1" style={{ fontWeight: 510 }}>
+                  <span className="text-[var(--t-fg-2)] truncate flex-1" style={{ fontWeight: 510 }}>
                     {inv.project?.name ?? '—'}
                   </span>
-                  <span className="text-[11px] text-[#62666d]" style={sans}>
+                  <span className="text-[11px] text-[var(--t-fg-4)]" style={sans}>
                     {inv.project?.language_label ?? ''}
                   </span>
                   {inv.project?.rate_per_hour_fcfa != null && inv.project.rate_per_hour_fcfa > 0 && (
-                    <span className="text-[11px] text-[#f7f8f8] tabular-nums" style={mono}>
+                    <span className="text-[11px] text-[var(--t-fg)] tabular-nums" style={mono}>
                       {new Intl.NumberFormat('fr-SN').format(inv.project.rate_per_hour_fcfa)} FCFA/h
                     </span>
                   )}
@@ -131,18 +131,18 @@ export function SpeakerDashboardPage() {
       )}
 
       {/* Section header avec toggle vue */}
-      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)]">
-        <span className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <div className="flex items-center gap-2 px-5 lg:px-8 h-[36px] border-t border-[var(--t-surface-active)] bg-[var(--t-bg-subtle)]">
+        <span className="text-[12px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Mes projets en cours
         </span>
-        <span className="text-[11px] text-[#62666d]" style={mono}>
+        <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
           {activeProjects.length}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <ViewToggle mode={viewMode} onChange={setView} />
           <Link
             to="/speaker/projects"
-            className="inline-flex items-center gap-1 h-[22px] px-2 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] rounded-sm hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+            className="inline-flex items-center gap-1 h-[22px] px-2 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] rounded-sm hover:bg-[var(--t-surface-2)] transition-colors"
             style={sans}
           >
             <Compass className="w-3 h-3" strokeWidth={1.75} />
@@ -159,8 +159,8 @@ export function SpeakerDashboardPage() {
                 key={i}
                 className="h-[160px] rounded-[10px] animate-pulse"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--t-surface)',
+                  border: '1px solid var(--t-surface-2-hover)',
                 }}
               />
             ))}
@@ -168,7 +168,7 @@ export function SpeakerDashboardPage() {
         ) : (
           <div className="px-5 lg:px-8 pt-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-[60px] mb-1 rounded-sm animate-pulse bg-[rgba(255,255,255,0.02)]" />
+              <div key={i} className="h-[60px] mb-1 rounded-sm animate-pulse bg-[var(--t-surface)]" />
             ))}
           </div>
         )
@@ -198,8 +198,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
     <div
       className="inline-flex items-center rounded-md"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
       }}
     >
       <button
@@ -207,8 +207,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
         title="Vue grille"
         className="w-[24px] h-[22px] flex items-center justify-center rounded-md transition-colors"
         style={{
-          color: mode === 'grid' ? '#f7f8f8' : '#8a8f98',
-          background: mode === 'grid' ? 'rgba(255,255,255,0.06)' : 'transparent',
+          color: mode === 'grid' ? 'var(--t-fg)' : 'var(--t-fg-3)',
+          background: mode === 'grid' ? 'var(--t-surface-2-hover)' : 'transparent',
         }}
       >
         <LayoutGrid className="w-3 h-3" strokeWidth={1.75} />
@@ -218,8 +218,8 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (v: ViewMode
         title="Vue liste"
         className="w-[24px] h-[22px] flex items-center justify-center rounded-md transition-colors"
         style={{
-          color: mode === 'list' ? '#f7f8f8' : '#8a8f98',
-          background: mode === 'list' ? 'rgba(255,255,255,0.06)' : 'transparent',
+          color: mode === 'list' ? 'var(--t-fg)' : 'var(--t-fg-3)',
+          background: mode === 'list' ? 'var(--t-surface-2-hover)' : 'transparent',
         }}
       >
         <ListIcon className="w-3 h-3" strokeWidth={1.75} />
@@ -244,16 +244,16 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
       to={`/speaker/record/${project.session_id}`}
       className="group flex flex-col rounded-[10px] overflow-hidden transition-all"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.035)'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+        e.currentTarget.style.background = 'var(--t-surface-hover)'
+        e.currentTarget.style.borderColor = 'var(--t-border-strong)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+        e.currentTarget.style.background = 'var(--t-surface)'
+        e.currentTarget.style.borderColor = 'var(--t-border)'
       }}
     >
       {/* Preview */}
@@ -262,7 +262,7 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
         style={{
           background:
             'linear-gradient(180deg, rgba(113,112,255,0.05) 0%, rgba(255,255,255,0) 100%)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--t-surface-2-hover)',
         }}
       >
         <StaticWaveform seed={project.session_id} />
@@ -273,13 +273,13 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
           style={{
             ...sans,
             fontWeight: 510,
-            color: '#7170ff',
-            background: 'rgba(8,9,10,0.7)',
-            border: '1px solid rgba(113,112,255,0.35)',
+            color: 'var(--t-accent-text)',
+            background: 'var(--t-accent-muted-bg)',
+            border: '1px solid var(--t-accent-muted-border)',
             backdropFilter: 'blur(8px)',
           }}
         >
-          <Play className="w-2.5 h-2.5 ml-0.5 fill-[#7170ff]" strokeWidth={0} />
+          <Play className="w-2.5 h-2.5 ml-0.5" strokeWidth={0} style={{ fill: 'var(--t-accent-text)' }} />
           En cours
         </span>
 
@@ -289,9 +289,9 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
           style={{
             ...sans,
             fontWeight: 510,
-            color: project.rate_per_hour_fcfa > 0 ? '#f7f8f8' : '#8a8f98',
-            background: 'rgba(8,9,10,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            color: project.rate_per_hour_fcfa > 0 ? 'var(--t-fg)' : 'var(--t-fg-3)',
+            background: 'var(--t-surface-active)',
+            border: '1px solid var(--t-border)',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -300,7 +300,7 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
 
         {/* Progression bas-gauche */}
         <span
-          className="absolute bottom-2 left-3 text-[10px] text-[#62666d] tabular-nums"
+          className="absolute bottom-2 left-3 text-[10px] text-[var(--t-fg-4)] tabular-nums"
           style={mono}
         >
           {project.recorded_phrases}/{project.total_phrases}
@@ -311,32 +311,32 @@ function ActiveCard({ project }: { project: ActiveSpeakerProject }) {
       <div className="flex flex-col gap-2.5 p-3.5">
         <div className="flex items-start gap-2 min-w-0">
           <p
-            className="text-[13px] text-[#f7f8f8] truncate flex-1 group-hover:text-white transition-colors"
+            className="text-[13px] text-[var(--t-fg)] truncate flex-1 transition-colors"
             style={{ ...sans, fontWeight: 510, letterSpacing: '-0.1px' }}
             title={project.project_name}
           >
             {project.project_name}
           </p>
           <ArrowRight
-            className="w-3.5 h-3.5 text-[#62666d] shrink-0 group-hover:text-[#f7f8f8] group-hover:translate-x-0.5 transition-all"
+            className="w-3.5 h-3.5 text-[var(--t-fg-4)] shrink-0 group-hover:text-[var(--t-fg)] group-hover:translate-x-0.5 transition-all"
             strokeWidth={1.75}
           />
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-[#8a8f98]" style={sans}>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--t-fg-3)]" style={sans}>
           <span>{project.language_label ?? project.target_language}</span>
-          <span className="text-[#3e3e44]">·</span>
+          <span className="text-[var(--t-fg-5)]">·</span>
           <span style={mono}>Reprendre</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-[3px] bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+          <div className="flex-1 h-[3px] bg-[var(--t-surface-2-hover)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#f7f8f8] rounded-full transition-all duration-500"
+              className="h-full bg-[var(--t-fg)] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[10px] text-[#d0d6e0] tabular-nums shrink-0" style={mono}>
+          <span className="text-[10px] text-[var(--t-fg-2)] tabular-nums shrink-0" style={mono}>
             {progress}%
           </span>
         </div>
@@ -359,7 +359,7 @@ function ActiveRow({ project }: { project: ActiveSpeakerProject }) {
   return (
     <Link
       to={`/speaker/record/${project.session_id}`}
-      className="group flex items-center gap-3 px-5 lg:px-8 py-3 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+      className="group flex items-center gap-3 px-5 lg:px-8 py-3 border-b border-[var(--t-surface-2)] hover:bg-[var(--t-surface)] transition-colors"
     >
       <span
         className="inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"
@@ -374,33 +374,33 @@ function ActiveRow({ project }: { project: ActiveSpeakerProject }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span
-            className="text-[13px] text-[#f7f8f8] truncate"
+            className="text-[13px] text-[var(--t-fg)] truncate"
             style={{ ...sans, fontWeight: 510 }}
           >
             {project.project_name}
           </span>
-          <span className="text-[11px] text-[#62666d]" style={sans}>
+          <span className="text-[11px] text-[var(--t-fg-4)]" style={sans}>
             {project.language_label ?? project.target_language}
           </span>
         </div>
         <div className="flex items-center gap-3 mt-1.5">
-          <div className="flex-1 max-w-[200px] h-[3px] bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+          <div className="flex-1 max-w-[200px] h-[3px] bg-[var(--t-surface-2-hover)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#f7f8f8] rounded-full transition-all"
+              className="h-full bg-[var(--t-fg)] rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[11px] text-[#62666d] tabular-nums" style={mono}>
+          <span className="text-[11px] text-[var(--t-fg-4)] tabular-nums" style={mono}>
             {project.recorded_phrases}/{project.total_phrases} · {progress}%
           </span>
         </div>
       </div>
 
-      <span className="text-[11px] text-[#d0d6e0] tabular-nums hidden sm:inline" style={mono}>
+      <span className="text-[11px] text-[var(--t-fg-2)] tabular-nums hidden sm:inline" style={mono}>
         {rateDisplay}
       </span>
 
-      <ArrowRight className="w-3.5 h-3.5 text-[#62666d] group-hover:text-[#f7f8f8] group-hover:translate-x-0.5 transition-all" strokeWidth={1.75} />
+      <ArrowRight className="w-3.5 h-3.5 text-[var(--t-fg-4)] group-hover:text-[var(--t-fg)] group-hover:translate-x-0.5 transition-all" strokeWidth={1.75} />
     </Link>
   )
 }
@@ -416,14 +416,14 @@ function StatInline({
 }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      {icon && <span className="text-[#8a8f98]">{icon}</span>}
+      {icon && <span className="text-[var(--t-fg-3)]">{icon}</span>}
       <span
-        className="text-[15px] text-[#f7f8f8] tabular-nums"
+        className="text-[15px] text-[var(--t-fg)] tabular-nums"
         style={{ ...sans, fontWeight: 590 }}
       >
         {value}
       </span>
-      <span className="text-[12px] text-[#62666d]" style={sans}>
+      <span className="text-[12px] text-[var(--t-fg-4)]" style={sans}>
         {label}
       </span>
     </div>
@@ -431,7 +431,7 @@ function StatInline({
 }
 
 function StatSep() {
-  return <span className="w-px h-3 bg-[rgba(255,255,255,0.08)]" />
+  return <span className="w-px h-3 bg-[var(--t-border)]" />
 }
 
 function EmptyState() {
@@ -440,19 +440,19 @@ function EmptyState() {
       <div
         className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+          border: '1px solid var(--t-border)',
         }}
       >
-        <Clock className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+        <Clock className="w-5 h-5 text-[var(--t-fg-3)]" strokeWidth={1.5} />
       </div>
       <h3
-        className="text-[16px] text-[#f7f8f8] m-0"
+        className="text-[16px] text-[var(--t-fg)] m-0"
         style={{ ...sans, fontWeight: 590, letterSpacing: '-0.2px' }}
       >
         Aucun projet en cours
       </h3>
-      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+      <p className="text-[13px] text-[var(--t-fg-3)] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
         Parcourez les projets disponibles pour commencer à enregistrer votre voix.
       </p>
       <Link

@@ -73,7 +73,7 @@ export function SpeakerProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
       </div>
     )
   }
@@ -84,9 +84,9 @@ export function SpeakerProfilePage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <User className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <User className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Mon profil
         </span>
         {profile?.is_certified && (
@@ -136,9 +136,9 @@ export function SpeakerProfilePage() {
                         style={{
                           ...sans,
                           fontWeight: 510,
-                          color: on ? '#f7f8f8' : '#d0d6e0',
-                          background: on ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                          border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                          color: on ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                          background: on ? 'var(--t-surface-2-hover)' : 'var(--t-surface)',
+                          border: `1px solid ${on ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                         }}
                       >
                         {lbl}
@@ -168,8 +168,8 @@ export function SpeakerProfilePage() {
                       key={code}
                       className="rounded-md p-3"
                       style={{
-                        background: on ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${on ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)'}`,
+                        background: on ? 'var(--t-surface-hover)' : 'var(--t-surface)',
+                        border: `1px solid ${on ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                       }}
                     >
                       <button
@@ -179,19 +179,19 @@ export function SpeakerProfilePage() {
                         <span
                           className="w-4 h-4 rounded-sm flex items-center justify-center shrink-0"
                           style={{
-                            border: `1.5px solid ${on ? '#f7f8f8' : 'rgba(255,255,255,0.2)'}`,
-                            background: on ? '#f7f8f8' : 'transparent',
+                            border: `1.5px solid ${on ? 'var(--t-fg)' : 'var(--t-border-strong)'}`,
+                            background: on ? 'var(--t-fg)' : 'transparent',
                           }}
                         >
-                          {on && <Check className="w-2.5 h-2.5" strokeWidth={3} style={{ color: '#08090a' }} />}
+                          {on && <Check className="w-2.5 h-2.5" strokeWidth={3} style={{ color: 'var(--t-bg)' }} />}
                         </span>
                         <span
-                          className="text-[13px] text-[#f7f8f8]"
+                          className="text-[13px] text-[var(--t-fg)]"
                           style={{ ...sans, fontWeight: 510 }}
                         >
                           {lang.label}
                         </span>
-                        <span className="ml-auto text-[10px] text-[#62666d]" style={mono}>
+                        <span className="ml-auto text-[10px] text-[var(--t-fg-4)]" style={mono}>
                           {on ? `${dialectsForLang.length}/${lang.dialects.length}` : ''}
                         </span>
                       </button>
@@ -207,9 +207,9 @@ export function SpeakerProfilePage() {
                                 style={{
                                   ...sans,
                                   fontWeight: 510,
-                                  color: activeD ? '#f7f8f8' : '#d0d6e0',
-                                  background: activeD ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
-                                  border: `1px solid ${activeD ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                                  color: activeD ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                                  background: activeD ? 'var(--t-border)' : 'var(--t-surface)',
+                                  border: `1px solid ${activeD ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                                 }}
                               >
                                 {d}
@@ -229,15 +229,15 @@ export function SpeakerProfilePage() {
               <div
                 className="rounded-md px-3 py-2.5"
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--t-surface)',
+                  border: '1px solid var(--t-border)',
                 }}
               >
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value.slice(0, 400))}
                   placeholder="Ex : Journaliste radio à Dakar, locuteur natif wolof, 12 ans d'expérience en voix-off."
-                  className="w-full bg-transparent border-0 outline-none text-[#f7f8f8] text-[14px] resize-y"
+                  className="w-full bg-transparent border-0 outline-none text-[var(--t-fg)] text-[14px] resize-y"
                   style={{
                     ...sans,
                     lineHeight: 1.5,
@@ -245,7 +245,7 @@ export function SpeakerProfilePage() {
                   }}
                 />
               </div>
-              <p className="text-[11px] text-[#62666d] text-right mt-1.5 tabular-nums" style={mono}>
+              <p className="text-[11px] text-[var(--t-fg-4)] text-right mt-1.5 tabular-nums" style={mono}>
                 {bio.length}/400
               </p>
             </Section>
@@ -266,10 +266,10 @@ export function SpeakerProfilePage() {
               className="sticky bottom-4 flex items-center justify-between gap-3 px-4 py-3 rounded-md backdrop-blur-md"
               style={{
                 background: 'rgba(15,16,17,0.9)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--t-border)',
               }}
             >
-              <p className="text-[12px] text-[#8a8f98]" style={sans}>
+              <p className="text-[12px] text-[var(--t-fg-3)]" style={sans}>
                 {saved ? 'Enregistré' : 'Modifications non enregistrées'}
               </p>
               <button
@@ -279,7 +279,7 @@ export function SpeakerProfilePage() {
                 style={{
                   ...sans,
                   fontWeight: 510,
-                  color: '#f7f8f8',
+                  color: 'var(--t-fg)',
                   background: saved ? 'rgba(16,185,129,0.22)' : '#5e6ad2',
                 }}
               >
@@ -301,15 +301,15 @@ export function SpeakerProfilePage() {
             <div
               className="rounded-[10px] p-4"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
               }}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-[#f7f8f8]"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--t-fg)]"
                   style={{
-                    background: '#3e3e44',
+                    background: 'var(--t-fg-5)',
                     ...sans,
                     fontSize: 14,
                     fontWeight: 590,
@@ -319,12 +319,12 @@ export function SpeakerProfilePage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p
-                    className="text-[13px] text-[#f7f8f8] truncate"
+                    className="text-[13px] text-[var(--t-fg)] truncate"
                     style={{ ...sans, fontWeight: 510 }}
                   >
                     {fullName}
                   </p>
-                  <p className="text-[11px] text-[#62666d] truncate" style={mono}>
+                  <p className="text-[11px] text-[var(--t-fg-4)] truncate" style={mono}>
                     {user?.email}
                   </p>
                 </div>
@@ -335,8 +335,8 @@ export function SpeakerProfilePage() {
             <div
               className="rounded-[10px]"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-border)',
               }}
             >
               <StatRow label="Enregistrements" value={String(profile?.total_recordings ?? 0)} />
@@ -361,10 +361,10 @@ export function SpeakerProfilePage() {
               <div className="flex items-start gap-2 mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 text-[#fca5a5] shrink-0 mt-0.5" strokeWidth={1.75} />
                 <div>
-                  <p className="text-[12px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+                  <p className="text-[12px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
                     Supprimer le compte
                   </p>
-                  <p className="text-[11px] text-[#8a8f98] mt-1 leading-relaxed" style={sans}>
+                  <p className="text-[11px] text-[var(--t-fg-3)] mt-1 leading-relaxed" style={sans}>
                     Cette action est irréversible.
                   </p>
                 </div>
@@ -398,7 +398,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section>
       <div
-        className="text-[11px] text-[#62666d] uppercase mb-3"
+        className="text-[11px] text-[var(--t-fg-4)] uppercase mb-3"
         style={{ ...sans, fontWeight: 510, letterSpacing: '0.04em' }}
       >
         {title}
@@ -412,7 +412,7 @@ function FieldBlock({ label, children }: { label: string; children: React.ReactN
   return (
     <div>
       <label
-        className="block text-[12px] text-[#d0d6e0] mb-1.5"
+        className="block text-[12px] text-[var(--t-fg-2)] mb-1.5"
         style={{ ...sans, fontWeight: 510 }}
       >
         {label}
@@ -429,7 +429,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full h-[34px] px-3 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.22)] transition-colors"
+      className="w-full h-[34px] px-3 text-[14px] text-[var(--t-fg)] placeholder:text-[var(--t-fg-4)] rounded-md bg-[var(--t-surface)] border border-[var(--t-border)] focus:outline-none focus:border-[var(--t-border-strong)] transition-colors"
       style={sans}
     />
   )
@@ -440,9 +440,9 @@ function StatRow({ label, value, icon }: { label: string; value: string; icon?: 
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center gap-1.5">
         {icon}
-        <span className="text-[12px] text-[#8a8f98]" style={sans}>{label}</span>
+        <span className="text-[12px] text-[var(--t-fg-3)]" style={sans}>{label}</span>
       </div>
-      <span className="text-[14px] text-[#f7f8f8] tabular-nums" style={{ ...sans, fontWeight: 590 }}>
+      <span className="text-[14px] text-[var(--t-fg)] tabular-nums" style={{ ...sans, fontWeight: 590 }}>
         {value}
       </span>
     </div>
@@ -450,5 +450,5 @@ function StatRow({ label, value, icon }: { label: string; value: string; icon?: 
 }
 
 function StatDivider() {
-  return <div className="h-px mx-4" style={{ background: 'rgba(255,255,255,0.05)' }} />
+  return <div className="h-px mx-4" style={{ background: 'var(--t-surface-active)' }} />
 }

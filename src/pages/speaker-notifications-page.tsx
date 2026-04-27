@@ -48,7 +48,7 @@ function buildDisplay(n: Notification): NotifDisplay {
       body: `${(p.speaker_name as string) ?? 'Un locuteur'} a accepté votre invitation sur ${projectName}`,
     },
     invitation_declined: {
-      icon: <X {...iconProps} className="w-3.5 h-3.5 text-[#8a8f98]" strokeWidth={1.75} />,
+      icon: <X {...iconProps} className="w-3.5 h-3.5 text-[var(--t-fg-3)]" strokeWidth={1.75} />,
       title: 'Invitation déclinée',
       body: `${(p.speaker_name as string) ?? 'Un locuteur'} a décliné votre invitation sur ${projectName}`,
     },
@@ -65,7 +65,7 @@ function buildDisplay(n: Notification): NotifDisplay {
   }
 
   return map[n.type] ?? {
-    icon: <Bell {...iconProps} className="w-3.5 h-3.5 text-[#8a8f98]" strokeWidth={1.75} />,
+    icon: <Bell {...iconProps} className="w-3.5 h-3.5 text-[var(--t-fg-3)]" strokeWidth={1.75} />,
     title: 'Notification',
     body: '',
   }
@@ -121,9 +121,9 @@ function Inner() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <Bell className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <Bell className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Notifications
         </span>
         {unreadCount > 0 && (
@@ -137,7 +137,7 @@ function Inner() {
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#8a8f98] hover:text-[#f7f8f8] transition-colors"
+            className="ml-auto inline-flex items-center gap-1 text-[12px] text-[var(--t-fg-3)] hover:text-[var(--t-fg)] transition-colors"
             style={sans}
           >
             <CheckCheck className="w-3 h-3" strokeWidth={1.75} />
@@ -155,7 +155,7 @@ function Inner() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+          <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
         </div>
       ) : notifications.length === 0 ? (
         <EmptyState />
@@ -166,7 +166,7 @@ function Inner() {
             const isUnread = !n.read_at
 
             const content = (
-              <div className="flex items-center gap-3 h-[56px] px-5 lg:px-8 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors">
+              <div className="flex items-center gap-3 h-[56px] px-5 lg:px-8 border-b border-[var(--t-surface-2)] hover:bg-[var(--t-surface)] transition-colors">
                 {isUnread ? (
                   <Circle className="w-1.5 h-1.5 shrink-0 fill-[#7170ff] text-[#7170ff]" strokeWidth={0} />
                 ) : (
@@ -175,27 +175,27 @@ function Inner() {
                 <span
                   className="w-7 h-7 flex items-center justify-center rounded-md shrink-0"
                   style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    background: 'var(--t-surface-2)',
+                    border: '1px solid var(--t-surface-active)',
                   }}
                 >
                   {d.icon}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p
-                    className="text-[13px] text-[#f7f8f8] truncate"
+                    className="text-[13px] text-[var(--t-fg)] truncate"
                     style={{ ...sans, fontWeight: isUnread ? 510 : 400 }}
                   >
                     {d.title}
                   </p>
-                  <p className="text-[11px] text-[#8a8f98] truncate" style={sans}>
+                  <p className="text-[11px] text-[var(--t-fg-3)] truncate" style={sans}>
                     {d.body}
                   </p>
                 </div>
-                <span className="text-[11px] text-[#62666d] shrink-0 hidden sm:inline" style={mono}>
+                <span className="text-[11px] text-[var(--t-fg-4)] shrink-0 hidden sm:inline" style={mono}>
                   {relativeTime(n.created_at)}
                 </span>
-                {d.href && <ChevronRight className="w-3.5 h-3.5 text-[#62666d]" strokeWidth={1.75} />}
+                {d.href && <ChevronRight className="w-3.5 h-3.5 text-[var(--t-fg-4)]" strokeWidth={1.75} />}
               </div>
             )
 
@@ -234,16 +234,16 @@ function EmptyState() {
       <div
         className="w-12 h-12 rounded-[10px] flex items-center justify-center mb-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, var(--t-border), var(--t-surface))',
+          border: '1px solid var(--t-border)',
         }}
       >
-        <Bell className="w-5 h-5 text-[#8a8f98]" strokeWidth={1.5} />
+        <Bell className="w-5 h-5 text-[var(--t-fg-3)]" strokeWidth={1.5} />
       </div>
-      <h3 className="text-[16px] text-[#f7f8f8] m-0" style={{ ...sans, fontWeight: 590 }}>
+      <h3 className="text-[16px] text-[var(--t-fg)] m-0" style={{ ...sans, fontWeight: 590 }}>
         Tout est calme
       </h3>
-      <p className="text-[13px] text-[#8a8f98] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
+      <p className="text-[13px] text-[var(--t-fg-3)] mt-2 max-w-[380px]" style={{ ...sans, lineHeight: 1.55 }}>
         Vous serez prévenu ici des invitations et mises à jour sur vos projets.
       </p>
     </div>

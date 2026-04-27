@@ -293,21 +293,20 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
 
   return (
     <Link
-      data-theme="dark"
       to={`/project/${project.id}`}
       className="group flex flex-col rounded-[10px] overflow-hidden transition-all"
       style={{
-        background: '#0f1011',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: '#f7f8f8',
+        background: 'var(--t-surface)',
+        border: '1px solid var(--t-border)',
+        color: 'var(--t-fg)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#141516'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+        e.currentTarget.style.background = 'var(--t-surface-hover)'
+        e.currentTarget.style.borderColor = 'var(--t-border-strong)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = '#0f1011'
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+        e.currentTarget.style.background = 'var(--t-surface)'
+        e.currentTarget.style.borderColor = 'var(--t-border)'
       }}
     >
       {/* Preview zone : waveform statique + badge usage */}
@@ -315,8 +314,8 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
         className="relative aspect-[5/2] overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+            'linear-gradient(180deg, var(--t-surface-hover) 0%, transparent 100%)',
+          borderBottom: '1px solid var(--t-border-subtle)',
         }}
       >
         {/* Waveform décorative statique — barres en gradient blanc→gris */}
@@ -328,9 +327,9 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
           style={{
             ...sans,
             fontWeight: 510,
-            color: '#d0d6e0',
-            background: 'rgba(8,9,10,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'var(--t-fg-2)',
+            background: 'var(--t-surface-active)',
+            border: '1px solid var(--t-border)',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -339,7 +338,7 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
 
         {/* Code en bas-gauche */}
         <span
-          className="absolute bottom-2 left-3 text-[10px] text-[#62666d]"
+          className="absolute bottom-2 left-3 text-[10px] text-[var(--t-fg-4)]"
           style={mono}
         >
           {code}
@@ -352,7 +351,7 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
         <div className="flex items-start gap-2 min-w-0">
           <s.Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" strokeWidth={2} style={{ color: s.color }} />
           <p
-            className="text-[13px] text-[#f7f8f8] truncate flex-1 group-hover:text-white transition-colors"
+            className="text-[13px] text-[var(--t-fg)] truncate flex-1 transition-colors"
             style={{ ...sans, fontWeight: 510, letterSpacing: '-0.1px' }}
             title={project.name}
           >
@@ -361,30 +360,30 @@ function ProjectCard({ project }: { project: ProjectWithStats }) {
         </div>
 
         {/* Méta row */}
-        <div className="flex items-center gap-1.5 text-[11px] text-[#8a8f98]" style={sans}>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--t-fg-3)]" style={sans}>
           <span>{project.language_label ?? project.target_language}</span>
-          <span className="text-[#3e3e44]">·</span>
+          <span className="text-[var(--t-fg-5)]">·</span>
           <span style={mono}>{dateFmt}</span>
         </div>
 
         {/* Progression */}
         {project.total_phrases > 0 ? (
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-[3px] bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+            <div className="flex-1 h-[3px] bg-[var(--t-surface-2-hover)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#f7f8f8] rounded-full transition-all duration-500"
+                className="h-full bg-[var(--t-fg)] rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-[10px] text-[#62666d] tabular-nums shrink-0" style={mono}>
+            <span className="text-[10px] text-[var(--t-fg-4)] tabular-nums shrink-0" style={mono}>
               {project.valid_recordings}/{project.total_phrases}
             </span>
-            <span className="text-[10px] text-[#d0d6e0] tabular-nums shrink-0" style={mono}>
+            <span className="text-[10px] text-[var(--t-fg-2)] tabular-nums shrink-0" style={mono}>
               {progress}%
             </span>
           </div>
         ) : (
-          <div className="text-[10px] text-[#62666d]" style={sans}>
+          <div className="text-[10px] text-[var(--t-fg-4)]" style={sans}>
             Aucune phrase
           </div>
         )}

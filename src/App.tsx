@@ -27,7 +27,6 @@ const RequestAccessPage = lazy(() => import('./pages/request-access-page').then(
 const SpeakerOnboardingPage = lazy(() => import('./pages/speaker-onboarding-page').then(m => ({ default: m.SpeakerOnboardingPage })))
 const SpeakerDashboardPage = lazy(() => import('./pages/speaker-dashboard-page').then(m => ({ default: m.SpeakerDashboardPage })))
 const SpeakerProjectsPage = lazy(() => import('./pages/speaker-projects-page').then(m => ({ default: m.SpeakerProjectsPage })))
-const SpeakerRecordingsPage = lazy(() => import('./pages/speaker-recordings-page').then(m => ({ default: m.SpeakerRecordingsPage })))
 const SpeakerInvitationsPage = lazy(() => import('./pages/speaker-invitations-page').then(m => ({ default: m.SpeakerInvitationsPage })))
 const SpeakerInvitationDetailPage = lazy(() => import('./pages/speaker-invitation-detail-page').then(m => ({ default: m.SpeakerInvitationDetailPage })))
 const SpeakerNotificationsPage = lazy(() => import('./pages/speaker-notifications-page').then(m => ({ default: m.SpeakerNotificationsPage })))
@@ -102,14 +101,6 @@ export function App() {
               element={
                 <ProtectedRoute allowedRoles={['speaker']}>
                   <SpeakerLayout><SpeakerProjectsPage /></SpeakerLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/speaker/recordings"
-              element={
-                <ProtectedRoute allowedRoles={['speaker']}>
-                  <SpeakerLayout><SpeakerRecordingsPage /></SpeakerLayout>
                 </ProtectedRoute>
               }
             />

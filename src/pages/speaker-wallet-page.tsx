@@ -25,8 +25,8 @@ const TX_ICON: Record<WalletTransactionType, React.ReactNode> = {
   validation_reward: <Check className="w-3 h-3 text-[#10b981]" strokeWidth={2} />,
   bonus: <Gift className="w-3 h-3 text-[#7170ff]" strokeWidth={2} />,
   withdrawal_request: <ArrowUpRight className="w-3 h-3 text-[#fbbf24]" strokeWidth={2} />,
-  withdrawal_paid: <ArrowDownLeft className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />,
-  withdrawal_refund: <TrendingDown className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />,
+  withdrawal_paid: <ArrowDownLeft className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />,
+  withdrawal_refund: <TrendingDown className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />,
 }
 
 export function SpeakerWalletPage() {
@@ -70,9 +70,9 @@ export function SpeakerWalletPage() {
   return (
     <div className="min-h-screen">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[rgba(255,255,255,0.05)] bg-[rgba(8,9,10,0.9)] backdrop-blur-md">
-        <Wallet className="w-[13px] h-[13px] text-[#8a8f98]" strokeWidth={1.75} />
-        <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+      <header className="sticky top-0 z-10 flex items-center gap-3 px-5 lg:px-8 h-[52px] border-b border-[var(--t-surface-active)] bg-[var(--t-topbar-bg)] backdrop-blur-md">
+        <Wallet className="w-[13px] h-[13px] text-[var(--t-fg-3)]" strokeWidth={1.75} />
+        <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
           Portefeuille
         </span>
       </header>
@@ -82,39 +82,39 @@ export function SpeakerWalletPage() {
         <div
           className="rounded-[12px] p-7"
           style={{
-            background: 'radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.05), transparent 60%), #0f1011',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'radial-gradient(ellipse at 20% 10%, var(--t-surface-active), transparent 60%), var(--t-bg-panel)',
+            border: '1px solid var(--t-border)',
           }}
         >
           <p
-            className="text-[11px] text-[#62666d] uppercase"
+            className="text-[11px] text-[var(--t-fg-4)] uppercase"
             style={{ ...sans, fontWeight: 510, letterSpacing: '0.08em' }}
           >
             Solde disponible
           </p>
           <div className="flex items-end gap-3 mt-2">
             <p
-              className="text-[40px] sm:text-[48px] text-[#f7f8f8] tabular-nums leading-none"
+              className="text-[40px] sm:text-[48px] text-[var(--t-fg)] tabular-nums leading-none"
               style={{ ...sans, fontWeight: 510, letterSpacing: '-1.056px' }}
             >
               {new Intl.NumberFormat('fr-SN').format(animatedBalance)}
             </p>
-            <span className="text-[18px] text-[#8a8f98] pb-1" style={{ ...sans, fontWeight: 510 }}>
+            <span className="text-[18px] text-[var(--t-fg-3)] pb-1" style={{ ...sans, fontWeight: 510 }}>
               FCFA
             </span>
           </div>
 
           <div className="mt-5 flex items-center gap-6 flex-wrap">
             <div>
-              <p className="text-[11px] text-[#62666d]" style={sans}>Total gagné</p>
-              <p className="text-[14px] text-[#f7f8f8] tabular-nums mt-0.5" style={{ ...mono, fontWeight: 510 }}>
+              <p className="text-[11px] text-[var(--t-fg-4)]" style={sans}>Total gagné</p>
+              <p className="text-[14px] text-[var(--t-fg)] tabular-nums mt-0.5" style={{ ...mono, fontWeight: 510 }}>
                 —
               </p>
             </div>
-            <div className="w-px h-8 bg-[rgba(255,255,255,0.08)]" />
+            <div className="w-px h-8 bg-[var(--t-border)]" />
             <div>
-              <p className="text-[11px] text-[#62666d]" style={sans}>Total retiré</p>
-              <p className="text-[14px] text-[#f7f8f8] tabular-nums mt-0.5" style={{ ...mono, fontWeight: 510 }}>
+              <p className="text-[11px] text-[var(--t-fg-4)]" style={sans}>Total retiré</p>
+              <p className="text-[14px] text-[var(--t-fg)] tabular-nums mt-0.5" style={{ ...mono, fontWeight: 510 }}>
                 —
               </p>
             </div>
@@ -125,7 +125,7 @@ export function SpeakerWalletPage() {
               style={{
                 ...sans,
                 fontWeight: 510,
-                color: '#f7f8f8',
+                color: 'var(--t-fg)',
                 background: '#5e6ad2',
               }}
               onMouseEnter={(e) => {
@@ -162,17 +162,17 @@ export function SpeakerWalletPage() {
           <div
             className="mt-4 p-5 rounded-[10px]"
             style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--t-surface)',
+              border: '1px solid var(--t-border)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+              <p className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
                 Demande de retrait
               </p>
               <button
                 onClick={() => setShowWithdraw(false)}
-                className="w-6 h-6 flex items-center justify-center rounded-sm text-[#8a8f98] hover:text-[#f7f8f8] hover:bg-[rgba(255,255,255,0.04)]"
+                className="w-6 h-6 flex items-center justify-center rounded-sm text-[var(--t-fg-3)] hover:text-[var(--t-fg)] hover:bg-[var(--t-surface-2)]"
               >
                 <X className="w-3.5 h-3.5" strokeWidth={1.75} />
               </button>
@@ -187,14 +187,14 @@ export function SpeakerWalletPage() {
 
             <div className="flex flex-col gap-3.5">
               <div>
-                <label className="block text-[12px] text-[#d0d6e0] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
+                <label className="block text-[12px] text-[var(--t-fg-2)] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
                   Montant
                 </label>
                 <div
                   className="relative rounded-md"
                   style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--t-surface)',
+                    border: '1px solid var(--t-border)',
                   }}
                 >
                   <input
@@ -204,20 +204,20 @@ export function SpeakerWalletPage() {
                     min={5000}
                     step={500}
                     placeholder="5000"
-                    className="w-full h-[36px] px-3 pr-16 text-[14px] bg-transparent border-0 outline-none text-[#f7f8f8] tabular-nums"
+                    className="w-full h-[36px] px-3 pr-16 text-[14px] bg-transparent border-0 outline-none text-[var(--t-fg)] tabular-nums"
                     style={{ ...sans }}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[#62666d]" style={mono}>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--t-fg-4)]" style={mono}>
                     FCFA
                   </span>
                 </div>
-                <p className="text-[11px] text-[#62666d] mt-1.5" style={sans}>
+                <p className="text-[11px] text-[var(--t-fg-4)] mt-1.5" style={sans}>
                   Minimum 5 000 FCFA · Disponible : {new Intl.NumberFormat('fr-SN').format(balance)} FCFA
                 </p>
               </div>
 
               <div>
-                <label className="block text-[12px] text-[#d0d6e0] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
+                <label className="block text-[12px] text-[var(--t-fg-2)] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
                   Méthode
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -239,9 +239,9 @@ export function SpeakerWalletPage() {
                         style={{
                           ...sans,
                           fontWeight: 510,
-                          color: on ? '#f7f8f8' : '#d0d6e0',
-                          background: on ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                          border: `1px solid ${on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                          color: on ? 'var(--t-fg)' : 'var(--t-fg-2)',
+                          background: on ? 'var(--t-surface-2-hover)' : 'var(--t-surface)',
+                          border: `1px solid ${on ? 'var(--t-border-strong)' : 'var(--t-border)'}`,
                         }}
                       >
                         {lbl}
@@ -252,7 +252,7 @@ export function SpeakerWalletPage() {
               </div>
 
               <div>
-                <label className="block text-[12px] text-[#d0d6e0] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
+                <label className="block text-[12px] text-[var(--t-fg-2)] mb-1.5" style={{ ...sans, fontWeight: 510 }}>
                   {method === 'bank' ? 'IBAN' : 'Numéro de téléphone'}
                 </label>
                 <input
@@ -260,7 +260,7 @@ export function SpeakerWalletPage() {
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder={method === 'bank' ? 'SN28…' : '+221 77 000 00 00'}
-                  className="w-full h-[36px] px-3 text-[14px] text-[#f7f8f8] placeholder:text-[#62666d] rounded-md bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:border-[rgba(255,255,255,0.22)]"
+                  className="w-full h-[36px] px-3 text-[14px] text-[var(--t-fg)] placeholder:text-[var(--t-fg-4)] rounded-md bg-[var(--t-surface)] border border-[var(--t-border)] focus:outline-none focus:border-[var(--t-border-strong)]"
                   style={sans}
                 />
               </div>
@@ -268,7 +268,7 @@ export function SpeakerWalletPage() {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => setShowWithdraw(false)}
-                  className="h-[34px] px-3 text-[13px] rounded-md text-[#d0d6e0] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                  className="h-[34px] px-3 text-[13px] rounded-md text-[var(--t-fg-2)] hover:bg-[var(--t-surface-2)] transition-colors"
                   style={{ ...sans, fontWeight: 510 }}
                 >
                   Annuler
@@ -280,7 +280,7 @@ export function SpeakerWalletPage() {
                   style={{
                     ...sans,
                     fontWeight: 510,
-                    color: '#f7f8f8',
+                    color: 'var(--t-fg)',
                     background: '#5e6ad2',
                   }}
                 >
@@ -295,28 +295,28 @@ export function SpeakerWalletPage() {
         {/* Historique */}
         <div className="mt-10">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[13px] text-[#f7f8f8]" style={{ ...sans, fontWeight: 510 }}>
+            <span className="text-[13px] text-[var(--t-fg)]" style={{ ...sans, fontWeight: 510 }}>
               Transactions récentes
             </span>
-            <span className="text-[11px] text-[#62666d]" style={mono}>
+            <span className="text-[11px] text-[var(--t-fg-4)]" style={mono}>
               {transactions.length}
             </span>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-5 h-5 animate-spin text-[#8a8f98]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[var(--t-fg-3)]" />
             </div>
           ) : transactions.length === 0 ? (
-            <div className="text-center py-12 text-[13px] text-[#62666d]" style={sans}>
+            <div className="text-center py-12 text-[13px] text-[var(--t-fg-4)]" style={sans}>
               Aucune transaction pour l'instant
             </div>
           ) : (
             <div
               className="rounded-[8px]"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'var(--t-surface)',
+                border: '1px solid var(--t-surface-active)',
               }}
             >
               {transactions.map((tx, idx) => (
@@ -340,7 +340,7 @@ function TxRow({
 }) {
   const type = tx.type as WalletTransactionType
   const label = TX_TYPE_LABELS[type] ?? type
-  const icon = TX_ICON[type] ?? <Minus className="w-3 h-3 text-[#8a8f98]" strokeWidth={2} />
+  const icon = TX_ICON[type] ?? <Minus className="w-3 h-3 text-[var(--t-fg-3)]" strokeWidth={2} />
   const amount = tx.amount_fcfa
   const isNegative = amount < 0
   const sign = amount > 0 ? '+' : ''
@@ -350,35 +350,35 @@ function TxRow({
       className="flex items-center gap-3 px-4 py-3 text-[13px]"
       style={{
         ...sans,
-        borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.04)',
+        borderBottom: last ? 'none' : '1px solid var(--t-surface-2)',
       }}
     >
       <span className="w-7 h-7 flex items-center justify-center rounded-md shrink-0"
         style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'var(--t-surface-2)',
+          border: '1px solid var(--t-surface-active)',
         }}
       >
         {icon}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] text-[#f7f8f8] truncate" style={{ ...sans, fontWeight: 510 }}>
+        <p className="text-[13px] text-[var(--t-fg)] truncate" style={{ ...sans, fontWeight: 510 }}>
           {label}
         </p>
         {tx.description && (
-          <p className="text-[11px] text-[#62666d] truncate" style={sans}>
+          <p className="text-[11px] text-[var(--t-fg-4)] truncate" style={sans}>
             {tx.description}
           </p>
         )}
       </div>
-      <span className="text-[11px] text-[#62666d] hidden sm:inline" style={mono}>
+      <span className="text-[11px] text-[var(--t-fg-4)] hidden sm:inline" style={mono}>
         {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
       </span>
       <span
         className="text-[13px] tabular-nums"
         style={{
           ...mono,
-          color: isNegative ? '#8a8f98' : '#f7f8f8',
+          color: isNegative ? 'var(--t-fg-3)' : 'var(--t-fg)',
           fontWeight: 510,
         }}
       >
