@@ -177,6 +177,33 @@ export function SubtopicsPanel({
     onValidated?.()
   }, [subtopics, notify, refetch, onValidated])
 
+  const handleCancel = useCallback(async (subtopic: Subtopic) => {
+    setBusy(subtopic.id, true)
+    try {
+      const { error: rpcErr } = await (supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: boolean | null
+          error: { message: string } | null
+        }>
+      }).rpc('cancel_subtopic_generation', { p_subtopic_id: subtopic.id })
+      if (rpcErr) throw new Error(rpcErr.message)
+      notify({
+        variant: 'success',
+        title: 'Génération annulée',
+        message: `"${subtopic.title}" est repassé en échec.`,
+      })
+      await refetch()
+    } catch (err) {
+      notify({
+        variant: 'error',
+        title: 'Annulation impossible',
+        message: err instanceof Error ? err.message : 'Erreur inconnue',
+      })
+    } finally {
+      setBusy(subtopic.id, false)
+    }
+  }, [notify, refetch])
+
   if (loading) {
     return (
       <div className="rounded-md p-4" style={{ background: 'var(--t-surface)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -290,6 +317,7 @@ export function SubtopicsPanel({
                 onGenerate={handleGenerate}
                 onAskRegenerate={setRegenerateTarget}
                 onValidate={handleValidate}
+                onCancel={handleCancel}
               />
             ))}
           </div>
@@ -317,6 +345,7 @@ export function SubtopicsPanel({
                 onGenerate={handleGenerate}
                 onAskRegenerate={setRegenerateTarget}
                 onValidate={handleValidate}
+                onCancel={handleCancel}
               />
             ))}
           </div>
@@ -344,6 +373,7 @@ export function SubtopicsPanel({
                 onGenerate={handleGenerate}
                 onAskRegenerate={setRegenerateTarget}
                 onValidate={handleValidate}
+                onCancel={handleCancel}
               />
             ))}
           </div>
@@ -423,10 +453,11 @@ interface SubtopicCardProps {
   onGenerate: (s: Subtopic, mode?: 'replace' | 'append') => void
   onAskRegenerate: (s: Subtopic) => void
   onValidate: (s: Subtopic) => void
+  onCancel: (s: Subtopic) => void
 }
 
 function SubtopicCard({
-  subtopic: s, projectId, busy, disabled, onGenerate, onAskRegenerate, onValidate,
+  subtopic: s, projectId, busy, disabled, onGenerate, onAskRegenerate, onValidate, onCancel,
 }: SubtopicCardProps) {
   const meta = STATUS_META[s.status]
   const isGenerating = s.status === 'generating' || busy
@@ -529,10 +560,29 @@ function SubtopicCard({
         )}
 
         {s.status === 'generating' && (
-          <span className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] text-[#8a8f98]" style={sans}>
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Patientez…
-          </span>
+          <>
+            <span className="inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] text-[#8a8f98]" style={sans}>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Génération…
+            </span>
+            <button
+              type="button"
+              onClick={() => onCancel(s)}
+              disabled={busy}
+              title="Arrêter la génération"
+              className="ml-auto inline-flex items-center gap-1.5 h-[28px] px-2.5 text-[12px] rounded-md transition-colors disabled:opacity-40"
+              style={{
+                ...sans,
+                fontWeight: 510,
+                color: 'var(--t-danger-text)',
+                background: 'var(--t-danger-muted-bg)',
+                border: '1px solid var(--t-danger-muted-border)',
+              }}
+            >
+              {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
+              Arrêter
+            </button>
+          </>
         )}
 
         {s.status === 'ready' && (

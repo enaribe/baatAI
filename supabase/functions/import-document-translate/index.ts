@@ -403,6 +403,7 @@ Deno.serve(async (req) => {
 
       const settled = await runWithConcurrency(batches, MAX_PARALLEL);
       let failureCount = 0;
+      let saturated = false;
       const ordered: Array<{ source: string; target: string }> = phrasesFR.map((p) => ({ source: p, target: p }));
 
       for (const r of settled) {
@@ -415,6 +416,10 @@ Deno.serve(async (req) => {
           }
         } else {
           failureCount++;
+          const msg = (r.reason as Error)?.message ?? "";
+          if (msg.includes("gemini_api_error_503") || msg.includes("gemini_api_error_429")) {
+            saturated = true;
+          }
           console.error("Translate batch failed:", r.reason);
         }
       }
@@ -422,11 +427,14 @@ Deno.serve(async (req) => {
       pairs = ordered;
 
       if (failureCount === settled.length) {
-        await markFailed(supabase, createdSubtopicId, "Toutes les traductions ont échoué");
+        const reason = saturated
+          ? "Le serveur de génération de texte est saturé en ce moment. Patientez 5 à 10 minutes puis réessayez."
+          : "L'IA n'a pas pu traduire le document. Réessayez dans quelques minutes.";
+        await markFailed(supabase, createdSubtopicId, reason);
         createdSubtopicId = null;
         return jsonResponse(
-          { error: "L'IA n'a pas pu traduire le document. Réessayez." },
-          502,
+          { error: reason },
+          saturated ? 503 : 502,
           corsHeaders,
         );
       }

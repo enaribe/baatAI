@@ -393,41 +393,86 @@ Deno.serve(async (req) => {
     const batchCount = Math.ceil(targetForRun / BATCH_SIZE);
     const batches: Array<() => Promise<PhrasePair[]>> = [];
 
+    // Helper : vérifie si l'utilisateur a demandé l'annulation
+    // (passage du statut à 'failed' via RPC cancel_subtopic_generation).
+    // On évite ainsi de lancer des batches Gemini inutiles.
+    const isCancelled = async (): Promise<boolean> => {
+      const { data } = await supabase
+        .from("subtopics")
+        .select("status")
+        .eq("id", subtopicId)
+        .single();
+      return (data as { status?: string } | null)?.status !== "generating";
+    };
+
     for (let i = 0; i < batchCount; i++) {
       const remaining = targetForRun - i * BATCH_SIZE;
       const size = Math.min(BATCH_SIZE, remaining);
-      batches.push(() =>
-        callWithRetry(() => callGeminiBatch(apiKey, {
+      batches.push(async () => {
+        // Skip si l'utilisateur a annulé entre-temps
+        if (await isCancelled()) {
+          throw new Error("cancelled_by_user");
+        }
+        return callWithRetry(() => callGeminiBatch(apiKey, {
           language,
           subtopicTitle: subtopicRow.title,
           subtopicDescription: subtopicRow.description ?? "",
           usageType,
           batchSize: size,
           excludeSamples,
-        }))
-      );
+        }));
+      });
     }
 
     // 9. Exécution avec concurrence limitée
     const settled = await runWithConcurrency(batches, MAX_PARALLEL);
     const allPairs: PhrasePair[] = [];
     let failureCount = 0;
+    let cancelled = false;
+    let saturated = false;  // détecté quand TOUS les fails sont 503/429
 
     for (const r of settled) {
       if (r.status === "fulfilled") {
         allPairs.push(...r.value);
       } else {
-        failureCount++;
+        const reason = r.reason as Error & { message?: string };
+        const msg = reason?.message ?? "";
+        if (msg === "cancelled_by_user") {
+          cancelled = true;
+        } else {
+          failureCount++;
+          // Détection de surcharge : codes 503 (UNAVAILABLE) ou 429 (RATE_LIMIT)
+          if (msg.includes("gemini_api_error_503") || msg.includes("gemini_api_error_429")) {
+            saturated = true;
+          }
+        }
         console.error("Batch failed:", r.reason);
       }
     }
 
-    if (allPairs.length === 0) {
-      await markFailed(supabase, subtopicId, "Aucune phrase générée par l'IA");
+    // Si annulation détectée, on respecte : ne pas continuer le pipeline.
+    // Le subtopic est déjà en 'failed' (mis par cancel_subtopic_generation RPC).
+    if (cancelled) {
       subtopicIdForCleanup = null;
       return jsonResponse(
-        { error: "L'IA n'a généré aucune phrase. Réessayez." },
-        502,
+        { error: "Génération annulée" },
+        200,
+        corsHeaders,
+      );
+    }
+
+    if (allPairs.length === 0) {
+      // Message adapté selon la cause détectée
+      const reason = saturated
+        ? "Le serveur de génération de texte est saturé en ce moment. Patientez 5 à 10 minutes puis cliquez sur \"Réessayer\". Si le problème persiste, contactez-nous via le bouton Feedback."
+        : failureCount > 0
+          ? "L'IA n'a pas pu générer les phrases pour le moment. Réessayez dans quelques minutes."
+          : "Aucune phrase générée par l'IA";
+      await markFailed(supabase, subtopicId, reason);
+      subtopicIdForCleanup = null;
+      return jsonResponse(
+        { error: reason },
+        saturated ? 503 : 502,
         corsHeaders,
       );
     }

@@ -12,8 +12,13 @@ export const GEMINI_MODEL = "gemini-flash-latest";
 export const GEMINI_ENDPOINT =
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const MAX_RETRIES = 3;
-const RETRY_DELAYS_MS = [2000, 4000, 8000];
+// Retries plus tolérants : Gemini peut être 503 pendant plusieurs secondes
+// quand leur API est saturée. Avec billing actif on a quand même droit à
+// nos quotas, mais on doit attendre que leur capacité revienne.
+// Pire cas total : 2 + 5 + 10 + 20 + 30 = ~67s → reste largement dans les
+// 150s de timeout edge function Supabase.
+const MAX_RETRIES = 5;
+const RETRY_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
 
 export interface GeminiCallOptions {
   /** Température 0-1 (créatif) */

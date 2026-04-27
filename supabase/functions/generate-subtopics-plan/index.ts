@@ -224,9 +224,15 @@ Deno.serve(async (req) => {
     } catch (e) {
       const msg = (e as Error).message;
       console.error("callGeminiPlan failed:", msg);
+      // Détection saturation Gemini → message explicite
+      const saturated = msg.includes("gemini_api_error_503") || msg.includes("gemini_api_error_429");
       return jsonResponse(
-        { error: "Impossible de générer le plan. Réessayez ou ajustez votre thème." },
-        502,
+        {
+          error: saturated
+            ? "Le serveur de génération de texte est saturé en ce moment. Patientez 5 à 10 minutes puis réessayez."
+            : "Impossible de générer le plan. Réessayez ou ajustez votre thème.",
+        },
+        saturated ? 503 : 502,
         corsHeaders,
       );
     }
