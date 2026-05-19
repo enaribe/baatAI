@@ -231,9 +231,9 @@ function Hero() {
               </div>
             </div>
           </div>
-          {/* Petit floating badge "live" — dot pulse animé */}
+          {/* Petit floating badge "live" */}
           <div
-            className="absolute -top-3 -right-3 inline-flex items-center gap-1.5 px-2.5 h-[24px] rounded-full text-[10px]"
+            className="absolute -top-3 -right-3 inline-flex items-center px-2.5 h-[24px] rounded-full text-[10px]"
             style={{
               ...sans,
               fontWeight: 590,
@@ -243,10 +243,6 @@ function Hero() {
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-              style={{ background: '#10b981' }}
-            />
             En cours
           </div>
         </div>
@@ -375,13 +371,9 @@ function DatasetPreviewPanel() {
                 Centre d'appel — Wolof
               </div>
               <span
-                className="inline-flex items-center gap-1.5 px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
+                className="inline-flex items-center px-2.5 h-[22px] rounded-full text-[12px] text-[#d0d6e0] border border-[#23252a]"
                 style={{ ...sans, fontWeight: 510 }}
               >
-                <span
-                  className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-                  style={{ background: '#10b981' }}
-                />
                 Collecte en cours
               </span>
             </div>

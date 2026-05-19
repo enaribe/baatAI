@@ -86,12 +86,12 @@ html[data-theme='dark'] {
   /* Surfaces */
   --t-bg: #08090a;                /* canvas principal */
   --t-bg-panel: #0f1011;          /* sidebar, panels */
-  --t-bg-subtle: rgba(255, 255, 255, 0.01);
-  --t-surface: rgba(255, 255, 255, 0.02);     /* card par défaut */
-  --t-surface-hover: rgba(255, 255, 255, 0.035);
-  --t-surface-active: rgba(255, 255, 255, 0.05);
-  --t-surface-2: rgba(255, 255, 255, 0.04);   /* card plus prononcée */
-  --t-surface-2-hover: rgba(255, 255, 255, 0.06);
+  --t-bg-subtle: rgba(255, 255, 255, 0.018);
+  --t-surface: rgba(255, 255, 255, 0.028);    /* card par défaut */
+  --t-surface-hover: rgba(255, 255, 255, 0.055);
+  --t-surface-active: rgba(255, 255, 255, 0.07);
+  --t-surface-2: rgba(255, 255, 255, 0.05);   /* card plus prononcée */
+  --t-surface-2-hover: rgba(255, 255, 255, 0.075);
 
   /* Modal/dialog : fond OPAQUE, jamais transparent (lisibilité au-dessus
      de l'overlay sombre + ne dépend pas de ce qui est derrière) */
@@ -100,16 +100,16 @@ html[data-theme='dark'] {
   /* Texte */
   --t-fg: #f7f8f8;                /* primary */
   --t-fg-2: #d0d6e0;              /* body */
-  --t-fg-3: #8a8f98;              /* muted */
-  --t-fg-4: #62666d;              /* disabled / tertiary */
-  --t-fg-5: #3e3e44;              /* ultra subtle (séparateurs texte) */
+  --t-fg-3: #9ea3ad;              /* muted (remonté pour AA) */
+  --t-fg-4: #7d818a;              /* disabled / tertiary (AA sur bg sombre) */
+  --t-fg-5: #4a4d54;              /* ultra subtle — DÉCORATIF UNIQUEMENT, jamais texte */
   --t-fg-on-accent: #f7f8f8;      /* texte sur CTA accent */
   --t-fg-on-solid: #08090a;       /* texte sur bouton blanc */
 
   /* Bordures */
-  --t-border: rgba(255, 255, 255, 0.08);
-  --t-border-subtle: rgba(255, 255, 255, 0.05);
-  --t-border-strong: rgba(255, 255, 255, 0.15);
+  --t-border: rgba(255, 255, 255, 0.10);
+  --t-border-subtle: rgba(255, 255, 255, 0.07);
+  --t-border-strong: rgba(255, 255, 255, 0.18);
 
   /* Top bar (sticky avec backdrop blur) */
   --t-topbar-bg: rgba(8, 9, 10, 0.9);
@@ -154,13 +154,13 @@ html[data-theme='dark'] {
 html[data-theme='light'] {
   /* Surfaces */
   --t-bg: #ffffff;
-  --t-bg-panel: #f8f9fa;          /* sidebar gris très clair */
-  --t-bg-subtle: rgba(0, 0, 0, 0.015);
-  --t-surface: rgba(0, 0, 0, 0.015);
-  --t-surface-hover: rgba(0, 0, 0, 0.03);
-  --t-surface-active: rgba(0, 0, 0, 0.05);
-  --t-surface-2: rgba(0, 0, 0, 0.03);
-  --t-surface-2-hover: rgba(0, 0, 0, 0.05);
+  --t-bg-panel: #f3f4f6;          /* sidebar gris clair (renforcé) */
+  --t-bg-subtle: rgba(0, 0, 0, 0.025);
+  --t-surface: rgba(0, 0, 0, 0.028);
+  --t-surface-hover: rgba(0, 0, 0, 0.055);
+  --t-surface-active: rgba(0, 0, 0, 0.075);
+  --t-surface-2: rgba(0, 0, 0, 0.05);
+  --t-surface-2-hover: rgba(0, 0, 0, 0.075);
 
   /* Modal/dialog : fond opaque pour lisibilité */
   --t-modal-bg: #ffffff;
@@ -168,16 +168,16 @@ html[data-theme='light'] {
   /* Texte */
   --t-fg: #1a1b1e;                /* primary */
   --t-fg-2: #3a3d43;              /* body */
-  --t-fg-3: #6f7680;              /* muted */
-  --t-fg-4: #9ea4ad;              /* disabled / tertiary */
-  --t-fg-5: #c9cdd2;              /* ultra subtle */
+  --t-fg-3: #5a6069;              /* muted (remonté pour AA confortable) */
+  --t-fg-4: #7c828c;              /* disabled / tertiary (AA sur bg blanc) */
+  --t-fg-5: #b6bac1;              /* ultra subtle — DÉCORATIF UNIQUEMENT, jamais texte */
   --t-fg-on-accent: #ffffff;
   --t-fg-on-solid: #ffffff;       /* texte sur bouton noir */
 
   /* Bordures */
-  --t-border: rgba(0, 0, 0, 0.08);
-  --t-border-subtle: rgba(0, 0, 0, 0.05);
-  --t-border-strong: rgba(0, 0, 0, 0.15);
+  --t-border: rgba(0, 0, 0, 0.12);
+  --t-border-subtle: rgba(0, 0, 0, 0.08);
+  --t-border-strong: rgba(0, 0, 0, 0.20);
 
   /* Top bar */
   --t-topbar-bg: rgba(255, 255, 255, 0.9);

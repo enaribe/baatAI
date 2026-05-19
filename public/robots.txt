@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /project/
+Disallow: /record/
+Disallow: /login
+Disallow: /register
+Disallow: /admin
+
+# Empêche l'indexation des pages applicatives (privées / tokenisées)
+# La landing publique reste indexable.
+
+Sitemap: https://daande.dev/sitemap.xml

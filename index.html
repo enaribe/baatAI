@@ -2,18 +2,63 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08090a" />
+
+    <!-- ─── Primary SEO ─────────────────────────────────────────── -->
+    <title>Daandé — Datasets vocaux pour langues africaines (Wolof, Pulaar, Sereer, Bambara)</title>
+    <meta
+      name="description"
+      content="Daandé est la plateforme SaaS de création de datasets vocaux pour langues africaines. Constituez des corpus audio multi-locuteurs en Wolof, Pulaar, Sereer et Bambara, prêts pour l'entraînement de modèles ASR et TTS."
+    />
+    <meta
+      name="keywords"
+      content="datasets vocaux, langues africaines, wolof, pulaar, sereer, bambara, ASR, TTS, speech recognition, text-to-speech, corpus audio, low-resource languages, Afrique de l'Ouest, Sénégal, Mali, AI dataset, intelligence artificielle, NLP africain"
+    />
+    <meta name="author" content="Daandé" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://daande.dev/" />
+
+    <!-- Langues alternatives (multi-marché FR / EN) -->
+    <link rel="alternate" hreflang="fr" href="https://daande.dev/" />
+    <link rel="alternate" hreflang="en" href="https://daande.dev/en" />
+    <link rel="alternate" hreflang="x-default" href="https://daande.dev/" />
+
+    <!-- ─── Open Graph (Facebook, LinkedIn, WhatsApp) ────────────── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Daandé" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://daande.dev/" />
+    <meta property="og:title" content="Daandé — Datasets vocaux pour langues africaines" />
+    <meta
+      property="og:description"
+      content="Plateforme SaaS pour constituer des corpus audio multi-locuteurs en Wolof, Pulaar, Sereer et Bambara — prêts pour l'entraînement de modèles ASR et TTS."
+    />
+    <meta property="og:image" content="https://daande.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Daandé — datasets vocaux pour langues africaines" />
+
+    <!-- ─── Twitter / X ───────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Daandé — Datasets vocaux pour langues africaines" />
+    <meta
+      name="twitter:description"
+      content="Constituez des corpus audio multi-locuteurs en Wolof, Pulaar, Sereer et Bambara pour l'entraînement de modèles ASR et TTS."
+    />
+    <meta name="twitter:image" content="https://daande.dev/og-image.png" />
+    <meta name="twitter:image:alt" content="Daandé — datasets vocaux pour langues africaines" />
+
+    <!-- ─── Favicons ──────────────────────────────────────────────── -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="mask-icon" href="/favicon.svg" color="#ffffff" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#08090a" />
-    <title>Daandé — Datasets vocaux africains</title>
 
-    <!-- Inter Variable (rsms.me = font officielle de Linear) -->
+    <!-- ─── Performance — preconnect / preload ───────────────────── -->
     <link rel="preconnect" href="https://rsms.me" crossorigin />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-
-    <!-- JetBrains Mono (fallback Berkeley Mono propriétaire) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,12 +66,61 @@
       rel="stylesheet"
     />
 
+    <!-- ─── Structured data (JSON-LD) ─────────────────────────────── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://daande.dev/#organization",
+            "name": "Daandé",
+            "url": "https://daande.dev/",
+            "logo": "https://daande.dev/favicon.svg",
+            "description": "Plateforme SaaS de création de datasets vocaux pour langues africaines.",
+            "areaServed": ["SN", "ML", "GM", "MR", "GN", "BF", "CI"],
+            "knowsLanguage": ["wo", "ff", "srr", "bm", "fr", "en"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://daande.dev/#website",
+            "url": "https://daande.dev/",
+            "name": "Daandé",
+            "publisher": { "@id": "https://daande.dev/#organization" },
+            "inLanguage": ["fr", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Daandé",
+            "operatingSystem": "Web",
+            "applicationCategory": "BusinessApplication",
+            "description": "Plateforme SaaS de création de datasets vocaux pour langues africaines (Wolof, Pulaar, Sereer, Bambara). Permet de constituer des corpus audio multi-locuteurs prêts pour l'entraînement de modèles ASR et TTS.",
+            "url": "https://daande.dev/",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR",
+              "availability": "https://schema.org/InStock"
+            },
+            "publisher": { "@id": "https://daande.dev/#organization" }
+          }
+        ]
+      }
+    </script>
+
     <style>
       html { background: #08090a; color-scheme: dark; }
     </style>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Daandé — Datasets vocaux pour langues africaines</h1>
+      <p>
+        Daandé est la plateforme SaaS de création de datasets vocaux pour langues africaines :
+        Wolof, Pulaar, Sereer et Bambara. Activez JavaScript pour accéder à l'application.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
